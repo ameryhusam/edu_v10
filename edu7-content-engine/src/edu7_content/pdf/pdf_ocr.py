@@ -17,7 +17,10 @@ import unicodedata
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 
-import pymupdf
+try:
+    import pymupdf
+except Exception:
+    pymupdf = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
