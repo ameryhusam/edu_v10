@@ -63,7 +63,7 @@ def main():
                         help=(
                             "AI model for vision TOC extraction when rule-based fails.\n"
                             "Free local: llava:7b | llava:13b | minicpm-v:8b | qwen2.5vl:7b\n"
-                            "Free cloud: gemini | gemini-2.5-flash | gemini-1.5-flash\n"
+                            "Free cloud: gemini-3.6-flash | gemini-3.5-flash\n"
                             "Default: auto (tries Ollama first, then Gemini if key set)"
                         ))
     p_prep.add_argument("--vision-pages", type=int, default=10,
