@@ -349,12 +349,31 @@ def _cmd_analyze(args):
             res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
             report = validator.validate(res, text)
             print(f"    [+] Concepts: {len(res.concepts)} | Questions: {len(res.questions)} | Flashcards: {len(res.flashcards)}")
+            print(f"    [*] Evidence verified: concepts={report['verifiedEvidenceConcepts']} questions={report['verifiedEvidenceQuestions']}")
+            print("    [!] AI output remains PROPOSED/NEEDS_REVIEW; human approval is required before import.")
 
             out_dir = l_dir / "analysis" / provider.provider_name
             out_dir.mkdir(parents=True, exist_ok=True)
             out_file = out_dir / "normalized.json"
             out_file.write_text(json.dumps(asdict(res), ensure_ascii=False, indent=2), encoding="utf-8")
-            print(f"    [✓] Saved analysis to: {out_file}")
+            report_file = out_dir / "validation-report.json"
+            report_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            analysis_manifest = {
+                "schemaVersion": "1.0",
+                "mode": "ANALYZE",
+                "status": "DRAFT",
+                "provider": provider.provider_name,
+                "lessonManifest": str(l_dir / "lesson_manifest.json"),
+                "groundingManifest": str(l_dir / "grounding_manifest.json"),
+                "normalizedOutput": str(out_file),
+                "validationReport": str(report_file),
+                "databaseWrite": False,
+                "humanApprovalRequired": True,
+            }
+            (out_dir / "analysis-manifest.json").write_text(
+                json.dumps(analysis_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print(f"    [✓] Saved draft analysis to: {out_file}")
 
             # Polite pacing for Gemini Free Tier (15 RPM limit)
             if "gemini" in provider.provider_name.lower() and idx < len(lesson_dirs):
@@ -378,13 +397,32 @@ def _cmd_analyze(args):
 
         print("[*] Validating Evidence-First compliance...")
         report = validator.validate(res, text)
-        print(f"[+] Concepts: {len(res.concepts)} approved | Questions: {len(res.questions)} approved | Flashcards: {len(res.flashcards)}")
+        print(f"[+] Concepts: {len(res.concepts)} proposed | Questions: {len(res.questions)} proposed | Flashcards: {len(res.flashcards)}")
+        print(f"[*] Evidence verified: concepts={report['verifiedEvidenceConcepts']} questions={report['verifiedEvidenceQuestions']}")
+        print("[!] AI output remains PROPOSED/NEEDS_REVIEW; human approval is required before import.")
 
         out_dir = l_dir / "analysis" / provider.provider_name
         out_dir.mkdir(parents=True, exist_ok=True)
         out_file = out_dir / "normalized.json"
         out_file.write_text(json.dumps(asdict(res), ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"[SUCCESS] Analysis saved to: {out_file}")
+        report_file = out_dir / "validation-report.json"
+        report_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        (out_dir / "analysis-manifest.json").write_text(
+            json.dumps({
+                "schemaVersion": "1.0",
+                "mode": "ANALYZE",
+                "status": "DRAFT",
+                "provider": provider.provider_name,
+                "lessonManifest": str(l_dir / "lesson_manifest.json"),
+                "groundingManifest": str(l_dir / "grounding_manifest.json"),
+                "normalizedOutput": str(out_file),
+                "validationReport": str(report_file),
+                "databaseWrite": False,
+                "humanApprovalRequired": True,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[SUCCESS] Draft analysis saved to: {out_file}")
 
     else:
         print(f"Error: '{target_path}' is neither a workspace nor a valid lesson directory.")
