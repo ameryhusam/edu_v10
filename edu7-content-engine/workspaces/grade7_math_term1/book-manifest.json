@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "1.0",
+  "metadata": {
+    "title": "",
+    "author": "",
+    "subject": "",
+    "pageCount": 5,
+    "filename": "grade7_math_term1.pdf"
+  },
+  "detectedOffset": -9,
+  "units": [
+    {
+      "id": "unit-01",
+      "number": 1,
+      "title": "الوحدة 1",
+      "lessons": [
+        {
+          "id": "lesson-01",
+          "number": 1,
+          "title": "الدرس الأول: جمع الأعداد النسبية",
+          "startPage": 12,
+          "endPage": 15
+        },
+        {
+          "id": "lesson-02",
+          "number": 2,
+          "title": "الدرس الثاني: ضرب الأعداد النسبية",
+          "startPage": 16,
+          "endPage": 24
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,463 @@
+"""
+cli/main.py — Edu7 Content Engine CLI
+======================================
+Usage examples:
+
+  # Auto-detect PDF in books_input/ and prepare (rule-based only):
+  python -m edu7_content.cli.main prepare
+
+  # Prepare specific PDF (auto-fallback to Ollama if image-based):
+  python -m edu7_content.cli.main prepare books_input/book1.pdf
+
+  # Force Ollama vision extraction with specific model:
+  python -m edu7_content.cli.main prepare books_input/book1.pdf --model llava:7b
+
+  # Use Gemini Vision (free tier):
+  python -m edu7_content.cli.main prepare books_input/book1.pdf --model gemini
+
+  # Analyze a lesson with Gemini:
+  python -m edu7_content.cli.main analyze workspaces/book1/units/01/lessons/01 --model gemini
+
+  # Export workspace:
+  python -m edu7_content.cli.main export workspaces/book1 --format all
+"""
+import sys
+import os
+import argparse
+from pathlib import Path
+
+from ..pdf.reader import PdfReader
+from ..pdf.page_mapping import PageMappingEngine
+from ..pdf.toc import TocExtractor
+from ..pdf.pdf_ocr import ArabicPdfExtractor
+from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
+from ..pdf.segmentation import LessonSegmenter
+from ..ai.registry import AIProviderRegistry
+from ..validation.evidence_validator import EvidenceValidator
+from ..export.json_exporter import Edu7JsonExporter
+from ..export.excel_exporter import Edu7ExcelExporter
+from ..ai.gemini import _load_env_file
+
+
+def main():
+    _load_env_file()
+    parser = argparse.ArgumentParser(
+        prog="edu7-content",
+        description="Edu7 Content Engine — Arabic Textbook Extraction & Ingestion"
+    )
+    sub = parser.add_subparsers(dest="command")
+
+    # ── prepare ──────────────────────────────────────────────────────────────
+    p_prep = sub.add_parser("prepare", help="Ingest PDF: detect TOC, map pages, segment lessons")
+    p_prep.add_argument("pdf_path", nargs="?", default=None,
+                        help="Path to PDF (default: first PDF in books_input/)")
+    p_prep.add_argument("--workspace", default=None,
+                        help="Output workspace dir (default: workspaces/<pdf_stem>)")
+    p_prep.add_argument("--model", default=None,
+                        help=(
+                            "AI model for vision TOC extraction when rule-based fails.\n"
+                            "Free local: llava:7b | llava:13b | minicpm-v:8b | qwen2.5vl:7b\n"
+                            "Free cloud: gemini | gemini-2.5-flash | gemini-1.5-flash\n"
+                            "Default: auto (tries Ollama first, then Gemini if key set)"
+                        ))
+    p_prep.add_argument("--vision-pages", type=int, default=10,
+                        help="Pages to render for vision analysis (default: 10)")
+    p_prep.add_argument("--dpi", type=int, default=150,
+                        help="Render DPI for vision analysis (default: 150, higher=better quality)")
+    p_prep.add_argument("--no-ollama", action="store_true",
+                        help="Skip Ollama local vision models")
+    p_prep.add_argument("--no-gemini", action="store_true",
+                        help="Skip Gemini Vision API even if GEMINI_API_KEY is set")
+    p_prep.add_argument("--force-vision", action="store_true",
+                        help="Force vision extraction even for text-based PDFs")
+
+    # ── analyze ──────────────────────────────────────────────────────────────
+    p_analyze = sub.add_parser("analyze", help="Analyze lesson content with AI (single lesson dir or full workspace dir)")
+    p_analyze.add_argument("target", help="Lesson directory (units/XX/lessons/YY) OR full workspace directory")
+    p_analyze.add_argument("--model", default="heuristic-micro-engine",
+                           help="Model: heuristic-micro-engine | gemini | gemini-2.5-flash | ollama-qwen2.5:7b | ...")
+    p_analyze.add_argument("--delay", type=float, default=4.0,
+                           help="Delay in seconds between lessons for Gemini Free Tier rate-limiting (default: 4.0s)")
+
+    # ── benchmark ────────────────────────────────────────────────────────────
+    p_bench = sub.add_parser("benchmark", help="Multi-model comparison on a lesson")
+    p_bench.add_argument("lesson_dir")
+    p_bench.add_argument("--models", default="heuristic-micro-engine",
+                         help="Comma-separated model names")
+
+    # ── export ───────────────────────────────────────────────────────────────
+    p_exp = sub.add_parser("export", help="Export workspace to JSON/Excel")
+    p_exp.add_argument("workspace", help="Workspace path")
+    p_exp.add_argument("--format", choices=["json", "xlsx", "all"], default="all")
+    p_exp.add_argument("--out", default="./out")
+
+    # ── info ─────────────────────────────────────────────────────────────────
+    p_info = sub.add_parser("info", help="Show system capabilities (Tesseract, Ollama, Gemini)")
+
+    args = parser.parse_args()
+    if not args.command:
+        parser.print_help()
+        sys.exit(1)
+
+    # =========================================================================
+    if args.command == "info":
+        _cmd_info()
+
+    elif args.command == "prepare":
+        _cmd_prepare(args)
+
+    elif args.command == "analyze":
+        _cmd_analyze(args)
+
+    elif args.command == "benchmark":
+        print(f"[*] Benchmark on: {args.lesson_dir}")
+        print("[SUCCESS] Benchmark placeholder completed.")
+
+    elif args.command == "export":
+        _cmd_export(args)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Command implementations
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _cmd_info():
+    """Print system capabilities."""
+    import shutil
+
+    print("\n── Edu7 Content Engine — System Info ──────────────────")
+
+    # PyMuPDF
+    import pymupdf
+    ver = pymupdf.__version__
+    print(f"  PyMuPDF      : {ver}")
+
+    # Tesseract
+    tess = shutil.which("tesseract")
+    if tess:
+        import subprocess
+        r = subprocess.run(["tesseract", "--version"], capture_output=True, text=True)
+        tver = r.stdout.split("\n")[0] if r.returncode == 0 else "unknown"
+        print(f"  Tesseract    : {tver} ({tess})")
+        # Check Arabic lang
+        r2 = subprocess.run(["tesseract", "--list-langs"], capture_output=True, text=True)
+        has_ara = "ara" in r2.stdout or "ara" in r2.stderr
+        print(f"  Arabic OCR   : {'✓ ara.traineddata found' if has_ara else '✗ ara not found (install Arabic lang pack)'}")
+    else:
+        print("  Tesseract    : ✗ not installed")
+        print("    → Install: https://github.com/UB-Mannheim/tesseract/wiki")
+
+    # Ollama
+    from ..ai.ollama_vision import _ollama_available, _list_ollama_models
+    if _ollama_available():
+        models = _list_ollama_models()
+        print(f"  Ollama       : ✓ running | models: {models}")
+    else:
+        print("  Ollama       : ✗ not running")
+        print("    → Install: https://ollama.ai | Then: ollama pull llava:7b")
+
+    # Gemini
+    api_key = os.environ.get("GEMINI_API_KEY", "")
+    if api_key:
+        print(f"  Gemini       : ✓ GEMINI_API_KEY set ({api_key[:8]}...)")
+    else:
+        print("  Gemini       : ✗ GEMINI_API_KEY not set (optional)")
+        print("    → Free tier: https://aistudio.google.com/apikey")
+
+    print("──────────────────────────────────────────────────────\n")
+
+
+def _cmd_prepare(args):
+    target_pdf = _resolve_pdf(args)
+    ws_path = Path(args.workspace) if args.workspace else Path("workspaces") / target_pdf.stem
+
+    print(f"\n[*] Reading PDF: {target_pdf}")
+    reader = PdfReader(str(target_pdf))
+    print(f"[+] Pages: {reader.page_count}")
+
+    # Detect PDF type
+    pdf_is_image = is_image_based_pdf(reader, sample_pages=8)
+    if pdf_is_image:
+        print("[*] Detected: IMAGE-based PDF (scanned / no selectable Arabic text)")
+    else:
+        print("[*] Detected: TEXT-based PDF (has Arabic text layer)")
+
+    # Page offset mapping
+    print("[*] Running Page Mapping Engine...")
+    mapper = PageMappingEngine(reader)
+    mapper.detect_mapping()
+    print(f"[+] Page offset: {mapper.detected_offset}  (PDF page = Printed page + {mapper.detected_offset})")
+
+    # ── TOC Extraction ───────────────────────────────────────────────────────
+    units = []
+    print("\n[*] Extracting Table of Contents...")
+
+    force_vision = getattr(args, "force_vision", False)
+
+    # Step 1: Rule-based TocExtractor (works only on text-based PDFs)
+    if not pdf_is_image and not force_vision:
+        toc = TocExtractor(reader)
+        toc_pages = toc.find_toc_pages()
+        print(f"[+] TOC pages detected: {[p+1 for p in toc_pages]}")
+        if toc_pages:
+            units = toc.extract_hierarchy(toc_pages)
+            print(f"[+] Rule-based TOC: {len(units)} units, {sum(len(u['lessons']) for u in units)} lessons.")
+
+    # Step 2+: Vision AI fallback (for image PDFs or when rule-based finds nothing)
+    if not units:
+        model_arg = getattr(args, "model", None)
+        use_ollama = not getattr(args, "no_ollama", False)
+        use_gemini = not getattr(args, "no_gemini", False)
+        vision_pages = getattr(args, "vision_pages", 10)
+        dpi = getattr(args, "dpi", 150)
+
+        # Force Gemini-only if model starts with "gemini"
+        if model_arg and str(model_arg).startswith("gemini"):
+            use_ollama = False
+
+        # Force Ollama-only if model doesn't start with "gemini"
+        if model_arg and not str(model_arg).startswith("gemini"):
+            use_gemini = False
+
+        print("\n[*] Starting Vision AI extraction pipeline...")
+        units = extract_toc_via_vision(
+            reader,
+            max_pages=vision_pages,
+            dpi=dpi,
+            api_key=os.environ.get("GEMINI_API_KEY"),
+            model_name=model_arg,
+            use_ollama=use_ollama,
+            use_gemini=use_gemini,
+        )
+
+    # Summary
+    total_lessons = sum(len(u.get("lessons", [])) for u in units)
+    if units:
+        print(f"\n[+] Final TOC: {len(units)} units, {total_lessons} lessons")
+        for u in units:
+            print(f"    Unit {u['number']}: {u['title']} ({len(u['lessons'])} lessons)")
+    else:
+        print("\n[!] No TOC found. Workspace will have empty structure.")
+        _print_help_tips()
+
+    # Segment
+    print(f"\n[*] Segmenting into packages: {ws_path}")
+    segmenter = LessonSegmenter(reader, mapper)
+    segmenter.segment_book(units, ws_path)
+    print(f"[SUCCESS] Book prepared at: {ws_path}\n")
+
+
+def _cmd_analyze(args):
+    import json
+    import time
+    from dataclasses import asdict
+
+    target_path = Path(args.target)
+    if not target_path.exists():
+        print(f"Error: Target path not found: {target_path}")
+        sys.exit(1)
+
+    registry = AIProviderRegistry()
+    provider = registry.get(args.model)
+    validator = EvidenceValidator()
+
+    # Case 1: Workspace mode (contains book-manifest.json)
+    if (target_path / "book-manifest.json").exists():
+        lesson_dirs = sorted(target_path.glob("units/*/lessons/*"))
+        print(f"\n[*] Workspace Mode: Found {len(lesson_dirs)} lesson(s) to analyze in {target_path}")
+        print(f"[*] Provider: {provider.provider_name}")
+
+        for idx, l_dir in enumerate(lesson_dirs, start=1):
+            m_file = l_dir / "manifest.json"
+            t_file = l_dir / "lesson_full_text.txt"
+            if not m_file.exists():
+                continue
+            manifest = json.loads(m_file.read_text(encoding="utf-8"))
+            text = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
+
+            print(f"\n[{idx}/{len(lesson_dirs)}] Analyzing: {manifest.get('title', l_dir.name)}...")
+            res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
+            report = validator.validate(res, text)
+            print(f"    [+] Concepts: {len(res.concepts)} | Questions: {len(res.questions)} | Flashcards: {len(res.flashcards)}")
+
+            out_dir = l_dir / "analysis" / provider.provider_name
+            out_dir.mkdir(parents=True, exist_ok=True)
+            out_file = out_dir / "normalized.json"
+            out_file.write_text(json.dumps(asdict(res), ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"    [✓] Saved analysis to: {out_file}")
+
+            # Polite pacing for Gemini Free Tier (15 RPM limit)
+            if "gemini" in provider.provider_name.lower() and idx < len(lesson_dirs):
+                delay = getattr(args, "delay", 4.0)
+                print(f"    [*] Pacing delay: {delay}s for Gemini Free Tier...")
+                time.sleep(delay)
+
+        print(f"\n[SUCCESS] Completed analysis for all {len(lesson_dirs)} lesson(s) in {target_path}")
+
+    # Case 2: Single lesson mode (contains manifest.json)
+    elif (target_path / "manifest.json").exists():
+        l_dir = target_path
+        manifest = json.loads((l_dir / "manifest.json").read_text(encoding="utf-8"))
+        t_file = l_dir / "lesson_full_text.txt"
+        text = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
+
+        print(f"\n[*] Analyzing single lesson: {manifest.get('title', l_dir.name)}")
+        print(f"[*] Provider: {provider.provider_name}")
+        res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
+
+        print("[*] Validating Evidence-First compliance...")
+        report = validator.validate(res, text)
+        print(f"[+] Concepts: {len(res.concepts)} approved | Questions: {len(res.questions)} approved | Flashcards: {len(res.flashcards)}")
+
+        out_dir = l_dir / "analysis" / provider.provider_name
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_file = out_dir / "normalized.json"
+        out_file.write_text(json.dumps(asdict(res), ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"[SUCCESS] Analysis saved to: {out_file}")
+
+    else:
+        print(f"Error: '{target_path}' is neither a workspace (missing book-manifest.json) nor a lesson (missing manifest.json).")
+        sys.exit(1)
+
+
+def _cmd_export(args):
+    import json
+    ws = Path(args.workspace)
+    out_dir = Path(args.out)
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    bm_file = ws / "book-manifest.json"
+    if not bm_file.exists():
+        print(f"Error: {bm_file} not found. Run 'prepare' first.")
+        sys.exit(1)
+
+    b_manifest = json.loads(bm_file.read_text(encoding="utf-8"))
+    registry = AIProviderRegistry()
+    heuristic_fallback = registry.get("heuristic-micro-engine")
+    results = []
+
+    for u in sorted(ws.glob("units/*")):
+        for l in sorted(u.glob("lessons/*")):
+            m_file = l / "manifest.json"
+            t_file = l / "lesson_full_text.txt"
+            if not m_file.exists():
+                continue
+            m = json.loads(m_file.read_text(encoding="utf-8"))
+            txt = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
+
+            # Check if an analysis already exists on disk
+            analysis_base = l / "analysis"
+            loaded = False
+            if analysis_base.exists():
+                candidates = list(analysis_base.glob("*/normalized.json"))
+                if candidates:
+                    # Prefer gemini analysis if exists
+                    gemini_c = [c for c in candidates if "gemini" in c.parent.name]
+                    target_cand = gemini_c[0] if gemini_c else candidates[0]
+                    try:
+                        d = json.loads(target_cand.read_text(encoding="utf-8"))
+                        res = _dict_to_analysis_result(d)
+                        results.append(res)
+                        loaded = True
+                    except Exception as err:
+                        print(f"[!] Could not load {target_cand}: {err}")
+
+            if not loaded:
+                results.append(heuristic_fallback.analyze_lesson(m, txt, l))
+
+    if args.format in ["json", "all"]:
+        j_path = out_dir / "edu7_content_package.json"
+        Edu7JsonExporter().export(b_manifest, results, j_path)
+        print(f"[+] JSON: {j_path}")
+
+    if args.format in ["xlsx", "all"]:
+        x_path = out_dir / "edu7_lesson_import.xlsx"
+        Edu7ExcelExporter().export(b_manifest, results, x_path)
+        print(f"[+] Excel: {x_path}")
+
+    print("[SUCCESS] Export complete.")
+
+
+def _dict_to_analysis_result(d: dict):
+    """Reconstruct LessonAnalysisResult dataclass from saved JSON dict."""
+    from ..content.models import (
+        LessonAnalysisResult, ExtractedConcept, ExtractedObjective,
+        ExtractedMisconception, ExtractedFlashcard, ExtractedQuestion, QuestionChoice
+    )
+    res = LessonAnalysisResult(
+        lesson_id=d.get("lesson_id", ""),
+        lesson_title=d.get("lesson_title", ""),
+        unit_number=d.get("unit_number", 1),
+        lesson_number=d.get("lesson_number", 1),
+        printed_pages=d.get("printed_pages", []),
+        pdf_pages=d.get("pdf_pages", []),
+        model_name=d.get("model_name", "")
+    )
+    for c in d.get("concepts", []):
+        res.concepts.append(ExtractedConcept(**c))
+    for obj in d.get("objectives", []):
+        res.objectives.append(ExtractedObjective(**obj))
+    for mis in d.get("misconceptions", []):
+        res.misconceptions.append(ExtractedMisconception(**mis))
+    for fc in d.get("flashcards", []):
+        res.flashcards.append(ExtractedFlashcard(**fc))
+    for q in d.get("questions", []):
+        choices = [QuestionChoice(**ch) for ch in q.get("choices", [])]
+        q_copy = dict(q)
+        q_copy["choices"] = choices
+        res.questions.append(ExtractedQuestion(**q_copy))
+    return res
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _resolve_pdf(args) -> Path:
+    if getattr(args, "pdf_path", None):
+        p = Path(args.pdf_path)
+        if p.exists():
+            return p
+        candidate = Path("books_input") / args.pdf_path
+        if candidate.exists():
+            return candidate
+        print(f"Error: PDF not found: {args.pdf_path}")
+        sys.exit(1)
+    in_dir = Path("books_input")
+    in_dir.mkdir(exist_ok=True)
+    pdfs = sorted(in_dir.glob("*.pdf"))
+    if not pdfs:
+        print(f"Error: No PDFs in {in_dir.resolve()}")
+        print("Put your book in books_input/ or: edu7-content prepare path/to/book.pdf")
+        sys.exit(1)
+    p = pdfs[0]
+    print(f"[*] Auto-selected: {p.name}")
+    return p
+
+
+def _print_help_tips():
+    print("""
+  ── How to enable TOC extraction for scanned PDFs ──────────────────
+  Option A — Ollama (100% free, local, no internet):
+    1. Install Ollama: https://ollama.ai
+    2. Pull a vision model:
+         ollama pull llava:7b          (4 GB, general purpose)
+         ollama pull minicpm-v:8b      (5 GB, good Arabic)
+         ollama pull llava-llama3:8b   (5 GB, best quality)
+    3. Run: edu7-content prepare books_input/book1.pdf
+
+  Option B — Gemini Vision (free tier, 15 RPM, needs internet):
+    1. Get free API key: https://aistudio.google.com/apikey
+    2. Set: $env:GEMINI_API_KEY = "AIza..."
+    3. Run: edu7-content prepare books_input/book1.pdf
+
+  Option C — Tesseract OCR (free, offline, for text-extractable PDFs):
+    1. Install Tesseract: https://github.com/UB-Mannheim/tesseract/wiki
+    2. Add Arabic lang pack (ara.traineddata)
+    3. PyMuPDF will auto-detect and use it
+  ────────────────────────────────────────────────────────────────────
+""")
+
+
+if __name__ == "__main__":
+    main()

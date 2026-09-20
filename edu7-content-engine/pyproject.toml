@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edu7-content-engine"
+version = "1.1.0"
+description = "Arabic Educational Content Extraction, Multi-Layer OCR & Multi-Model AI Benchmark Engine for Edu7"
+authors = [{ name = "Edu7 Core Team" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "pymupdf>=1.24.0",
+    "pypdf>=5.0.0",
+    "openpyxl>=3.1.0"
+]
+
+[project.scripts]
+edu7-content = "edu7_content.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning:fitz"
+]
+
+[tool.python]
+# Suppress pymupdf fitz deprecation warning globally
+PYTHONWARNINGS = "ignore::DeprecationWarning"
