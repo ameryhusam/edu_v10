@@ -243,6 +243,31 @@ def _cmd_prepare(args):
     if ai_units:
         units = ai_units
         print("[+] Segmentation source: AI-extracted TOC from first ten pages.")
+
+        # For scanned books, verify the first lesson's physical PDF page
+        # using the reference algorithm's evidence-backed visual calibration.
+        if pdf_is_image and use_gemini:
+            try:
+                from ..pdf.visual_calibration import calibrate_first_lesson
+                calibrated = calibrate_first_lesson(
+                    reader, units, mapper, model_arg, dpi=dpi, radius=6
+                )
+                if calibrated:
+                    first_lesson = next(
+                        lesson for unit in units for lesson in unit.get("lessons", [])
+                        if lesson.get("startPage") is not None and lesson.get("title")
+                    )
+                    offset = mapper.calibrate_from_pdf_page(
+                        int(first_lesson["startPage"]), calibrated
+                    )
+                    print(
+                        f"[+] Visual page calibration: printed {first_lesson['startPage']} -> "
+                        f"PDF {calibrated} (offset {offset})."
+                    )
+                else:
+                    print("[!] Visual page calibration did not produce a high-confidence mapping; using detected offset.")
+            except Exception as err:
+                print(f"[!] Visual page calibration skipped: {err}")
     else:
         # Deterministic fallback for installations without an available AI
         # provider or when AI cannot establish a reliable TOC.
