@@ -711,6 +711,7 @@ model Lesson {
   attempts  Attempt[]
   questions Question[]
   resources LearningResource[]
+  assets    ContentAsset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -937,6 +938,7 @@ model LearningResource {
   textbook Textbook? @relation(fields: [textbookId], references: [id], onDelete: Cascade)
   concept  Concept?  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
   lesson   Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  asset    ContentAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
