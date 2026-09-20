@@ -40,12 +40,12 @@ class AIProviderRegistry:
         return self._providers.get("heuristic-micro-engine")
 
     def get_gemini(self) -> GeminiFreeProvider:
-        """Get or create a GeminiFreeProvider instance."""
+        """Get or create the configured Gemini provider under its canonical provider id."""
         key = os.environ.get("GEMINI_API_KEY", "")
-        provider_name = "gemini-gemini-2.5-flash"
+        model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        provider_name = f"gemini-{model}"
         if provider_name not in self._providers:
-            p = GeminiFreeProvider(api_key=key)
-            self.register(p)
+            self.register(GeminiFreeProvider(api_key=key, model_name=model))
         return self._providers[provider_name]
 
     def list_providers(self) -> List[str]:
