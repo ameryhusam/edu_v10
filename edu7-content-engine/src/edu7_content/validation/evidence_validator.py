@@ -1,38 +1,31 @@
-from typing import List, Dict, Any
+from typing import Any, Dict
 from ..content.models import LessonAnalysisResult
 
-class EvidenceValidator:
-    """
-    Enforces the core rule: Evidence-First!
-    Rejects any concept or question that fails to provide direct textual evidence from the lesson.
-    """
-    def validate(self, result: LessonAnalysisResult, lesson_full_text: str) -> Dict[str, Any]:
-        report = {
-            "model": result.model_name,
-            "approvedConcepts": 0,
-            "rejectedConcepts": 0,
-            "approvedQuestions": 0,
-            "rejectedQuestions": 0,
-            "isValid": True
-        }
 
-        for c in result.concepts:
-            if not c.evidence or len(c.evidence.strip()) < 5:
-                c.status = "REJECTED"
+def _contains_evidence(evidence: str, source: str) -> bool:
+    compact_evidence = " ".join(evidence.casefold().split())
+    compact_source = " ".join(source.casefold().split())
+    return bool(compact_evidence) and compact_evidence in compact_source
+
+
+class EvidenceValidator:
+    """Reject generated content whose evidence is absent from lesson text."""
+
+    def validate(self, result: LessonAnalysisResult, lesson_full_text: str) -> Dict[str, Any]:
+        report = {"model": result.model_name, "approvedConcepts": 0, "rejectedConcepts": 0, "approvedQuestions": 0, "rejectedQuestions": 0, "isValid": True}
+        for concept in result.concepts:
+            if len(concept.evidence.strip()) < 5 or not _contains_evidence(concept.evidence, lesson_full_text):
+                concept.status = "NEEDS_REVIEW"
                 report["rejectedConcepts"] += 1
             else:
-                c.status = "APPROVED"
+                concept.status = "APPROVED"
                 report["approvedConcepts"] += 1
-
-        for q in result.questions:
-            if not q.evidence or len(q.evidence.strip()) < 5:
-                q.status = "REJECTED"
+        for question in result.questions:
+            if len(question.evidence.strip()) < 5 or not _contains_evidence(question.evidence, lesson_full_text):
+                question.status = "NEEDS_REVIEW"
                 report["rejectedQuestions"] += 1
             else:
-                q.status = "APPROVED"
+                question.status = "APPROVED"
                 report["approvedQuestions"] += 1
-
-        if report["rejectedConcepts"] > 0 or report["rejectedQuestions"] > 0:
-            report["isValid"] = False
-
+        report["isValid"] = report["rejectedConcepts"] == 0 and report["rejectedQuestions"] == 0
         return report

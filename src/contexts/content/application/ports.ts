@@ -14,6 +14,8 @@
 import type { PublicationState } from '../domain/publication.js';
 import type { ContentNodeKind } from '../domain/authoring.js';
 import type { TextbookStructure } from '../domain/structural-validation.js';
+import type { ContentAssetType, ContentAssetScope } from '../domain/assets.js';
+import type { ContentAssetExport } from '../domain/export-profile.js';
 
 /** Identity and lifecycle facts about a node, plus its owning textbook. */
 export interface NodeContext {
@@ -326,6 +328,7 @@ export interface ExportableTextbook {
     pageEnd: number | null;
     estimatedMins: number | null;
   }>;
+  readonly assets?: ReadonlyArray<ContentAssetExport>;
   readonly questions: ReadonlyArray<{
     key: string;
     unitSlug: string;
@@ -596,3 +599,94 @@ export interface TextbookAdministrationRepository {
   schoolExists(schoolKey: string): Promise<boolean>;
   academicYearExists(academicYearKey: string): Promise<boolean>;
 }
+
+export interface ContentAssetRecord {
+  readonly id: string;
+  readonly key: string;
+  readonly assetType: ContentAssetType;
+  readonly originalName: string;
+  readonly relativePath: string;
+  readonly storageKey: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+  readonly sha256: string;
+  readonly version: number;
+  readonly isActive: boolean;
+  readonly scope: ContentAssetScope;
+  readonly textbookId: string;
+  readonly textbookKey: string;
+  readonly unitId?: string | null;
+  readonly unitKey?: string | null;
+  readonly lessonId?: string | null;
+  readonly lessonKey?: string | null;
+  readonly conceptId?: string | null;
+  readonly conceptKey?: string | null;
+  readonly pageStart?: number | null;
+  readonly pageEnd?: number | null;
+  readonly title?: string | null;
+  readonly altText?: string | null;
+  readonly caption?: string | null;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+export interface CreateAssetInput {
+  readonly key: string;
+  readonly assetType: ContentAssetType;
+  readonly originalName: string;
+  readonly relativePath: string;
+  readonly storageKey: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+  readonly sha256: string;
+  readonly version?: number;
+  readonly scope: ContentAssetScope;
+  readonly textbookKey: string;
+  readonly unitKey?: string | null;
+  readonly lessonKey?: string | null;
+  readonly conceptKey?: string | null;
+  readonly pageStart?: number | null;
+  readonly pageEnd?: number | null;
+  readonly title?: string | null;
+  readonly altText?: string | null;
+  readonly caption?: string | null;
+}
+
+export interface ContentAssetRepository {
+  findAssetByKey(key: string): Promise<ContentAssetRecord | null>;
+  findAssetByStorageKey(storageKey: string): Promise<ContentAssetRecord | null>;
+  findAssetByChecksum(textbookKey: string, sha256: string): Promise<ContentAssetRecord | null>;
+  findAssetByRelativePath(textbookKey: string, relativePath: string): Promise<ContentAssetRecord | null>;
+  listAssetsForTextbook(
+    textbookKey: string,
+    options?: { scope?: ContentAssetScope; assetType?: ContentAssetType },
+  ): Promise<readonly ContentAssetRecord[]>;
+  listAssetsForNode(input: {
+    scope: ContentAssetScope;
+    nodeKey: string;
+  }): Promise<readonly ContentAssetRecord[]>;
+  createAsset(input: CreateAssetInput): Promise<ContentAssetRecord>;
+  updateAssetMetadata(key: string, input: Partial<CreateAssetInput>): Promise<ContentAssetRecord>;
+  deactivateAsset(key: string): Promise<void>;
+}
+
+export interface ContentStorage {
+  exists(storageKey: string): Promise<boolean>;
+  readStream(storageKey: string, range?: { start?: number; end?: number }): Promise<NodeJS.ReadableStream | null>;
+  writeStream(
+    storageKey: string,
+    stream: NodeJS.ReadableStream,
+    mimeType: string,
+  ): Promise<{ sizeBytes: number; sha256: string }>;
+  writeBuffer(
+    storageKey: string,
+    buffer: Buffer,
+    mimeType: string,
+  ): Promise<{ sizeBytes: number; sha256: string }>;
+  getMetadata(
+    storageKey: string,
+  ): Promise<{ sizeBytes: number; mimeType: string; updatedAt: Date } | null>;
+  delete(storageKey: string): Promise<void>;
+  getPublicUrl(storageKey: string): Promise<string | null>;
+}
+

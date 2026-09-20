@@ -276,6 +276,17 @@ export function textbookResourceKey(parent: TextbookKey, stableIdentity: string)
   return Ok(`${parent}-RES${stableKeyFingerprint(identity)}`);
 }
 
+/** `<parentKey>-AST1a2b3c4d` for textbook/unit/lesson/concept assets. */
+export function contentAssetKey(parent: string, stableIdentity: string): Result<string> {
+  const identity = String(stableIdentity ?? '').trim();
+  if (!identity) {
+    return Err(
+      Errors.validation('identity.asset_identity_required', 'A stable identity is required for an asset key.'),
+    );
+  }
+  return Ok(`${parent}-AST${stableKeyFingerprint(identity)}`);
+}
+
 /** `<conceptKey>-FC1a2b3c4d` */
 export function flashcardKey(parent: ConceptKey, stableIdentity: string): Result<string> {
   const identity = String(stableIdentity ?? '').trim();

@@ -1,55 +1,182 @@
+import hashlib
 import json
-import pymupdf
+import re
 from pathlib import Path
-from typing import Dict, Any, List
-from .reader import PdfReader
+from typing import Any, Dict, List, Optional
+import pymupdf
+
 from .page_mapping import PageMappingEngine
+from .reader import PdfReader
+
+
+def slugify(text: str, fallback: str = "item") -> str:
+    """Derive a URL and file-safe alphanumeric slug."""
+    if not text:
+        return fallback
+    clean = text.strip()
+    clean = re.sub(r"[^\w\u0600-\u06FF]+", "-", clean, flags=re.UNICODE)
+    clean = clean.strip("-_")
+    return clean or fallback
+
+
+def compute_sha256(file_path: Path) -> str:
+    """Compute sha256 hex digest of a file."""
+    h = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        while chunk := f.read(65536):
+            h.update(chunk)
+    return h.hexdigest()
+
 
 class LessonSegmenter:
     """
-    Segments a full book into independent Lesson Packages:
-    lesson.pdf, manifest.json, pages/ (images), text/ (extracted text)
+    Segments a full book PDF into standard Workspace packages:
+    - textbook/ (textbook.pdf, textbook_manifest.json)
+    - unit_01_<slug>/ (U_01_<slug>.pdf, unit_manifest.json)
+      - lesson_01_<slug>/ (L_01_<slug>.pdf, lesson_manifest.json, pages/, text/, lesson_full_text.txt)
+    - index.json (master workspace index)
+    - edu7-content-package.json (canonical package manifest)
     """
+
     def __init__(self, reader: PdfReader, page_mapper: PageMappingEngine):
         self.reader = reader
         self.mapper = page_mapper
 
-    def segment_book(self, units: List[Dict[str, Any]], workspace_dir: Path) -> Dict[str, Any]:
+    def segment_book(
+        self,
+        units: List[Dict[str, Any]],
+        workspace_dir: Path,
+        coordinates: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         workspace_dir.mkdir(parents=True, exist_ok=True)
-        book_manifest = {
-            "schemaVersion": "1.0",
-            "metadata": self.reader.get_metadata(),
-            "detectedOffset": self.mapper.detected_offset,
-            "units": units
-        }
+        raw_meta = self.reader.get_metadata()
+        coords = coordinates or {}
 
-        (workspace_dir / "book-manifest.json").write_text(
-            json.dumps(book_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+        subject = coords.get("subject", raw_meta.get("subject", "GENERAL"))
+        grade = coords.get("grade", "G07")
+        term = coords.get("term", "T1")
+        edition = str(coords.get("edition", "2026"))
+        title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
+
+        textbook_key = f"EDU-{subject}-{grade}-{term}-ED{edition}"
+
+        # 1. Prepare textbook/ folder
+        textbook_dir = workspace_dir / "textbook"
+        textbook_dir.mkdir(parents=True, exist_ok=True)
+        dest_pdf = textbook_dir / "textbook.pdf"
+
+        # Copy/save source PDF
+        if hasattr(self.reader, "pdf_path") and self.reader.pdf_path.exists():
+            import shutil
+            shutil.copy2(str(self.reader.pdf_path), str(dest_pdf))
+        else:
+            self.reader.doc.save(str(dest_pdf))
+
+        tb_sha256 = compute_sha256(dest_pdf)
+        tb_size = dest_pdf.stat().st_size
+
+        assets_registry: List[Dict[str, Any]] = [
+            {
+                "scope": "TEXTBOOK",
+                "assetType": "TEXTBOOK_PDF",
+                "originalName": dest_pdf.name,
+                "relativePath": "textbook/textbook.pdf",
+                "mimeType": "application/pdf",
+                "sizeBytes": tb_size,
+                "sha256": tb_sha256,
+                "version": 1,
+            }
+        ]
+
+        textbook_manifest = {
+            "schemaVersion": "1.1",
+            "textbookKey": textbook_key,
+            "subject": subject,
+            "grade": grade,
+            "term": term,
+            "edition": edition,
+            "title": title,
+            "totalPages": self.reader.page_count,
+            "detectedOffset": self.mapper.detected_offset,
+            "sha256": tb_sha256,
+        }
+        (textbook_dir / "textbook_manifest.json").write_text(
+            json.dumps(textbook_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
-        for u in units:
-            u_dir = workspace_dir / "units" / f"{u['number']:02d}"
+        processed_units: List[Dict[str, Any]] = []
+        flat_lessons_pkg: List[Dict[str, Any]] = []
+        flat_units_pkg: List[Dict[str, Any]] = []
+
+        # 2. Iterate units and lessons
+        for u_idx, u in enumerate(units, start=1):
+            u_num = u.get("number", u_idx)
+            u_title = u.get("title", f"الوحدة {u_num}")
+            u_slug = slugify(u_title, f"UNIT-{u_num:02d}")
+            u_dir_name = f"unit_{u_num:02d}_{u_slug}"
+            u_dir = workspace_dir / u_dir_name
             u_dir.mkdir(parents=True, exist_ok=True)
 
-            u_manifest = {
-                "unitId": u["id"],
-                "number": u["number"],
-                "title": u["title"],
-                "lessonCount": len(u["lessons"])
-            }
-            (u_dir / "unit-manifest.json").write_text(
-                json.dumps(u_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
-            )
+            lessons = u.get("lessons", [])
+            unit_start_page = min([les.get("startPage", 1) for les in lessons]) if lessons else 1
+            unit_end_page = max([les.get("endPage", unit_start_page) for les in lessons]) if lessons else unit_start_page
 
-            for les in u["lessons"]:
-                l_dir = u_dir / "lessons" / f"{les['number']:02d}"
+            # Slice Unit PDF
+            unit_doc = pymupdf.open()
+            unit_printed_pages = list(range(unit_start_page, unit_end_page + 1))
+            unit_pdf_pages = [self.mapper.get_pdf_page(p) for p in unit_printed_pages]
+
+            for p_pdf in unit_pdf_pages:
+                pdf_idx = p_pdf - 1
+                if 0 <= pdf_idx < self.reader.page_count:
+                    unit_doc.insert_pdf(self.reader.doc, from_page=pdf_idx, to_page=pdf_idx)
+
+            unit_pdf_name = f"U_{u_num:02d}_{u_slug}.pdf"
+            unit_pdf_path = u_dir / unit_pdf_name
+            unit_doc.save(str(unit_pdf_path))
+            unit_doc.close()
+
+            u_sha = compute_sha256(unit_pdf_path)
+            u_size = unit_pdf_path.stat().st_size
+            u_rel_path = f"{u_dir_name}/{unit_pdf_name}"
+
+            assets_registry.append({
+                "scope": "UNIT",
+                "unitSlug": u_slug,
+                "assetType": "UNIT_PDF",
+                "originalName": unit_pdf_name,
+                "relativePath": u_rel_path,
+                "mimeType": "application/pdf",
+                "sizeBytes": u_size,
+                "sha256": u_sha,
+                "version": 1,
+            })
+
+            flat_units_pkg.append({
+                "slug": u_slug,
+                "name": u_title,
+                "orderIndex": u_num,
+                "startPage": unit_start_page,
+                "endPage": unit_end_page,
+                "isActive": True,
+            })
+
+            processed_lessons: List[Dict[str, Any]] = []
+
+            for l_idx, les in enumerate(lessons, start=1):
+                l_num = les.get("number", l_idx)
+                l_title = les.get("title", f"الدرس {l_num}")
+                l_slug = slugify(l_title, f"LESSON-{l_num:02d}")
+                l_dir_name = f"lesson_{l_num:02d}_{l_slug}"
+                l_dir = u_dir / l_dir_name
                 l_dir.mkdir(parents=True, exist_ok=True)
+
                 pages_dir = l_dir / "pages"
                 text_dir = l_dir / "text"
                 pages_dir.mkdir(exist_ok=True)
                 text_dir.mkdir(exist_ok=True)
 
-                start_p = les["startPage"]
+                start_p = les.get("startPage", unit_start_page)
                 end_p = les.get("endPage", start_p)
                 printed_pages = list(range(start_p, end_p + 1))
                 pdf_pages = [self.mapper.get_pdf_page(p) for p in printed_pages]
@@ -57,7 +184,7 @@ class LessonSegmenter:
                 les["printedPages"] = printed_pages
                 les["pdfPages"] = pdf_pages
 
-                # Extract sub-PDF for the lesson
+                # Slice Lesson PDF
                 lesson_doc = pymupdf.open()
                 aggregated_text = []
                 page_image_files = []
@@ -70,37 +197,154 @@ class LessonSegmenter:
                         (text_dir / f"page_{p_print:03d}.txt").write_text(p_text, encoding="utf-8")
                         aggregated_text.append(f"--- [صفحة {p_print}] ---\n{p_text}")
 
-                        # Render and save page image for multimodal vision & preview
+                        # Render High-Res PNG (150 DPI)
                         try:
                             page_obj = self.reader.doc[pdf_idx]
                             pix = page_obj.get_pixmap(dpi=150)
                             img_file = pages_dir / f"page_{p_print:03d}.png"
                             pix.save(str(img_file))
-                            page_image_files.append(f"pages/page_{p_print:03d}.png")
+                            rel_img_path = f"{u_dir_name}/{l_dir_name}/pages/page_{p_print:03d}.png"
+                            page_image_files.append(rel_img_path)
+
+                            assets_registry.append({
+                                "scope": "LESSON",
+                                "unitSlug": u_slug,
+                                "lessonSlug": l_slug,
+                                "assetType": "PAGE_IMAGE",
+                                "originalName": f"page_{p_print:03d}.png",
+                                "relativePath": rel_img_path,
+                                "mimeType": "image/png",
+                                "sizeBytes": img_file.stat().st_size,
+                                "sha256": compute_sha256(img_file),
+                                "pageStart": p_print,
+                                "pageEnd": p_print,
+                                "version": 1,
+                            })
                         except Exception:
                             pass
 
-                lesson_doc.save(str(l_dir / "lesson.pdf"))
+                lesson_pdf_name = f"L_{l_num:02d}_{l_slug}.pdf"
+                lesson_pdf_path = l_dir / lesson_pdf_name
+                lesson_doc.save(str(lesson_pdf_path))
                 lesson_doc.close()
 
-                # Save combined lesson text
+                l_sha = compute_sha256(lesson_pdf_path)
+                l_size = lesson_pdf_path.stat().st_size
+                l_rel_path = f"{u_dir_name}/{l_dir_name}/{lesson_pdf_name}"
+
+                assets_registry.append({
+                    "scope": "LESSON",
+                    "unitSlug": u_slug,
+                    "lessonSlug": l_slug,
+                    "assetType": "LESSON_PDF",
+                    "originalName": lesson_pdf_name,
+                    "relativePath": l_rel_path,
+                    "mimeType": "application/pdf",
+                    "sizeBytes": l_size,
+                    "sha256": l_sha,
+                    "version": 1,
+                })
+
                 (l_dir / "lesson_full_text.txt").write_text("\n\n".join(aggregated_text), encoding="utf-8")
 
-                # Save lesson manifest
-                les_manifest = {
-                    "schemaVersion": "1.0",
-                    "lessonId": les["id"],
-                    "unitNumber": u["number"],
-                    "lessonNumber": les["number"],
-                    "title": les["title"],
+                lesson_manifest = {
+                    "schemaVersion": "1.1",
+                    "lessonId": les.get("id", f"lesson-{l_num:02d}"),
+                    "unitSlug": u_slug,
+                    "lessonSlug": l_slug,
+                    "unitNumber": u_num,
+                    "lessonNumber": l_num,
+                    "title": l_title,
                     "printedPages": printed_pages,
                     "pdfPages": pdf_pages,
+                    "startPage": start_p,
+                    "endPage": end_p,
                     "pageImages": page_image_files,
-                    "confidence": 0.95,
-                    "evidence": ["toc_matched", "page_numbering_valid"]
+                    "pdfFile": l_rel_path,
+                    "sha256": l_sha,
                 }
-                (l_dir / "manifest.json").write_text(
-                    json.dumps(les_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+                (l_dir / "lesson_manifest.json").write_text(
+                    json.dumps(lesson_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
 
-        return book_manifest
+                processed_lessons.append(lesson_manifest)
+                flat_lessons_pkg.append({
+                    "slug": l_slug,
+                    "unitSlug": u_slug,
+                    "name": l_title,
+                    "orderIndex": l_num,
+                    "startPage": start_p,
+                    "endPage": end_p,
+                    "isActive": True,
+                })
+
+            unit_manifest = {
+                "schemaVersion": "1.1",
+                "unitId": u.get("id", f"unit-{u_num:02d}"),
+                "unitSlug": u_slug,
+                "number": u_num,
+                "title": u_title,
+                "startPage": unit_start_page,
+                "endPage": unit_end_page,
+                "lessonCount": len(lessons),
+                "pdfFile": u_rel_path,
+                "sha256": u_sha,
+                "lessons": processed_lessons,
+            }
+            (u_dir / "unit_manifest.json").write_text(
+                json.dumps(unit_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            processed_units.append(unit_manifest)
+
+        # 3. Master workspace index.json
+        index_manifest = {
+            "schemaVersion": "1.1",
+            "textbookKey": textbook_key,
+            "metadata": {
+                "title": title,
+                "subjectKey": subject,
+                "gradeKey": grade,
+                "termKey": term,
+                "edition": edition,
+                "totalPages": self.reader.page_count,
+            },
+            "detectedOffset": self.mapper.detected_offset,
+            "units": processed_units,
+            "assetsCount": len(assets_registry),
+        }
+        (workspace_dir / "index.json").write_text(
+            json.dumps(index_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        # 4. Standard edu7-content-package.json skeleton
+        edu7_package = {
+            "meta": {
+                "profile": "edu7.textbook-content",
+                "profileVersion": "1.1",
+                "scope": "FULL",
+                "exportedAt": "2026-09-20T00:00:00.000Z",
+            },
+            "textbook": {
+                "key": textbook_key,
+                "subjectKey": subject,
+                "gradeKey": grade,
+                "termKey": term,
+                "title": title,
+                "edition": edition,
+                "status": "DRAFT",
+                "totalPages": self.reader.page_count,
+            },
+            "units": flat_units_pkg,
+            "lessons": flat_lessons_pkg,
+            "concepts": [],
+            "prerequisites": [],
+            "misconceptions": [],
+            "learningResources": [],
+            "questions": [],
+            "assets": assets_registry,
+        }
+        (workspace_dir / "edu7-content-package.json").write_text(
+            json.dumps(edu7_package, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        return index_manifest

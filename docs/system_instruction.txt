@@ -257,19 +257,6 @@ Frontend غير مسؤول عن:
 - لا توسع نطاق المهمة دون توثيق السبب.
 - اسمح بتحسين التصميم إذا كان يحافظ على الملكية والحدود ويقلل التعقيد.
 
-بعد التعديل:
-
-```bash
-npm run typecheck
-npm run arch:check
-npm test
-npm run verify
-npm --prefix web run typecheck
-npm --prefix web run arch:check
-npm --prefix web test
-```
-
-وشغّل اختبارات Python الخاصة بالمحرك عند تعديل مسار PDF أو Workspace أو exporters.
 
 ## 12. التعامل مع الابتكار
 

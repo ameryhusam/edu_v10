@@ -333,6 +333,31 @@ export interface LearningResourceExport {
   readonly estimatedMins: number | null;
 }
 
+/**
+ * Physical asset attached to textbook, unit, lesson, or concept.
+ * Carries relative storage path, MIME type, checksum, and size.
+ */
+export type ContentAssetScope = 'TEXTBOOK' | 'UNIT' | 'LESSON' | 'CONCEPT';
+
+export interface ContentAssetExport {
+  readonly scope: ContentAssetScope;
+  readonly unitSlug?: string | null;
+  readonly lessonSlug?: string | null;
+  readonly conceptSlug?: string | null;
+  readonly assetType: string;
+  readonly originalName: string;
+  readonly relativePath: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+  readonly sha256: string;
+  readonly version?: number;
+  readonly pageStart?: number | null;
+  readonly pageEnd?: number | null;
+  readonly title?: string | null;
+  readonly altText?: string | null;
+  readonly caption?: string | null;
+}
+
 export interface ContentPackage {
   readonly meta: ExportMeta;
   readonly textbook: TextbookExport;
@@ -346,6 +371,7 @@ export interface ContentPackage {
    */
   readonly misconceptions?: readonly MisconceptionExport[];
   readonly learningResources?: readonly LearningResourceExport[];
+  readonly assets?: readonly ContentAssetExport[];
   readonly questions: readonly QuestionExport[];
 }
 
@@ -365,6 +391,18 @@ export const IMPORTABLE_RESOURCE_KINDS = [
   'TEXTBOOK_PAGE',
 ] as const;
 
+export const IMPORTABLE_ASSET_TYPES = [
+  'TEXTBOOK_PDF',
+  'UNIT_PDF',
+  'LESSON_PDF',
+  'PAGE_IMAGE',
+  'PAGE_TEXT',
+  'RESOURCE_FILE',
+  'IMAGE_SUMMARY',
+  'AUDIO',
+  'VIDEO',
+] as const;
+
 /**
  * Dependency order for reading a package.
  *
@@ -378,6 +416,7 @@ export const CONTENT_IMPORT_ORDER = [
   'lessons',
   'concepts',
   'prerequisites',
+  'assets',
   // Both hang off a concept, so they follow concepts. Misconceptions precede
   // questions because a distractor may name one: the referent must exist
   // before the reference is written, even though this converter never
@@ -452,6 +491,18 @@ export function sortPackage(pkg: ContentPackage): ContentPackage {
               (a.conceptSlug ?? '').localeCompare(b.conceptSlug ?? '') ||
               a.orderIndex - b.orderIndex ||
               a.slug.localeCompare(b.slug),
+          ),
+        }
+      : {}),
+    ...(pkg.assets
+      ? {
+          assets: [...pkg.assets].sort(
+            (a, b) =>
+              a.scope.localeCompare(b.scope) ||
+              (a.unitSlug ?? '').localeCompare(b.unitSlug ?? '') ||
+              (a.lessonSlug ?? '').localeCompare(b.lessonSlug ?? '') ||
+              (a.conceptSlug ?? '').localeCompare(b.conceptSlug ?? '') ||
+              a.relativePath.localeCompare(b.relativePath),
           ),
         }
       : {}),
@@ -589,6 +640,47 @@ export function checkPackageIntegrity(pkg: ContentPackage): {
       problems.push(`duplicate resource "${res.slug}" on ${scope.toLowerCase()} "${targetId}"`);
     }
     seenResources.add(identity);
+  }
+
+  const seenAssets = new Set<string>();
+  for (const ast of pkg.assets ?? []) {
+    let targetId = 'textbook';
+    if (ast.scope === 'CONCEPT') {
+      const conceptId = `${ast.unitSlug ?? ''}/${ast.lessonSlug ?? ''}/${ast.conceptSlug ?? ''}`;
+      targetId = conceptId;
+      if (!conceptSlugs.has(conceptId)) {
+        problems.push(`asset "${ast.relativePath}" references missing concept "${conceptId}"`);
+      }
+    } else if (ast.scope === 'LESSON') {
+      const lessonId = `${ast.unitSlug ?? ''}/${ast.lessonSlug ?? ''}`;
+      targetId = lessonId;
+      if (!lessonIds.has(lessonId)) {
+        problems.push(`asset "${ast.relativePath}" references missing lesson "${lessonId}"`);
+      }
+    } else if (ast.scope === 'UNIT') {
+      const unitSlug = ast.unitSlug ?? '';
+      targetId = unitSlug;
+      if (!unitSlugs.has(unitSlug)) {
+        problems.push(`asset "${ast.relativePath}" references missing unit "${unitSlug}"`);
+      }
+    }
+    if (!(IMPORTABLE_ASSET_TYPES as readonly string[]).includes(ast.assetType)) {
+      problems.push(`asset "${ast.relativePath}" declares unknown assetType "${ast.assetType}"`);
+    }
+    if (!ast.relativePath || ast.relativePath.trim() === '' || ast.relativePath.includes('..')) {
+      problems.push(`asset "${ast.relativePath}" has invalid relativePath`);
+    }
+    if (typeof ast.sizeBytes !== 'number' || ast.sizeBytes < 0) {
+      problems.push(`asset "${ast.relativePath}" has invalid sizeBytes "${ast.sizeBytes}"`);
+    }
+    if (!/^[a-fA-F0-9]{64}$/.test(ast.sha256)) {
+      problems.push(`asset "${ast.relativePath}" has invalid sha256 checksum "${ast.sha256}"`);
+    }
+    const identity = `${ast.scope}/${targetId}/${ast.relativePath}`;
+    if (seenAssets.has(identity)) {
+      problems.push(`duplicate asset "${ast.relativePath}" on ${ast.scope.toLowerCase()} "${targetId}"`);
+    }
+    seenAssets.add(identity);
   }
 
   const externalPrerequisites: string[] = [];

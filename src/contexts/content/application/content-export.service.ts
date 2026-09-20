@@ -73,6 +73,7 @@ export class ContentExportService {
       prerequisites: raw.prerequisites,
       misconceptions: raw.misconceptions,
       learningResources: raw.learningResources,
+      assets: raw.assets,
       questions: raw.questions,
     });
 

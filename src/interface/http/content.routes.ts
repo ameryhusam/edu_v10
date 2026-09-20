@@ -15,7 +15,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Errors } from '../../shared/kernel/errors.js';
-import { Err, type Result } from '../../shared/kernel/result.js';
+import { Err, Ok, type Result } from '../../shared/kernel/result.js';
 import { hasRole } from '../../contexts/identity/domain/roles.js';
 import {
   PUBLICATION_ACTIONS,
@@ -23,10 +23,16 @@ import {
   type PublicationAction,
 } from '../../contexts/content/domain/publication.js';
 import { CONTENT_NODE_KINDS } from '../../contexts/content/domain/authoring.js';
+import {
+  CONTENT_ASSET_TYPES,
+  CONTENT_ASSET_SCOPES,
+} from '../../contexts/content/domain/assets.js';
 import type { ContentAuthoringService } from '../../contexts/content/application/authoring.service.js';
 import type { PublishingService } from '../../contexts/content/application/publishing.service.js';
 import type { ContentExportService } from '../../contexts/content/application/content-export.service.js';
 import type { ContentImportService } from '../../contexts/content/application/content-import.service.js';
+import type { ContentAssetService } from '../../contexts/content/application/content-asset.service.js';
+import type { WorkspaceImporterService } from '../../contexts/content/application/workspace-importer.service.js';
 import type { TextbookAdministrationService } from '../../contexts/content/application/textbook-administration.service.js';
 import type { Actor } from './middleware/context.js';
 import { handle } from './handler.js';
@@ -37,6 +43,8 @@ export interface ContentRouteDeps {
   readonly contentExport: ContentExportService;
   readonly contentImport: ContentImportService;
   readonly textbookAdministration: TextbookAdministrationService;
+  readonly contentAsset?: ContentAssetService;
+  readonly workspaceImporter?: WorkspaceImporterService;
 }
 
 /**
@@ -686,6 +694,261 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
       },
     }),
   );
+
+  const uploadTextbookSourceInput = z.object({
+    term: z.string().min(1),
+    grade: z.string().min(1),
+    subject: z.string().min(1),
+    edition: z.string().optional(),
+    title: z.string().optional(),
+    pdfBase64: z.string().min(1),
+  });
+
+  router.post(
+    '/textbooks/upload-source',
+    handle({
+      input: uploadTextbookSourceInput,
+      requireAuth: true,
+      successStatus: 201,
+      execute: async ({ input, actor }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.contentAsset) {
+          return Err(Errors.internal('asset.service_unavailable', 'Content asset service is not enabled.'));
+        }
+        const buffer = Buffer.from(input.pdfBase64, 'base64');
+        const res = await deps.contentAsset.uploadTextbookSource({
+          term: input.term,
+          grade: input.grade,
+          subject: input.subject,
+          edition: input.edition,
+          title: input.title,
+          buffer,
+        });
+        return Ok(res);
+      },
+    }),
+  );
+
+  const uploadAssetInput = z.object({
+    textbookKey: z.string().min(1),
+    relativePath: z.string().min(1),
+    assetType: z.enum(CONTENT_ASSET_TYPES),
+    scope: z.enum(CONTENT_ASSET_SCOPES),
+    bufferBase64: z.string().min(1),
+    unitKey: z.string().optional(),
+    lessonKey: z.string().optional(),
+    conceptKey: z.string().optional(),
+    mimeType: z.string().optional(),
+    originalName: z.string().optional(),
+    pageStart: z.number().int().optional(),
+    pageEnd: z.number().int().optional(),
+    title: z.string().optional(),
+    altText: z.string().optional(),
+    caption: z.string().optional(),
+  });
+
+  router.post(
+    '/assets/upload',
+    handle({
+      input: uploadAssetInput,
+      requireAuth: true,
+      successStatus: 201,
+      execute: async ({ input, actor }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.contentAsset) {
+          return Err(Errors.internal('asset.service_unavailable', 'Content asset service is not enabled.'));
+        }
+        const buffer = Buffer.from(input.bufferBase64, 'base64');
+        const res = await deps.contentAsset.uploadAsset({
+          textbookKey: input.textbookKey,
+          relativePath: input.relativePath,
+          buffer,
+          assetType: input.assetType,
+          scope: input.scope,
+          unitKey: input.unitKey,
+          lessonKey: input.lessonKey,
+          conceptKey: input.conceptKey,
+          mimeType: input.mimeType,
+          originalName: input.originalName,
+          pageStart: input.pageStart,
+          pageEnd: input.pageEnd,
+          title: input.title,
+          altText: input.altText,
+          caption: input.caption,
+        });
+        return Ok(res);
+      },
+    }),
+  );
+
+  const workspaceImportInput = z.object({
+    workspaceDir: z.string().min(1),
+    dryRun: z.boolean().optional(),
+    syncAssets: z.boolean().optional(),
+  });
+
+  const workspacePrepareInput = z.object({
+    term: z.string().min(1),
+    grade: z.string().min(1),
+    subject: z.string().min(1),
+    edition: z.string().optional(),
+    title: z.string().optional(),
+    pdfBase64: z.string().optional(),
+    autoSegment: z.boolean().optional(),
+    units: z.array(z.any()).optional(),
+  });
+
+  const workspaceSegmentInput = z.object({
+    workspaceDir: z.string().min(1),
+    units: z.array(z.any()).optional(),
+  });
+
+  router.post(
+    '/workspace/prepare',
+    handle({
+      input: workspacePrepareInput,
+      requireAuth: true,
+      execute: async ({ input, actor }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.workspaceImporter) {
+          return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
+        }
+        const pdfBuffer = input.pdfBase64 ? Buffer.from(input.pdfBase64, 'base64') : undefined;
+        const res = await deps.workspaceImporter.prepareWorkspace({
+          term: input.term,
+          grade: input.grade,
+          subject: input.subject,
+          edition: input.edition,
+          title: input.title,
+          pdfBuffer,
+          autoSegment: input.autoSegment,
+          units: input.units,
+        });
+        return Ok(res);
+      },
+    }),
+  );
+
+  router.get(
+    '/workspaces',
+    handle({
+      requireAuth: true,
+      execute: async ({ actor }) => {
+        const reader = requireStaffReader(actor);
+        if (!reader.ok) return reader;
+        if (!deps.workspaceImporter) {
+          return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
+        }
+        const list = await deps.workspaceImporter.listWorkspaces();
+        return Ok(list);
+      },
+    }),
+  );
+
+  router.get(
+    '/workspace/inspect',
+    handle({
+      input: z.object({ workspaceDir: z.string().min(1) }),
+      requireAuth: true,
+      execute: async ({ input, actor }) => {
+        const reader = requireStaffReader(actor);
+        if (!reader.ok) return reader;
+        if (!deps.workspaceImporter) {
+          return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
+        }
+        const details = await deps.workspaceImporter.inspectWorkspace(input.workspaceDir);
+        return Ok(details);
+      },
+    }),
+  );
+
+  router.post(
+    '/workspace/segment',
+    handle({
+      input: workspaceSegmentInput,
+      requireAuth: true,
+      execute: async ({ input, actor }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.workspaceImporter) {
+          return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
+        }
+        const res = await deps.workspaceImporter.segmentWorkspace(input.workspaceDir, input.units);
+        return Ok(res);
+      },
+    }),
+  );
+
+  router.post(
+    '/workspace/import',
+    handle({
+      input: workspaceImportInput,
+      requireAuth: true,
+      execute: async ({ input, actor }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.workspaceImporter) {
+          return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
+        }
+        const res = await deps.workspaceImporter.importFromWorkspace(input.workspaceDir, {
+          dryRun: input.dryRun,
+          syncAssets: input.syncAssets,
+          actorKey: author.value.actorKey,
+        });
+        return Ok(res);
+      },
+    }),
+  );
+
+  router.get('/assets/:assetKey/stream', async (req, res, next) => {
+    try {
+      if (!deps.contentAsset) {
+        res.status(501).json(Errors.internal('asset.storage_not_configured', 'Asset service not configured.'));
+        return;
+      }
+      const assetKey = req.params.assetKey;
+      const rangeHeader = req.headers.range;
+
+      let range: { start?: number; end?: number } | undefined;
+      if (rangeHeader && rangeHeader.startsWith('bytes=')) {
+        const parts = rangeHeader.replace('bytes=', '').split('-');
+        range = {
+          start: parts[0] ? parseInt(parts[0], 10) : undefined,
+          end: parts[1] ? parseInt(parts[1], 10) : undefined,
+        };
+      }
+
+      const streamResult = await deps.contentAsset.getAssetStream(assetKey, range);
+      if (!streamResult) {
+        res.status(404).json(Errors.notFound('asset.not_found', `Asset not found: ${assetKey}`));
+        return;
+      }
+
+      const { stream, asset } = streamResult;
+      res.setHeader('Content-Type', asset.mimeType);
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('ETag', `"${asset.sha256}"`);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+
+      if (range && range.start !== undefined) {
+        const start = range.start;
+        const end = range.end !== undefined ? range.end : asset.sizeBytes - 1;
+        const chunksize = end - start + 1;
+        res.status(206);
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${asset.sizeBytes}`);
+        res.setHeader('Content-Length', chunksize);
+      } else {
+        res.setHeader('Content-Length', asset.sizeBytes);
+      }
+
+      stream.pipe(res);
+    } catch (err) {
+      next(err);
+    }
+  });
 
   return router;
 }

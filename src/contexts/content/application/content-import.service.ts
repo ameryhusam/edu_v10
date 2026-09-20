@@ -92,6 +92,32 @@ export interface ImportOptions {
   readonly includeQuestions?: boolean;
 }
 
+export interface ImportResult {
+  readonly dryRun: boolean;
+  readonly applied: boolean;
+  readonly textbookKey: string;
+  readonly created: {
+    readonly units: number;
+    readonly lessons: number;
+    readonly concepts: number;
+    readonly prerequisites: number;
+    readonly misconceptions: number;
+    readonly learningResources: number;
+    readonly questions: number;
+  };
+  readonly unchanged: {
+    readonly units: number;
+    readonly lessons: number;
+    readonly concepts: number;
+    readonly prerequisites: number;
+    readonly misconceptions: number;
+    readonly learningResources: number;
+    readonly questions: number;
+  };
+  readonly generatedKeys: ReadonlyArray<{ sheet: string; reference: string; key: string }>;
+  readonly problems: readonly ImportProblem[];
+}
+
 function slugifyOrFallback(raw?: string | null, fallback = 'node'): string {
   if (raw && raw.trim()) {
     const norm = normalizeSlug(raw);

@@ -52,7 +52,12 @@ def main():
     p_prep.add_argument("pdf_path", nargs="?", default=None,
                         help="Path to PDF (default: first PDF in books_input/)")
     p_prep.add_argument("--workspace", default=None,
-                        help="Output workspace dir (default: workspaces/<pdf_stem>)")
+                        help="Output workspace dir (default: workspaces/<TERM>/<GRADE>/<SUBJECT> or workspaces/<pdf_stem>)")
+    p_prep.add_argument("--subject", default="MATH", help="Subject code (e.g. MATH, SCI, ARB)")
+    p_prep.add_argument("--grade", default="G07", help="Grade code (e.g. G07, G08)")
+    p_prep.add_argument("--term", default="T1", help="Term code (e.g. T1, T2)")
+    p_prep.add_argument("--edition", default="2026", help="Edition year (e.g. 2026)")
+    p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
                             "AI model for vision TOC extraction when rule-based fails.\n"
@@ -243,8 +248,26 @@ def _cmd_prepare(args):
     # Segment
     print(f"\n[*] Segmenting into packages: {ws_path}")
     segmenter = LessonSegmenter(reader, mapper)
-    segmenter.segment_book(units, ws_path)
+    coordinates = {
+        "subject": args.subject,
+        "grade": args.grade,
+        "term": args.term,
+        "edition": args.edition,
+        "title": args.title,
+    }
+    segmenter.segment_book(units, ws_path, coordinates=coordinates)
     print(f"[SUCCESS] Book prepared at: {ws_path}\n")
+
+
+def _find_lesson_dirs(target_path: Path) -> List[Path]:
+    """Find all lesson directories in workspace supporting both new and legacy layouts."""
+    # Standard format: unit_01_*/lesson_01_*
+    standard = sorted([d for d in target_path.glob("unit_*/lesson_*") if d.is_dir()])
+    if standard:
+        return standard
+    # Legacy format: units/*/lessons/*
+    legacy = sorted([d for d in target_path.glob("units/*/lessons/*") if d.is_dir()])
+    return legacy
 
 
 def _cmd_analyze(args):
@@ -261,14 +284,20 @@ def _cmd_analyze(args):
     provider = registry.get(args.model)
     validator = EvidenceValidator()
 
-    # Case 1: Workspace mode (contains book-manifest.json)
-    if (target_path / "book-manifest.json").exists():
-        lesson_dirs = sorted(target_path.glob("units/*/lessons/*"))
+    # Case 1: Workspace mode (contains index.json, edu7-content-package.json, or book-manifest.json)
+    is_ws = (
+        (target_path / "index.json").exists()
+        or (target_path / "edu7-content-package.json").exists()
+        or (target_path / "book-manifest.json").exists()
+    )
+
+    if is_ws:
+        lesson_dirs = _find_lesson_dirs(target_path)
         print(f"\n[*] Workspace Mode: Found {len(lesson_dirs)} lesson(s) to analyze in {target_path}")
         print(f"[*] Provider: {provider.provider_name}")
 
         for idx, l_dir in enumerate(lesson_dirs, start=1):
-            m_file = l_dir / "manifest.json"
+            m_file = l_dir / "lesson_manifest.json" if (l_dir / "lesson_manifest.json").exists() else l_dir / "manifest.json"
             t_file = l_dir / "lesson_full_text.txt"
             if not m_file.exists():
                 continue
@@ -294,10 +323,11 @@ def _cmd_analyze(args):
 
         print(f"\n[SUCCESS] Completed analysis for all {len(lesson_dirs)} lesson(s) in {target_path}")
 
-    # Case 2: Single lesson mode (contains manifest.json)
-    elif (target_path / "manifest.json").exists():
+    # Case 2: Single lesson mode (contains lesson_manifest.json or manifest.json)
+    elif (target_path / "lesson_manifest.json").exists() or (target_path / "manifest.json").exists():
         l_dir = target_path
-        manifest = json.loads((l_dir / "manifest.json").read_text(encoding="utf-8"))
+        m_file = l_dir / "lesson_manifest.json" if (l_dir / "lesson_manifest.json").exists() else l_dir / "manifest.json"
+        manifest = json.loads(m_file.read_text(encoding="utf-8"))
         t_file = l_dir / "lesson_full_text.txt"
         text = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
 
@@ -316,7 +346,7 @@ def _cmd_analyze(args):
         print(f"[SUCCESS] Analysis saved to: {out_file}")
 
     else:
-        print(f"Error: '{target_path}' is neither a workspace (missing book-manifest.json) nor a lesson (missing manifest.json).")
+        print(f"Error: '{target_path}' is neither a workspace nor a valid lesson directory.")
         sys.exit(1)
 
 
@@ -326,48 +356,48 @@ def _cmd_export(args):
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    bm_file = ws / "book-manifest.json"
-    if not bm_file.exists():
-        print(f"Error: {bm_file} not found. Run 'prepare' first.")
+    manifest_file = ws / "index.json" if (ws / "index.json").exists() else ws / "book-manifest.json"
+    if not manifest_file.exists():
+        print(f"Error: Neither index.json nor book-manifest.json found in {ws}. Run 'prepare' first.")
         sys.exit(1)
 
-    b_manifest = json.loads(bm_file.read_text(encoding="utf-8"))
+    b_manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
     registry = AIProviderRegistry()
     heuristic_fallback = registry.get("heuristic-micro-engine")
     results = []
 
-    for u in sorted(ws.glob("units/*")):
-        for l in sorted(u.glob("lessons/*")):
-            m_file = l / "manifest.json"
-            t_file = l / "lesson_full_text.txt"
-            if not m_file.exists():
-                continue
-            m = json.loads(m_file.read_text(encoding="utf-8"))
-            txt = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
+    lesson_dirs = _find_lesson_dirs(ws)
+    for l in lesson_dirs:
+        m_file = l / "lesson_manifest.json" if (l / "lesson_manifest.json").exists() else l / "manifest.json"
+        t_file = l / "lesson_full_text.txt"
+        if not m_file.exists():
+            continue
+        m = json.loads(m_file.read_text(encoding="utf-8"))
+        txt = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
 
-            # Check if an analysis already exists on disk
-            analysis_base = l / "analysis"
-            loaded = False
-            if analysis_base.exists():
-                candidates = list(analysis_base.glob("*/normalized.json"))
-                if candidates:
-                    # Prefer gemini analysis if exists
-                    gemini_c = [c for c in candidates if "gemini" in c.parent.name]
-                    target_cand = gemini_c[0] if gemini_c else candidates[0]
-                    try:
-                        d = json.loads(target_cand.read_text(encoding="utf-8"))
-                        res = _dict_to_analysis_result(d)
-                        results.append(res)
-                        loaded = True
-                    except Exception as err:
-                        print(f"[!] Could not load {target_cand}: {err}")
+        # Check if an analysis already exists on disk
+        analysis_base = l / "analysis"
+        loaded = False
+        if analysis_base.exists():
+            candidates = list(analysis_base.glob("*/normalized.json"))
+            if candidates:
+                # Prefer gemini analysis if exists
+                gemini_c = [c for c in candidates if "gemini" in c.parent.name]
+                target_cand = gemini_c[0] if gemini_c else candidates[0]
+                try:
+                    d = json.loads(target_cand.read_text(encoding="utf-8"))
+                    res = _dict_to_analysis_result(d)
+                    results.append(res)
+                    loaded = True
+                except Exception as err:
+                    print(f"[!] Could not load {target_cand}: {err}")
 
-            if not loaded:
-                results.append(heuristic_fallback.analyze_lesson(m, txt, l))
+        if not loaded:
+            results.append(heuristic_fallback.analyze_lesson(m, txt, l))
 
     if args.format in ["json", "all"]:
-        j_path = out_dir / "edu7_content_package.json"
-        Edu7JsonExporter().export(b_manifest, results, j_path)
+        j_path = out_dir / "edu7-content-package.json"
+        Edu7JsonExporter().export(b_manifest, results, j_path, workspace_dir=ws)
         print(f"[+] JSON: {j_path}")
 
     if args.format in ["xlsx", "all"]:

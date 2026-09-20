@@ -380,6 +380,17 @@ describe('content export — parity with import', () => {
         estimatedMins: 5,
       },
     ],
+    assets: [
+      {
+        scope: 'TEXTBOOK',
+        assetType: 'TEXTBOOK_PDF',
+        originalName: 'math_g7.pdf',
+        relativePath: 'assets/math_g7.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 1048576,
+        sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      },
+    ],
   });
 
   it('emits every collection the package format can carry', async () => {
@@ -389,6 +400,7 @@ describe('content export — parity with import', () => {
     if (!res.ok) return;
     expect(res.value.misconceptions).toHaveLength(1);
     expect(res.value.learningResources).toHaveLength(1);
+    expect(res.value.assets).toHaveLength(1);
   });
 
   /**
@@ -421,6 +433,7 @@ describe('content export — parity with import', () => {
     // `pageStart` is exactly the kind of loss that stays invisible otherwise.
     expect(res.value.misconceptions).toEqual(WITH_ATTACHMENTS.misconceptions);
     expect(res.value.learningResources).toEqual(WITH_ATTACHMENTS.learningResources);
+    expect(res.value.assets).toEqual(WITH_ATTACHMENTS.assets);
   });
 
   it('orders attachments deterministically, so two exports diff clean', async () => {
@@ -433,6 +446,26 @@ describe('content export — parity with import', () => {
         { slug: 'SECOND', unitSlug: 'SETS', lessonSlug: 'INTRO', conceptSlug: 'SET', kind: 'READING', title: '2', body: null, url: null, orderIndex: 5, pageStart: null, pageEnd: null, estimatedMins: null },
         { slug: 'FIRST', unitSlug: 'SETS', lessonSlug: 'INTRO', conceptSlug: 'SET', kind: 'READING', title: '1', body: null, url: null, orderIndex: 1, pageStart: null, pageEnd: null, estimatedMins: null },
       ],
+      assets: [
+        {
+          scope: 'TEXTBOOK',
+          assetType: 'TEXTBOOK_PDF',
+          originalName: 'b.pdf',
+          relativePath: 'b.pdf',
+          mimeType: 'application/pdf',
+          sizeBytes: 100,
+          sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        },
+        {
+          scope: 'TEXTBOOK',
+          assetType: 'TEXTBOOK_PDF',
+          originalName: 'a.pdf',
+          relativePath: 'a.pdf',
+          mimeType: 'application/pdf',
+          sizeBytes: 100,
+          sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+        },
+      ],
     });
     const res = await setup(shuffled).exportTextbook(CTX, TB);
 
@@ -442,6 +475,7 @@ describe('content export — parity with import', () => {
     // Resources sort on the author's reading order, not the slug: FIRST has
     // the lower orderIndex, and would sort second if the slug won.
     expect(res.value.learningResources?.map((r) => r.slug)).toEqual(['FIRST', 'SECOND']);
+    expect(res.value.assets?.map((a) => a.relativePath)).toEqual(['a.pdf', 'b.pdf']);
   });
 
   it('refuses an attachment pointing at a concept that is not in the book', async () => {

@@ -96,8 +96,13 @@ import { GetDiagnosticPlacementUseCase } from '../contexts/learning/application/
 import { ContentAuthoringService } from '../contexts/content/application/authoring.service.js';
 import { ContentExportService } from '../contexts/content/application/content-export.service.js';
 import { ContentImportService } from '../contexts/content/application/content-import.service.js';
+import { ContentAssetService } from '../contexts/content/application/content-asset.service.js';
+import { WorkspaceImporterService } from '../contexts/content/application/workspace-importer.service.js';
 import { PublishingService } from '../contexts/content/application/publishing.service.js';
 import { TextbookAdministrationService } from '../contexts/content/application/textbook-administration.service.js';
+import { LocalContentStorage } from '../infrastructure/storage/local-content-storage.js';
+import { WorkspaceManager } from '../infrastructure/storage/workspace-manager.js';
+import { PrismaContentAssetRepository } from '../infrastructure/database/content-asset.repository.js';
 import { AssignmentService } from '../contexts/instruction/application/assignment.service.js';
 import { DueWorkService } from '../contexts/instruction/application/due-work.service.js';
 import { ParentTaskService } from '../contexts/instruction/application/parent-task.service.js';
@@ -136,6 +141,12 @@ export interface Container {
   readonly analyticsReader: PrismaAnalyticsReader;
   /** Exposed for GET /auth/me, which reads the account behind the token. */
   readonly userRepository: PrismaUserRepository;
+  /** Binary file and asset storage adapter. */
+  readonly contentStorage: LocalContentStorage;
+  /** Workspace filesystem and manifest manager. */
+  readonly workspaceManager: WorkspaceManager;
+  /** Asset metadata repository. */
+  readonly contentAssetRepository: PrismaContentAssetRepository;
   /** Cookies are Secure outside development; over plain HTTP they would not be sent. */
   readonly secureCookies: boolean;
   readonly cookieSameSite: 'lax' | 'none';
@@ -168,6 +179,8 @@ export interface Container {
     readonly registerAccount: RegisterAccountUseCase;
     readonly contentExport: ContentExportService;
     readonly contentImport: ContentImportService;
+    readonly contentAsset: ContentAssetService;
+    readonly workspaceImporter: WorkspaceImporterService;
     readonly publishing: PublishingService;
     /** The admin surface over the textbook catalogue and its deployment. */
     readonly textbookAdministration: TextbookAdministrationService;
@@ -251,9 +264,16 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
   const resourceReader = new PrismaResourceReader(db);
   const decisionLog = new PrismaDecisionLogWriter(db);
 
+  const contentStorage = new LocalContentStorage({
+    rootDir: process.env.STORAGE_ROOT || './data/storage',
+  });
+  const workspaceManager = new WorkspaceManager(process.env.WORKSPACE_ROOT);
+  const contentAssetRepository = new PrismaContentAssetRepository(db);
+
   const contentRepository = new PrismaContentRepository(db);
   const contentAudit = new PrismaContentAuditWriter(db);
   const contentAuthoring = new ContentAuthoringService(contentRepository, contentAudit);
+  const contentAsset = new ContentAssetService(contentAssetRepository, contentStorage);
 
   const analyticsReader = new PrismaAnalyticsReader(db, () => clock.now());
   const remediationRepository = new PrismaRemediationRepository(db);
@@ -407,6 +427,9 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
     secureCookies: env.NODE_ENV === 'production',
     cookieSameSite: env.COOKIE_SAMESITE,
     userRepository,
+    contentStorage,
+    workspaceManager,
+    contentAssetRepository,
     useCases: {
       recomputeMastery,
       getMasteryProfile: new GetMasteryProfileUseCase(masteryRepository, masteryPolicy, clock),
@@ -471,6 +494,12 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
       // ones: import must be an adapter over the canonical write paths, and
       // duplicate instances would be more objects to keep in step.
       contentImport: new ContentImportService(contentAuthoring, itemBank),
+      contentAsset,
+      workspaceImporter: new WorkspaceImporterService(
+        workspaceManager,
+        new ContentImportService(contentAuthoring, itemBank),
+        contentAsset,
+      ),
       publishing: new PublishingService(
         contentRepository,
         clock,

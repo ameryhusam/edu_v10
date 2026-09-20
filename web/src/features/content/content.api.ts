@@ -483,6 +483,37 @@ export const textbookAdministrationApi = {
   /** The full content package — a backup or an external-audit export. */
   exportTextbook: (textbookKey: string) =>
     api.get<unknown>(`content/textbooks/${encodeURIComponent(textbookKey)}/export`),
+
+  /** Workspace operations */
+  workspacePrepare: (input: {
+    term: string;
+    grade: string;
+    subject: string;
+    edition?: string;
+    title?: string;
+    pdfBase64?: string;
+    autoSegment?: boolean;
+    units?: Array<any>;
+  }) => api.post<any>('content/workspace/prepare', input),
+
+  workspaceList: () => api.get<Array<{
+    workspaceDir: string;
+    relativePath: string;
+    manifest: any;
+    packageExists: boolean;
+  }>>('content/workspaces'),
+
+  workspaceInspect: (workspaceDir: string) =>
+    api.get<any>('content/workspace/inspect', { query: { workspaceDir } }),
+
+  workspaceSegment: (input: { workspaceDir: string; units?: Array<any> }) =>
+    api.post<any>('content/workspace/segment', input),
+
+  workspaceImport: (input: {
+    workspaceDir: string;
+    dryRun?: boolean;
+    syncAssets?: boolean;
+  }) => api.post<any>('content/workspace/import', input),
 };
 
 export const contentApi = textbookAdministrationApi;
