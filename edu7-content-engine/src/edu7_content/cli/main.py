@@ -72,7 +72,7 @@ def main():
     p_prep.add_argument("--no-ollama", action="store_true",
                         help="Skip Ollama local vision models")
     p_prep.add_argument("--no-gemini", action="store_true",
-                        help="Skip Gemini Vision API even if GEMINI_API_KEY is set")
+                        help="Skip Gemini API even if GEMINI_API_KEYS are configured")
     p_prep.add_argument("--force-vision", action="store_true",
                         help="Force vision extraction even for text-based PDFs")
 
@@ -82,7 +82,7 @@ def main():
     p_analyze.add_argument("--model", default="heuristic-micro-engine",
                            help="Model: heuristic-micro-engine | gemini | gemini-3.6-flash | gemini-3.5-flash | ollama-qwen2.5:7b | ...")
     p_analyze.add_argument("--delay", type=float, default=4.0,
-                           help="Delay in seconds between lessons for Gemini Free Tier rate-limiting (default: 4.0s)")
+                           help="Delay in seconds between lessons to pace Gemini requests (default: 4.0s)")
 
     # ── benchmark ────────────────────────────────────────────────────────────
     p_bench = sub.add_parser("benchmark", help="Multi-model comparison on a lesson")
@@ -387,10 +387,10 @@ def _cmd_analyze(args):
             )
             print(f"    [✓] Saved draft analysis to: {out_file}")
 
-            # Polite pacing for Gemini Free Tier (15 RPM limit)
+            # Polite pacing between Gemini lesson requests
             if "gemini" in provider.provider_name.lower() and idx < len(lesson_dirs):
                 delay = getattr(args, "delay", 4.0)
-                print(f"    [*] Pacing delay: {delay}s for Gemini Free Tier...")
+                print(f"    [*] Pacing delay: {delay}s between Gemini requests...")
                 time.sleep(delay)
 
         print(f"\n[SUCCESS] Completed analysis for all {len(lesson_dirs)} lesson(s) in {target_path}")
