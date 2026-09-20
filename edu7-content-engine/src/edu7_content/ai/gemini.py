@@ -41,8 +41,8 @@ def _load_env_file():
 
 class GeminiFreeProvider(AIProvider):
     """
-    Google Gemini Free Tier Provider.
-    Uses official Google AI Studio API Key (15 RPM free of charge).
+    Google Gemini provider for text and multimodal content analysis.
+    Authentication and quota are controlled by the configured Google API account.
     Supports:
       - Text & Multimodal Lesson Analysis (analyze_lesson)
       - Vision-based TOC extraction from page images (extract_toc_from_page_images)
