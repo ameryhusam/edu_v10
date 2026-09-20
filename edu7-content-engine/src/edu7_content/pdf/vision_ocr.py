@@ -7,7 +7,7 @@ Extraction strategy (in priority order):
   Layer 1: PyMuPDF native text layer  (free, instant, no AI)
   Layer 2: PyMuPDF + Tesseract OCR    (free, offline, no API key)
   Layer 3: Ollama local vision model  (free, local GPU/CPU inference)
-  Layer 4: Gemini Vision API          (free tier, requires API key)
+  Layer 4: Gemini API (multimodal when renderable, text-only with pypdf)
 
 The system tries each layer in sequence and stops at first success.
 """
@@ -89,10 +89,10 @@ def extract_toc_via_vision(
     reader      : PdfReader or ArabicPdfExtractor
     max_pages   : how many pages to render/send
     dpi         : render resolution (higher = better quality, larger payload)
-    api_key     : Gemini API key (optional; read from GEMINI_API_KEY env if None)
-    model_name  : specific AI model name (e.g. "llava:7b", "gemini-2.5-flash")
+    api_key     : optional explicit Gemini key (normally leave unset so key rotation is used)
+    model_name  : specific AI model name (gemini-3.6-flash or gemini-3.5-flash)
     use_ollama  : try Ollama local models (default: True)
-    use_gemini  : try Gemini Vision API (default: True, only if api_key available)
+    use_gemini  : try Gemini API (default: True, using configured key rotation)
 
     Returns
     -------
@@ -128,17 +128,23 @@ def extract_toc_via_vision(
         else:
             print("[!] Ollama not available (not running or not installed).")
 
-    # ── Layer 4: Gemini Vision (free tier, needs API key) ─────────────────
+    # ── Layer 4: Gemini API ───────────────────────────────────────────────
     if use_gemini:
-        import os
-        gemini_key = api_key or os.environ.get("GEMINI_API_KEY", "")
-        if gemini_key:
-            gemini_model = "gemini-2.5-flash"
-            if model_name and model_name.startswith("gemini"):
-                gemini_model = model_name.replace("gemini-", "", 1) if model_name != "gemini" else "gemini-2.5-flash"
-            print(f"[*] Trying Gemini Vision ({gemini_model})...")
-            from ..ai.gemini import GeminiFreeProvider
-            provider = GeminiFreeProvider(api_key=gemini_key, model_name=gemini_model)
+        from ..ai.gemini import GeminiFreeProvider
+
+        # Do not inspect GEMINI_API_KEY here. GeminiFreeProvider/GeminiClient
+        # owns authentication, plural-key rotation, model validation, and 429
+        # failover. Passing api_key=None is intentional.
+        try:
+            requested_model = model_name if model_name and model_name.startswith("gemini") else None
+            provider = GeminiFreeProvider(api_key=api_key, model_name=requested_model)
+
+            if not provider.client.api_keys:
+                print("[!] Gemini skipped (GEMINI_API_KEYS/GEMINI_API_KEY not set).")
+                return []
+
+            gemini_model = provider.model_name
+            print(f"[*] Trying Gemini {gemini_model} TOC extraction...")
             units = (
                 provider.extract_toc_from_page_images(images_b64)
                 if images_b64
@@ -150,7 +156,7 @@ def extract_toc_via_vision(
                 print(f"[+] Gemini {mode} TOC: {len(units)} units, {total_lessons} lessons.")
                 return units
             print("[!] Gemini TOC analysis returned no results.")
-        else:
-            print("[!] Gemini Vision skipped (GEMINI_API_KEY not set).")
+        except Exception as err:
+            print(f"[!] Gemini TOC provider unavailable: {err}")
 
     return []
