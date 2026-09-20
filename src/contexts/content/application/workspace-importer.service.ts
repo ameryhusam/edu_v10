@@ -59,7 +59,13 @@ export class WorkspaceImporterService {
     const textbookKey = pkg.textbook.key;
     const dryRun = options.dryRun ?? false;
 
-    // 1. Check local assets if present in package
+    // Content structure is created first. ContentAsset rows have real foreign
+    // keys to Textbook/Unit/Lesson/Concept, so asset registration must never
+    // race ahead of the canonical content authoring transaction.
+    const authorCtx: AuthorContext = { actorKey: options.actorKey || 'SYSTEM_WORKSPACE_IMPORTER' };
+    const importRes = await this.contentImportService.importPackage(authorCtx, pkg, { dryRun });
+    if (!importRes.ok) throw new DomainErrorException(importRes.error);
+
     const missingAssets: string[] = [];
     let assetsVerified = 0;
     let assetsUploaded = 0;
@@ -77,7 +83,6 @@ export class WorkspaceImporterService {
           missingAssets.push(`${asset.relativePath} (checksum mismatch)`);
           continue;
         }
-
         assetsVerified++;
 
         if (!dryRun && options.syncAssets !== false) {
@@ -101,16 +106,6 @@ export class WorkspaceImporterService {
           assetsUploaded++;
         }
       }
-    }
-
-    // 2. Perform ContentImportService execution
-    const authorCtx: AuthorContext = { actorKey: options.actorKey || 'SYSTEM_WORKSPACE_IMPORTER' };
-    const importRes = await this.contentImportService.importPackage(authorCtx, pkg, {
-      dryRun,
-    });
-
-    if (!importRes.ok) {
-      throw new DomainErrorException(importRes.error);
     }
 
     return {
