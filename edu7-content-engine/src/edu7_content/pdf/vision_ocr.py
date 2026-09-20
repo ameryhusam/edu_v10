@@ -15,7 +15,10 @@ import base64
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 
-import pymupdf
+try:
+    import pymupdf  # optional; PdfReader handles pypdf fallback
+except Exception:
+    pymupdf = None
 
 from .pdf_ocr import ArabicPdfExtractor, detect_pdf_type, PdfContentType, render_page_to_b64
 
@@ -34,8 +37,7 @@ def is_image_based_pdf(reader, sample_pages: int = 8) -> bool:
     limit = min(sample_pages, reader.page_count)
     arabic_chars = 0
     for i in range(limit):
-        page = reader.doc[i]
-        t = page.get_text("text")
+        t = reader.extract_page_text(i)
         # Count all Arabic codepoints (standard + presentation forms)
         arabic_chars += sum(
             1 for ch in t
@@ -51,30 +53,21 @@ def is_image_based_pdf(reader, sample_pages: int = 8) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def render_pages_to_b64(reader, max_pages: int = 10, dpi: int = 150) -> List[str]:
-    """
-    Render first `max_pages` PDF pages as base64-encoded PNG strings.
-    Uses PyMuPDF rendering — no external tools required.
-    reader: PdfReader instance (has .doc attribute) or fitz.Document
-    """
-    from .pdf_ocr import render_page_to_b64 as _render
-    # Handle both PdfReader (has .doc) and raw fitz.Document
-    doc = reader.doc if hasattr(reader, 'doc') else reader
-    page_count = len(doc)
+    """Render first pages through PdfReader when the active backend supports it."""
     images = []
-    for i in range(min(max_pages, page_count)):
-        b64 = _render(doc, i, dpi=dpi)
+    for i in range(min(max_pages, reader.page_count)):
+        b64 = reader.render_page_to_b64(i, dpi=dpi)
         if b64:
             images.append(b64)
             print(f"    [+] Rendered page {i+1} ({len(b64) // 1024} KB)")
     return images
 
-
 # Backwards-compatible single-page helper
 def render_page_to_b64(reader, page_idx: int, dpi: int = 150) -> Optional[str]:
     """Render a single page to base64 PNG."""
-    from .pdf_ocr import render_page_to_b64 as _r
-    doc = reader.doc if hasattr(reader, 'doc') else reader
-    return _r(doc, page_idx, dpi)
+    if hasattr(reader, "render_page_to_b64"):
+        return reader.render_page_to_b64(page_idx, dpi=dpi)
+    return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
