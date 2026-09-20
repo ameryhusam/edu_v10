@@ -1,0 +1,326 @@
+# Edu7 AI Development System Instruction
+
+أنت تعمل داخل مشروع Edu7، وهو نظام إنتاجي مبني على **Clean Architecture** و**Bounded Contexts**. مهمتك تنفيذ التحديثات والتطويرات بطريقة تحافظ على الحدود المعمارية، سلامة البيانات، وقابلية الاختبار، مع السماح بالابتكار داخل هذه الحدود.
+
+## 1. المبادئ الأساسية
+
+1. افهم الكود الحالي قبل تعديله، ولا تفترض أن الوثائق أو أسماء الملفات تمثل الحالة الفعلية دائماً.
+2. ابحث عن المالك الحالي للسلوك قبل إضافة implementation جديد.
+3. لا تنشئ مساراً موازياً لسلوك موجود؛ وسّع المسار الحالي أو أصلح مالكه.
+4. اعتبر البيانات المرتبطة بتجارب المتعلمين تاريخاً لا يجوز حذفه أو تغييره بصمت.
+5. اجعل التحديثات قابلة لإعادة التشغيل وآمنة عند التكرار.
+6. لا تعتبر نجاح الـ typecheck دليلاً كافياً؛ يجب مراعاة الاختبارات، القواعد المعمارية، وتدفق التشغيل الكامل.
+7. عند وجود غموض، اختر الحل الذي يحافظ على المسؤولية الحالية ولا ينقل المنطق إلى طبقة غير مناسبة.
+
+## 2. اتجاه الاعتماد
+
+اتجاه الاعتماد يكون إلى الداخل:
+
+```text
+interface
+  ↓
+application
+  ↓
+domain
+```
+
+وتنفذ البنية الخارجية التفاصيل:
+
+```text
+infrastructure → application ports
+composition     → يربط جميع implementations
+```
+
+القواعد:
+
+- `domain` لا يعتمد على Prisma أو Express أو filesystem أو SDK خاص بمزود خارجي.
+- `application` لا يستورد Prisma أو Express أو تفاصيل التخزين أو AI SDK.
+- `interface` لا يحتوي قواعد تعليمية أو قرارات نشر أو منطق تكرار.
+- `infrastructure` يحتوي تفاصيل قواعد البيانات، الملفات، الشبكات، التخزين، وAI providers.
+- `composition/container.ts` هو المكان المعتمد لإنشاء وربط implementations.
+- لا تنشئ services أو repositories داخل routes أو React components.
+
+## 3. مسؤولية كل طبقة
+
+### Domain
+
+ضع فيه:
+
+- قواعد العمل النقية.
+- Value objects.
+- أنواع المجال.
+- سياسات التحقق.
+- قرارات لا تعتمد على HTTP أو قاعدة البيانات.
+
+لا تضع فيه:
+
+- استدعاءات الشبكة.
+- قراءة البيئة أو filesystem.
+- Prisma.
+- الوقت العشوائي أو الوقت المباشر إذا كان يؤثر على القرار.
+- منطق واجهة المستخدم.
+
+### Application
+
+ضع فيه:
+
+- Use cases.
+- orchestration.
+- ports التي يعرّفها المستهلك.
+- حدود المعاملات.
+- تنسيق domain مع repositories وproviders.
+
+يجب أن يستدعي application الخدمات المالكة للسلوك، لا أن يكرر منطقها.
+
+### Infrastructure
+
+ضع فيه:
+
+- Prisma repositories.
+- File/object storage.
+- PDF وWorkspace readers.
+- AI provider adapters.
+- HTTP clients.
+- hashing وstreaming وMIME detection.
+
+لا تجعل infrastructure يقرر قواعد المنتج؛ عليه تنفيذ ports وترجمة البيانات فقط.
+
+### Interface
+
+ضع فيه:
+
+- HTTP routes.
+- Zod/input validation.
+- authentication and role checks.
+- response envelopes.
+- React pages/components/hooks في Frontend.
+
+لا تجعل route أو component يقرر:
+
+- معنى mastery.
+- صلاحية السؤال.
+- قرار النشر.
+- duplicate policy.
+- canonical keys.
+- learner authorization.
+
+## 4. قواعد الـ Bounded Contexts
+
+احترم ملكية السياقات الحالية:
+
+- `identity`: المستخدمون والأدوار والجلسات والـ guardianship.
+- `content`: الكتب والوحدات والدروس والمفاهيم والموارد والمحتوى المؤلف.
+- `assessment`: الأسئلة والإجابات والمحاولات والتقييم وإنتاج evidence.
+- `mastery`: حساب mastery من evidence.
+- `learning`: next-step، progression، prerequisites، remediation.
+- `tutoring`: AI tutoring وgrounding والرفض عند نقص الأدلة.
+- `analytics`: التقارير والقراءات المشتقة.
+- `engagement`: XP وstreaks، ولا يكتب mastery.
+- `instruction`: assignments والعمل المطلوب.
+- `administration/catalogue`: الإدارة والهيكل والاعتمادات.
+
+لا تصل إلى internals الخاصة بسياق آخر. استخدم ports أو application services أو public domain contracts.
+
+العلاقة الأساسية التي يجب الحفاظ عليها:
+
+```text
+Assessment → Evidence → Mastery
+```
+
+Assessment لا يكتب mastery، وMastery لا يقرأ attempt rows مباشرة كبديل عن evidence.
+
+## 5. مسارات الكتابة
+
+استخدم المالك الحالي لكل نوع من البيانات:
+
+- هيكل المحتوى → `ContentAuthoringService`.
+- الاستيراد → `ContentImportService`.
+- الأسئلة → `ItemBankService`.
+- النشر → `PublishingService`.
+- mastery → مسار mastery الوحيد.
+- learner evidence → مسار assessment الرسمي.
+- الملفات والأصول → `ContentAssetService` عبر storage ports.
+
+لا تكتب مباشرة إلى Prisma من:
+
+- Python engine.
+- scripts.
+- routes.
+- frontend.
+- import adapters.
+
+أي مصدر خارجي يجب أن يتحول إلى contract ثم يمر بمسار الكتابة الرسمي.
+
+## 6. الهوية والحالات
+
+- استخدم canonical keys المشتقة من business coordinates وslugs.
+- لا تستخدم `orderIndex` كهوية.
+- لا تقبل UUID داخلياً كهوية عامة للحزمة.
+- لا تجعل Python أو Frontend يخترع canonical keys.
+- `DRAFT` يعني محتوى Edu7 قيد الإعداد أو المراجعة.
+- `PUBLISHED` يعني محتوى Edu7 جاهز للعرض للمتعلم.
+- `ARCHIVED` غير متاح للعرض العادي.
+- `adoption` ليس هو `publication`.
+- اعتماد أو أصل خارجي ليس هو نشر محتوى Edu7.
+
+المحتوى الإداري يمكن أن يقرأ DRAFT، أما learner-facing queries فيجب أن تستخدم predicates النشر والـ entitlement من Backend.
+
+## 7. الاستيراد والتحديث
+
+كل استيراد يجب أن:
+
+1. يبدأ بـ `dryRun`.
+2. يتحقق من schema/profile.
+3. يتحقق من العلاقات والحقول المطلوبة.
+4. يكتشف التكرارات والتعارضات.
+5. يعرض ما سيتم إنشاؤه أو تجاهله.
+6. يطبق فقط بعد اجتياز الفحص.
+7. يكون آمناً عند إعادة التشغيل.
+
+قواعد التحديث:
+
+- نفس الهوية ونفس المحتوى → `unchanged`.
+- محتوى جديد → `create`.
+- نفس الهوية بمحتوى متعارض → `conflict` أو workflow صريح للتحديث.
+- غياب العنصر من التحديث لا يعني حذفه.
+- لا تعدل سؤالاً قديماً بصمت إذا كان مرتبطاً بإجابات أو evidence.
+- لا تحذف mastery أو attempts أو evidence أو XP بسبب تحديث محتوى.
+- أي حذف أو retire يجب أن يكون صريحاً ومحمياً بدورة lifecycle.
+
+## 8. الأصول والملفات
+
+- لا تخزن PDF أو الصور داخل JSON بصيغة Base64.
+- JSON يحمل metadata وروابط نسبية وchecksum فقط.
+- الملفات الفعلية تذهب إلى storage.
+- قاعدة البيانات تحفظ asset metadata وstorage key والعلاقات.
+- لا تعرض filesystem path الداخلي للعميل.
+- استخدم streaming وHTTP caching عند تقديم الملفات.
+- لا تجعل Web أو Android يعتمد على بنية Workspace المحلية؛ يعتمد على API contract.
+- يجب أن تدعم الأصول version/hash حتى يعمل cache والتحديث بأمان.
+
+## 9. الذكاء الاصطناعي
+
+ضع AI خلف port/adapter، ولا تستدعي مزوداً خارجياً مباشرة من route أو domain.
+
+كل AI output يجب أن:
+
+- يلتزم schema صارماً.
+- يمر بالتحقق قبل الحفظ.
+- يحتوي على provenance/evidence عندما تكون المهمة grounded.
+- يكتشف التكرار قبل الإنشاء.
+- يحفظ كـ `DRAFT` عند الحاجة إلى مراجعة.
+- لا يغيّر أو يحذف المحتوى السابق تلقائياً.
+- لا يقرر publication status.
+- لا يخترع prerequisite أو misconception أو answer key بلا مصدر أو قاعدة واضحة.
+
+عند التوليد من DB، اقرأ المحتوى المخزن و`TextbookPage` و`ContentChunk` بدلاً من العودة إلى Workspace بلا حاجة.
+
+## 10. Frontend
+
+Frontend مسؤول عن:
+
+- العرض.
+- إدخال المستخدم.
+- حالات loading/error/empty/retry.
+- استدعاء API.
+- cache وإعادة التحقق.
+- عرض قرارات Backend.
+
+Frontend غير مسؤول عن:
+
+- حساب mastery.
+- اتخاذ next-step.
+- توليد canonical keys.
+- تطبيق authorization.
+- تطبيق duplicate policy.
+- نشر المحتوى مباشرة.
+- إعادة تنفيذ قواعد domain.
+
+اعرض DRAFT للإدارة عند الحاجة، ولا تعرضه للمتعلم. استخدم نفس API contract للويب وأندرويد.
+
+## 11. أسلوب التطوير
+
+قبل التعديل:
+
+1. حدد الملفات والرموز المالكة للسلوك.
+2. افحص tests الحالية.
+3. افحص architecture rules.
+4. حدد إن كان المطلوب تعديل ملف موجود أو إضافة port/service/adapter جديد.
+5. اشرح سبب وضع التغيير في طبقته.
+
+أثناء التعديل:
+
+- نفذ أصغر تغيير متماسك.
+- حافظ على public contracts قدر الإمكان.
+- لا تكرر implementation موجوداً.
+- لا تضف abstraction بلا حاجة واضحة.
+- لا توسع نطاق المهمة دون توثيق السبب.
+- اسمح بتحسين التصميم إذا كان يحافظ على الملكية والحدود ويقلل التعقيد.
+
+بعد التعديل:
+
+```bash
+npm run typecheck
+npm run arch:check
+npm test
+npm run verify
+npm --prefix web run typecheck
+npm --prefix web run arch:check
+npm --prefix web test
+```
+
+وشغّل اختبارات Python الخاصة بالمحرك عند تعديل مسار PDF أو Workspace أو exporters.
+
+## 12. التعامل مع الابتكار
+
+الابتكار مسموح ومطلوب عندما:
+
+- يحل مشكلة حقيقية.
+- يحافظ على bounded contexts.
+- لا ينشئ مسار كتابة ثانياً.
+- لا يخفي قراراته داخل route أو component.
+- يمكن اختباره واستبداله.
+- لا يكسر contracts أو يضيف migration بلا حاجة.
+- يملك fallback واضحاً عند فشل مزود خارجي.
+- يحافظ على التوافق مع Web وAndroid.
+
+إذا احتاج الابتكار إلى تغيير contract أو schema، ابدأ بـ:
+
+1. domain contract.
+2. migration/adapter plan.
+3. compatibility strategy.
+4. tests/fixtures.
+5. ثم implementation.
+
+## 13. قاعدة الإيقاف
+
+أوقف التنفيذ واطلب مراجعة التصميم إذا أدى التغيير إلى أحد الآتي:
+
+- مخالفة `arch:check`.
+- import مباشر لـ Prisma من طبقة ممنوعة.
+- كتابة مباشرة خارج canonical services.
+- منطق learner authorization داخل Frontend.
+- ظهور DRAFT للمتعلم.
+- حذف محتوى تاريخي تلقائياً.
+- تكرار business rule في أكثر من سياق.
+- إنشاء key باستخدام `orderIndex`.
+- تخزين ملفات binary داخل package JSON.
+- عدم وجود اختبار لسلوك جديد مؤثر.
+- جعل فشل AI أو storage يفسد بيانات صحيحة دون rollback أو compensation.
+
+## 14. الهدف النهائي
+
+كل تطوير جديد يجب أن يحقق هذه المعادلة:
+
+```text
+ابتكار داخل الحدود
++ ملكية واضحة للسلوك
++ اعتماد للداخل
++ مسار كتابة واحد
++ بيانات تاريخية محفوظة
++ Backend هو مصدر القرار
++ Frontend يعرض ولا يعيد اختراع المعنى
++ اختبارات تثبت السلوك
+```
+
+لا تكبح الحلول الجديدة لمجرد أنها جديدة؛ قيّمها وفق هذه المبادئ، وضعها في الطبقة الصحيحة، واربطها عبر `composition/container.ts`، ثم أثبتها بالاختبارات قبل اعتمادها.
