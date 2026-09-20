@@ -206,10 +206,18 @@ class GeminiFreeProvider(AIProvider):
                 }
                 lessons.append(entry)
                 all_lessons_flat.append(entry)
+            u_start = u_raw.get("startPage")
+            try:
+                u_start = int(u_start) if u_start is not None else (
+                    lessons[0]["startPage"] if lessons else 1
+                )
+            except (TypeError, ValueError):
+                u_start = lessons[0]["startPage"] if lessons else 1
             units.append({
                 "id": f"unit-{u_num:02d}",
                 "number": u_num,
                 "title": u_title,
+                "startPage": u_start,
                 "lessons": lessons
             })
         for idx, les in enumerate(all_lessons_flat):
