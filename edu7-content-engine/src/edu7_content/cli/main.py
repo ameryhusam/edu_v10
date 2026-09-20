@@ -24,6 +24,7 @@ Usage examples:
 import sys
 import os
 import argparse
+import re
 from pathlib import Path
 from typing import List
 
@@ -238,6 +239,7 @@ def _cmd_prepare(args):
         model_name=model_arg,
         use_ollama=use_ollama,
         use_gemini=use_gemini,
+        force_vision=getattr(args, "force_vision", False),
     )
 
     if ai_units:
@@ -295,12 +297,16 @@ def _cmd_prepare(args):
     # Segment
     print(f"\n[*] Segmenting into packages: {ws_path}")
     segmenter = LessonSegmenter(reader, mapper)
+    metadata_title = reader.get_metadata().get("title", "")
+    book_title = args.title or metadata_title or _derive_book_title(target_pdf.stem)
+    print(f"[+] Book title: {book_title}")
+
     coordinates = {
         "subject": args.subject,
         "grade": args.grade,
         "term": args.term,
         "edition": args.edition,
-        "title": args.title,
+        "title": book_title,
     }
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
     print(f"[SUCCESS] Book prepared at: {ws_path}\n")
@@ -559,24 +565,43 @@ def _dict_to_analysis_result(d: dict):
 #  Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _derive_book_title(stem: str) -> str:
+    """Create a human-readable fallback title from a PDF filename.
+
+    The filename is never treated as the canonical Edu7 textbook identity.
+    It is only a fallback display title when PDF metadata and --title are absent.
+    """
+    value = re.sub(r"[_-]+", " ", stem).strip()
+    value = re.sub(r"\\s+", " ", value)
+    return value or "Untitled textbook"
+
+
 def _resolve_pdf(args) -> Path:
     if getattr(args, "pdf_path", None):
-        p = Path(args.pdf_path)
-        if p.exists():
-            return p
-        candidate = Path("books_input") / args.pdf_path
-        if candidate.exists():
-            return candidate
+        p = Path(args.pdf_path).expanduser()
+        if p.exists() and p.is_file():
+            return p.resolve()
+        candidate = (Path("books_input") / args.pdf_path).expanduser()
+        if candidate.exists() and candidate.is_file():
+            return candidate.resolve()
         print(f"Error: PDF not found: {args.pdf_path}")
         sys.exit(1)
+
     in_dir = Path("books_input")
     in_dir.mkdir(exist_ok=True)
-    pdfs = sorted(in_dir.glob("*.pdf"))
+    pdfs = sorted(p for p in in_dir.glob("*.pdf") if p.is_file())
     if not pdfs:
         print(f"Error: No PDFs in {in_dir.resolve()}")
         print("Put your book in books_input/ or: edu7-content prepare path/to/book.pdf")
         sys.exit(1)
-    p = pdfs[0]
+    if len(pdfs) > 1:
+        print("Error: Multiple PDFs found in books_input; refusing to guess the book.")
+        for p in pdfs:
+            print(f"  - {p.name}")
+        print("Run: edu7-content prepare books_input/<exact-file-name>.pdf")
+        sys.exit(2)
+
+    p = pdfs[0].resolve()
     print(f"[*] Auto-selected: {p.name}")
     return p
 
