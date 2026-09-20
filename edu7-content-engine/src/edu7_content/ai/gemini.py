@@ -2,18 +2,16 @@ import os
 import json
 import base64
 import time
-import urllib.request
 import urllib.error
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from .base import AIProvider
+from .client import GeminiClient
 from ..content.models import (
     LessonAnalysisResult, ExtractedConcept, ExtractedQuestion,
     QuestionChoice, ExtractedObjective, ExtractedMisconception,
     ExtractedFlashcard
 )
-
-GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
 def _load_env_file():
@@ -57,6 +55,7 @@ class GeminiFreeProvider(AIProvider):
         _load_env_file()
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
         self.model_name = model_name
+        self.client = GeminiClient(self.api_key, model_name)
 
     @property
     def provider_name(self) -> str:
@@ -66,29 +65,12 @@ class GeminiFreeProvider(AIProvider):
     #  Core HTTP helper with automatic 429 retry backoff                  #
     # ------------------------------------------------------------------ #
     def _call_api(self, payload: dict, timeout: int = 120, max_retries: int = 3) -> dict:
-        """POST to Gemini generateContent endpoint with automatic rate-limit backoff."""
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not set.")
-        url = f"{GEMINI_API_BASE}/{self.model_name}:generateContent?key={self.api_key}"
-        data = json.dumps(payload).encode("utf-8")
-
-        delay = 4.0
-        for attempt in range(max_retries + 1):
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-            try:
-                with urllib.request.urlopen(req, timeout=timeout) as resp:
-                    return json.loads(resp.read().decode("utf-8"))
-            except urllib.error.HTTPError as e:
-                if e.code == 429 and attempt < max_retries:
-                    print(f"[*] Gemini Free Tier rate limit reached (429). Retrying in {delay:.1f}s (attempt {attempt+1}/{max_retries})...")
-                    time.sleep(delay)
-                    delay *= 2.0
-                    continue
-                raise
+        # Kept as a thin compatibility method for existing callers.
+        return self.client.generate(payload, timeout=timeout)
 
     def _extract_text(self, response: dict) -> str:
         try:
-            return response["candidates"][0]["content"]["parts"][0]["text"]
+            return GeminiClient.text(response)
         except (KeyError, IndexError) as e:
             raise ValueError(f"Unexpected Gemini response structure: {e}")
 
