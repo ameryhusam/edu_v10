@@ -20,8 +20,6 @@ try:
 except Exception:
     pymupdf = None
 
-from .pdf_ocr import ArabicPdfExtractor, detect_pdf_type, PdfContentType, render_page_to_b64
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  Core: is this an image-based PDF?
