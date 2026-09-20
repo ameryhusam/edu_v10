@@ -106,9 +106,11 @@ def extract_toc_via_vision(
         for i in range(min(max_pages, reader.page_count))
     ]
 
-    # pypdf cannot render pages. Keep the text path available for Gemini.
+    # A scanned PDF must reach a vision provider with actual page images.
+    # pypdf can slice/extract metadata but cannot render pages itself.
     if not images_b64 and not any(p["text"].strip() for p in page_texts):
-        print("[!] First pages contain neither renderable images nor text.")
+        print("[!] Scanned PDF has no text layer and no available renderer.")
+        print("[!] Install PyMuPDF, or a system renderer such as pdftoppm/mutool.")
         return []
 
     # ── Layer 3: Ollama (local, free, no API key) ─────────────────────────
