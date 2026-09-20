@@ -29,7 +29,6 @@ from pathlib import Path
 from ..pdf.reader import PdfReader
 from ..pdf.page_mapping import PageMappingEngine
 from ..pdf.toc import TocExtractor
-from ..pdf.pdf_ocr import ArabicPdfExtractor
 from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
