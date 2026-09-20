@@ -130,12 +130,50 @@ class PdfReader:
         )
 
     def render_page_to_png(self, page_num: int, dpi: int = 150) -> Optional[bytes]:
-        """Render a page only when PyMuPDF is available."""
-        if not self.can_render or not (0 <= page_num < self.page_count):
+        """Render with PyMuPDF first, then pdftoppm/mutool if available."""
+        if not (0 <= page_num < self.page_count):
             return None
-        page = self.doc[page_num]
-        pix = page.get_pixmap(dpi=dpi, alpha=False)
-        return pix.tobytes("png")
+        if self.backend == "pymupdf":
+            page = self.doc[page_num]
+            pix = page.get_pixmap(dpi=dpi, alpha=False)
+            return pix.tobytes("png")
+        return self._render_with_system_tool(page_num, dpi)
+
+    def _render_with_system_tool(self, page_num: int, dpi: int) -> Optional[bytes]:
+        page = page_num + 1
+        source = str(self.pdf_path)
+
+        pdftoppm = shutil.which("pdftoppm")
+        if pdftoppm:
+            with tempfile.TemporaryDirectory(prefix="edu7-render-") as tmp:
+                prefix = os.path.join(tmp, "page")
+                try:
+                    result = subprocess.run(
+                        [pdftoppm, "-f", str(page), "-l", str(page),
+                         "-singlefile", "-png", "-r", str(dpi), source, prefix],
+                        capture_output=True, text=True, timeout=60, check=False,
+                    )
+                    output = Path(prefix + ".png")
+                    if result.returncode == 0 and output.exists():
+                        return output.read_bytes()
+                except (OSError, subprocess.SubprocessError):
+                    pass
+
+        mutool = shutil.which("mutool")
+        if mutool:
+            with tempfile.TemporaryDirectory(prefix="edu7-render-") as tmp:
+                output = Path(tmp) / "page.png"
+                try:
+                    result = subprocess.run(
+                        [mutool, "draw", "-F", "png", "-r", str(dpi),
+                         "-o", str(output), source, str(page)],
+                        capture_output=True, text=True, timeout=60, check=False,
+                    )
+                    if result.returncode == 0 and output.exists():
+                        return output.read_bytes()
+                except (OSError, subprocess.SubprocessError):
+                    pass
+        return None
 
     def render_page_to_b64(self, page_num: int, dpi: int = 150) -> Optional[str]:
         data = self.render_page_to_png(page_num, dpi)
