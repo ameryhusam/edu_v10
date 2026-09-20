@@ -388,7 +388,7 @@ class GeminiFreeProvider(AIProvider):
                 evidence=c.get("evidence", ""),
                 confidence=0.96,
                 model_name=self.provider_name,
-                status="APPROVED"
+                status="PROPOSED"
             ))
 
         for obj in data.get("objectives", []):
@@ -422,7 +422,7 @@ class GeminiFreeProvider(AIProvider):
                 evidence=fc.get("evidence", ""),
                 confidence=0.95,
                 model_name=self.provider_name,
-                status="APPROVED"
+                status="PROPOSED"
             ))
 
         for i, q in enumerate(data.get("questions", [])):
@@ -451,7 +451,7 @@ class GeminiFreeProvider(AIProvider):
                 evidence=q.get("evidence", ""),
                 confidence=0.95,
                 model_name=self.provider_name,
-                status="APPROVED"
+                status="PROPOSED"
             ))
 
         return res
