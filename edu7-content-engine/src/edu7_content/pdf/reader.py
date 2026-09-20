@@ -60,7 +60,9 @@ class PdfReader:
 
     @property
     def can_render(self) -> bool:
-        return self.backend == "pymupdf"
+        return self.backend == "pymupdf" or any(
+            shutil.which(tool) for tool in ("pdftoppm", "mutool")
+        )
 
     def get_metadata(self) -> Dict[str, Any]:
         if self.backend == "pymupdf":
