@@ -55,32 +55,60 @@ class GeminiClient:
     def generate(self, payload: Dict[str, Any], *, timeout: Optional[int] = None) -> Dict[str, Any]:
         if not self.api_keys:
             raise ValueError("GEMINI_API_KEYS (or GEMINI_API_KEY) not set.")
+
         delay = 2.0
-        for attempt in range(self.max_retries + 1):
-            model = self.models[self.model_index]
-            key = self.api_keys[self.key_index]
-            url = f"{GEMINI_API_BASE}/{model}:generateContent?key={key}"
-            data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-            try:
-                with urllib.request.urlopen(req, timeout=timeout or self.timeout) as resp:
-                    return json.loads(resp.read().decode("utf-8"))
-            except urllib.error.HTTPError as exc:
-                if exc.code == 429:
-                    if self.key_index + 1 < len(self.api_keys):
-                        self.key_index += 1
-                        delay = 1.0
-                        continue
-                    if self.model_index + 1 < len(self.models):
-                        self.model_index += 1
-                        self.key_index = 0
-                        delay = 1.0
-                        continue
-                if exc.code in (408, 500, 502, 503, 504) and attempt < self.max_retries:
-                    time.sleep(delay)
-                    delay = min(delay * 2.0, 20.0)
-                    continue
-                raise
+        last_error: Optional[Exception] = None
+
+        # Retry each configured key/model combination independently. A transient
+        # 5xx must not discard the remaining configured keys or models.
+        for model_index, model in enumerate(self.models):
+            self.model_index = model_index
+            for key_index, key in enumerate(self.api_keys):
+                self.key_index = key_index
+                delay = 2.0
+
+                for attempt in range(self.max_retries + 1):
+                    url = f"{GEMINI_API_BASE}/{model}:generateContent?key={key}"
+                    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+                    req = urllib.request.Request(
+                        url,
+                        data=data,
+                        headers={"Content-Type": "application/json"},
+                    )
+                    try:
+                        with urllib.request.urlopen(req, timeout=timeout or self.timeout) as resp:
+                            return json.loads(resp.read().decode("utf-8"))
+                    except urllib.error.HTTPError as exc:
+                        last_error = exc
+
+                        # Quota/rate-limit: move immediately to the next key.
+                        if exc.code == 429:
+                            break
+
+                        # Service/transient failures: retry the current key first,
+                        # then continue with the next key/model after exhaustion.
+                        if exc.code in (408, 500, 502, 503, 504):
+                            if attempt < self.max_retries:
+                                time.sleep(delay)
+                                delay = min(delay * 2.0, 20.0)
+                                continue
+                            break
+
+                        raise
+
+                    except (urllib.error.URLError, TimeoutError) as exc:
+                        last_error = exc
+                        if attempt < self.max_retries:
+                            time.sleep(delay)
+                            delay = min(delay * 2.0, 20.0)
+                            continue
+                        break
+
+        self.model_index = len(self.models) - 1
+        self.key_index = len(self.api_keys) - 1
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("Gemini request failed without a response.")
 
     @staticmethod
     def text(response: Dict[str, Any]) -> str:
