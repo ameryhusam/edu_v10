@@ -16,6 +16,8 @@ import type {
 export interface GeminiConfig {
   readonly apiKey: string | undefined;
   readonly model?: string;
+  readonly maxRetries?: number;
+  readonly timeoutMs?: number;
 }
 
 export class GeminiProvider implements AiProvider {
@@ -45,17 +47,33 @@ export class GeminiProvider implements AiProvider {
       .filter(Boolean)
       .join('\n\n');
 
-    const response = await this.client.models.generateContent({
-      model: this.model,
-      contents: prompt,
-      config: {
-        systemInstruction: request.systemInstruction,
-        maxOutputTokens: request.maxOutputTokens ?? 800,
-        // Low temperature: this is a tutor quoting a textbook, not a poet.
-        temperature: 0.2,
-        ...(request.jsonSchemaName ? { responseMimeType: 'application/json' } : {}),
-      },
-    });
+    const config: Record<string, unknown> = {
+      systemInstruction: request.systemInstruction,
+      maxOutputTokens: request.maxOutputTokens ?? 800,
+      temperature: 0.2,
+    };
+    if (request.jsonSchemaName || request.jsonSchema) {
+      config.responseMimeType = 'application/json';
+      if (request.jsonSchema) config.responseJsonSchema = request.jsonSchema;
+    }
+
+    const maxRetries = this.config.maxRetries ?? 2;
+    let response: Awaited<ReturnType<GoogleGenAI['models']['generateContent']>> | null = null;
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      try {
+        response = await Promise.race([
+          this.client.models.generateContent({ model: this.model, contents: prompt, config: config as any }),
+          new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Gemini request timed out')), this.config.timeoutMs ?? 60_000)),
+        ]);
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxRetries) throw error;
+        await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
+      }
+    }
+    if (!response) throw lastError instanceof Error ? lastError : new Error('Gemini request failed');
 
     const usage = response.usageMetadata;
     return {
