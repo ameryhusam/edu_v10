@@ -1,0 +1,3670 @@
+{
+  "$comment": [
+    "Science G07 Part 1 — Yemeni national curriculum, authored from the book's",
+    "own index and lesson summaries. Units and lessons keep the printed page",
+    "numbers; concepts, questions, misconceptions and readings are authored",
+    "content in the book's vocabulary.",
+    "",
+    "Invariants (asserted below, and again by the seed): slugs are unique",
+    "book-wide; every question has exactly one correct choice; misconception",
+    "slugs referenced from distractors exist on the same concept; explicit",
+    "prerequisites resolve inside the book."
+  ],
+  "subjectKey": "SCI",
+  "gradeKey": "G07",
+  "term": 1,
+  "edition": "2026",
+  "title": "كتاب العلوم",
+  "issuer": "وزارة التربية والتعليم — اليمن",
+  "totalPages": 171,
+  "units": [
+    {
+      "slug": "STRUCTURE-OF-MATTER",
+      "name": "تركيب المادة",
+      "startPage": 7,
+      "endPage": 19,
+      "lessons": [
+        {
+          "slug": "MOLECULE-AND-ATOM",
+          "name": "الجزيء والذرة",
+          "startPage": 8,
+          "endPage": 11,
+          "estimatedMins": 45,
+          "reading": "كل ما يشغل حيزًا من الفراغ وله كتلة يُسمى مادة، ويمكن إدراكه بحاسة أو أكثر. وتتكون المادة من جزيئات متناهية الصغر، والجزيء هو أصغر جزء من المادة يمكن أن يوجد منفردًا ويحتفظ بخواصها الأصلية. ويتكون الجزيء بدوره من ذرات، والذرة أصغر جزء من العنصر لا يقبل الانقسام في التفاعلات الكيميائية الاعتيادية. وعند مرور تيار كهربائي في الماء (جهاز فولتاميتر) يتفكك جزيء الماء إلى ذرتي هيدروجين وذرة أكسجين.",
+          "extraResources": [
+            {
+              "kind": "WORKED_EXAMPLE",
+              "title": "مثال: من المادة إلى الذرة",
+              "body": "قطرة ماء ← تتبخر فنرى بخارها (مادة) ← جزيئات الماء (تحتفظ بخواص الماء) ← كل جزيء ذرتا هيدروجين + ذرة أكسجين. نزول السلم: مادة ← جزيء ← ذرة."
+            }
+          ],
+          "concepts": [
+            {
+              "slug": "MATTER",
+              "name": "المادة",
+              "page": 8,
+              "threshold": 0.7,
+              "difficulty": 0.15,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "LIGHT-IS-MATTER",
+                  "name": "الضوء والظل مواد",
+                  "description": "يعتقد الطالب أن كل ما نراه أو نحس به مادة، فيعدّ الضوء والظل والصوت مواد.",
+                  "remediation": "المادة يجب أن تشغل حيزًا من الفراغ وأن يكون لها كتلة؛ الضوء والظل والصوت لا يستوفيان الشرطين معًا، فليست موادًا وإن كانت ظواهر نحس بها."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "أي مما يلي يُعد مادة؟",
+                  "choices": [
+                    {
+                      "text": "الهواء الذي نتنفسه",
+                      "correct": true
+                    },
+                    {
+                      "text": "ضوء الشمس",
+                      "correct": false,
+                      "misconception": "LIGHT-IS-MATTER"
+                    },
+                    {
+                      "text": "ظل الشجرة",
+                      "correct": false,
+                      "misconception": "LIGHT-IS-MATTER"
+                    },
+                    {
+                      "text": "صوت الموسيقى",
+                      "correct": false,
+                      "misconception": "LIGHT-IS-MATTER"
+                    }
+                  ]
+                },
+                {
+                  "text": "المادة هي كل ما يشغل حيزًا من الفراغ وله:",
+                  "choices": [
+                    {
+                      "text": "كتلة",
+                      "correct": true
+                    },
+                    {
+                      "text": "لون",
+                      "correct": false
+                    },
+                    {
+                      "text": "رائحة فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "شكل ثابت دائمًا",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "MOLECULE",
+              "name": "الجزيء",
+              "page": 9,
+              "threshold": 0.75,
+              "difficulty": 0.25,
+              "prerequisites": [
+                "MATTER"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "ATOM-KEEPS-PROPERTIES",
+                  "name": "الذرة تحتفظ بخواص المادة",
+                  "description": "يخلط الطالب بين الجزيء والذرة فيظن أن الذرة أصغر جزء يحتفظ بخواص المادة.",
+                  "remediation": "الجزيء هو وحدة البناء التي تحفظ خواص المادة؛ فذرة أكسجين منفردة ليست ماءً ولا هواءً نتنفسه، بينما جزيء الماء ماء فعلاً."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "أصغر جزء من المادة يمكن أن يوجد منفردًا ويحتفظ بخواصها الأصلية هو:",
+                  "choices": [
+                    {
+                      "text": "الجزيء",
+                      "correct": true
+                    },
+                    {
+                      "text": "الذرة",
+                      "correct": false,
+                      "misconception": "ATOM-KEEPS-PROPERTIES"
+                    },
+                    {
+                      "text": "الإلكترون",
+                      "correct": false,
+                      "misconception": "ATOM-KEEPS-PROPERTIES"
+                    },
+                    {
+                      "text": "العنصر",
+                      "correct": false,
+                      "misconception": "ATOM-KEEPS-PROPERTIES"
+                    }
+                  ]
+                },
+                {
+                  "text": "جزيء واحد من السكر يحتفظ بطعم السكر الحلو. هذا يدل على أن الجزيء:",
+                  "choices": [
+                    {
+                      "text": "يحمل خواص المادة الأصلية",
+                      "correct": true
+                    },
+                    {
+                      "text": "يختلف في خواصه عن المادة",
+                      "correct": false
+                    },
+                    {
+                      "text": "لا يمكن رؤيته بالعين المجردة",
+                      "correct": false
+                    },
+                    {
+                      "text": "يتحلل بالتسخين",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "ATOM",
+              "name": "الذرة والتحليل الكهربائي للماء",
+              "page": 10,
+              "threshold": 0.75,
+              "difficulty": 0.4,
+              "prerequisites": [
+                "MOLECULE"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "WATER-ELECTROLYSIS-RATIO",
+                  "name": "نسب تفكك الماء خاطئة",
+                  "description": "يظن الطالب أن الماء يتفكك إلى أعداد متساوية من ذرتي الهيدروجين والأكسجين.",
+                  "remediation": "صيغة الماء H₂O تحسم الأمر: ذرتا هيدروجين مقابل ذرة أكسجين واحدة، ولهذا يظهر غاز الهيدروجين في الفولتاميتر بحجم ضعف حجم الأكسجين."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "عند التحليل الكهربائي للماء في جهاز الفولتاميتر يتفكك جزيء الماء إلى:",
+                  "choices": [
+                    {
+                      "text": "ذرتي هيدروجين وذرة أكسجين",
+                      "correct": true
+                    },
+                    {
+                      "text": "ذرتين أكسجين وذرة هيدروجين",
+                      "correct": false,
+                      "misconception": "WATER-ELECTROLYSIS-RATIO"
+                    },
+                    {
+                      "text": "ذرة هيدروجين وذرة أكسجين",
+                      "correct": false,
+                      "misconception": "WATER-ELECTROLYSIS-RATIO"
+                    },
+                    {
+                      "text": "أربع ذرات هيدروجين",
+                      "correct": false,
+                      "misconception": "WATER-ELECTROLYSIS-RATIO"
+                    }
+                  ]
+                },
+                {
+                  "text": "الذرة هي أصغر جزء من العنصر:",
+                  "choices": [
+                    {
+                      "text": "لا يقبل الانقسام في التفاعلات الكيميائية الاعتيادية",
+                      "correct": true
+                    },
+                    {
+                      "text": "يمكن رؤيته بالمجهر المدرسي",
+                      "correct": false
+                    },
+                    {
+                      "text": "ينقسم إلى جزيئات في أي تفاعل",
+                      "correct": false
+                    },
+                    {
+                      "text": "يحتفظ بخواص المادة المركبة",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "ELEMENTS",
+          "name": "العناصر",
+          "startPage": 12,
+          "endPage": 19,
+          "estimatedMins": 45,
+          "reading": "العنصر أبسط مادة نقية لا يمكن تحليلها إلى مواد أبسط منها بالطرق الكيميائية أو الفيزيائية العادية. وتنقسم العناصر إلى فلزات صلبة (عدا الزئبق السائل) ذات بريق معدني وقابلية للطرق والسحب وتوصيل جيد للحرارة والكهرباء، ولافلزات توجد في الحالات الثلاث وليس لها بريق وهي هشة ورديئة التوصيل. ولكل عنصر رمز كيميائي دولي يدل على ذرة واحدة منه، والتكافؤ هو عدد ذرات الهيدروجين التي تتحد معها أو تحل محلها ذرة واحدة من العنصر.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "ELEMENT",
+              "name": "العنصر",
+              "page": 12,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "العنصر هو:",
+                  "choices": [
+                    {
+                      "text": "أبسط مادة نقية لا تتحلل إلى أبسط منها بالطرق العادية",
+                      "correct": true
+                    },
+                    {
+                      "text": "أي مادة نقية يمكن تنقيتها",
+                      "correct": false
+                    },
+                    {
+                      "text": "مادة تتكون من عنصرين أو أكثر",
+                      "correct": false
+                    },
+                    {
+                      "text": "مخلوط من مواد مختلفة",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "أي مما يلي يُعد عنصرًا؟",
+                  "choices": [
+                    {
+                      "text": "الحديد",
+                      "correct": true
+                    },
+                    {
+                      "text": "الماء",
+                      "correct": false
+                    },
+                    {
+                      "text": "ملح الطعام",
+                      "correct": false
+                    },
+                    {
+                      "text": "ثاني أكسيد الكربون",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "METALS-AND-NONMETALS",
+              "name": "الفلزات واللافلزات",
+              "page": 14,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "ELEMENT"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "ALL-METALS-SOLID",
+                  "name": "كل الفلزات صلبة",
+                  "description": "يعمم الطالب حالة الفلزات الصلبة فيظن أنه لا يوجد فلز سائل.",
+                  "remediation": "الزئبق فلز سائل في الظروف العادية، ولهذا يُستخدم في الثرمومترات؛ الحالة الفيزيائية ليست دليلًا على كون المادة فلزًا أو لافلزًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "أي من العناصر التالية فلز يوجد في الحالة السائلة؟",
+                  "choices": [
+                    {
+                      "text": "الزئبق",
+                      "correct": true
+                    },
+                    {
+                      "text": "الحديد",
+                      "correct": false,
+                      "misconception": "ALL-METALS-SOLID"
+                    },
+                    {
+                      "text": "الكبريت",
+                      "correct": false,
+                      "misconception": "ALL-METALS-SOLID"
+                    },
+                    {
+                      "text": "الألومنيوم",
+                      "correct": false,
+                      "misconception": "ALL-METALS-SOLID"
+                    }
+                  ]
+                },
+                {
+                  "text": "من خواص اللافلزات أنها:",
+                  "choices": [
+                    {
+                      "text": "رديئة التوصيل للحرارة والكهرباء",
+                      "correct": true
+                    },
+                    {
+                      "text": "لمّاعة وبريقها معدني",
+                      "correct": false
+                    },
+                    {
+                      "text": "قابلة للطرق والسحب",
+                      "correct": false
+                    },
+                    {
+                      "text": "جميعها غازات",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "SYMBOLS-AND-VALENCE",
+              "name": "الرموز والتكافؤ",
+              "page": 17,
+              "threshold": 0.75,
+              "difficulty": 0.45,
+              "prerequisites": [
+                "METALS-AND-NONMETALS"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "SYMBOL-MEANS-MOLECULE",
+                  "name": "الرمز يدل على الجزيء لا الذرة",
+                  "description": "يظن الطالب أن رمز O مثلًا يعني جزيء الأكسجين لا ذرة أكسجين واحدة.",
+                  "remediation": "الرمز يدل على ذرة واحدة؛ فجزيء الأكسجين يُكتب O₂ أي ذرتان مرتبطتان، والتمييز بين الذرة والجزيء في الرمز أساس لكتابة الصيغ لاحقًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الرمز الكيميائي للعنصر هو اختصار كتابي دولي يدل على:",
+                  "choices": [
+                    {
+                      "text": "ذرة واحدة من العنصر",
+                      "correct": true
+                    },
+                    {
+                      "text": "جزيء واحد من العنصر",
+                      "correct": false,
+                      "misconception": "SYMBOL-MEANS-MOLECULE"
+                    },
+                    {
+                      "text": "جميع ذرات المادة",
+                      "correct": false,
+                      "misconception": "SYMBOL-MEANS-MOLECULE"
+                    },
+                    {
+                      "text": "وزن العنصر الذري",
+                      "correct": false,
+                      "misconception": "SYMBOL-MEANS-MOLECULE"
+                    }
+                  ]
+                },
+                {
+                  "text": "تكافؤ العنصر هو عدد ذرات الهيدروجين التي:",
+                  "choices": [
+                    {
+                      "text": "تتحد معها أو تحل محلها ذرة واحدة من العنصر",
+                      "correct": true
+                    },
+                    {
+                      "text": "توجد في نواته",
+                      "correct": false
+                    },
+                    {
+                      "text": "تفقد منها الإلكترونات دائمًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "تتكافأ معه في الكتلة",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "MATTER-AROUND-US",
+      "name": "المواد من حولنا",
+      "startPage": 21,
+      "endPage": 37,
+      "lessons": [
+        {
+          "slug": "SOLID-STATE",
+          "name": "الحالة الصلبة",
+          "startPage": 22,
+          "endPage": 24,
+          "estimatedMins": 45,
+          "reading": "تتميز المواد الصلبة بأبعاد وشكل وحجم ثابتين، ويرجع ذلك إلى شدة تقارب جزيئاتها وتماسكها. وتنقسم المواد الصلبة إلى بلورية تتناسق جزيئاتها في بناء هندسي منتظم وزوايا متساوية مثل الياقوت وملح الطعام، وغير بلورية تكون جزيئاتها غير مرتبة بانتظام وأشكالها الخارجية غير هندسية مثل الفحم والزجاج.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "SOLID-PROPERTIES",
+              "name": "خصائص الحالة الصلبة",
+              "page": 22,
+              "threshold": 0.7,
+              "difficulty": 0.2,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "SOLID-RIGID-FOREVER",
+                  "name": "الصلب لا يتغير شكله أبدًا",
+                  "description": "يظن الطالب أن ثبات الشكل يعني استحالة تغيّره تحت أي ظرف.",
+                  "remediation": "الثبات في الظروف العادية؛ لكن الصلب يمكن أن يتشكل بالطرق والسحب (الفلزات) أو يتغير بالتسخين — الثبات صفة في الظروف المعتادة لا قانونًا مطلقًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "يتميز الشكل الهندسي الثابت للمواد الصلبة بأنه نتيجة لـ:",
+                  "choices": [
+                    {
+                      "text": "شدة تقارب جزيئاتها وتماسكها",
+                      "correct": true
+                    },
+                    {
+                      "text": "حركة جزيئاتها السريعة",
+                      "correct": false,
+                      "misconception": "SOLID-RIGID-FOREVER"
+                    },
+                    {
+                      "text": "بعد جزيئاتها عن بعضها",
+                      "correct": false,
+                      "misconception": "SOLID-RIGID-FOREVER"
+                    },
+                    {
+                      "text": "ضغطها على جدران الإناء",
+                      "correct": false,
+                      "misconception": "SOLID-RIGID-FOREVER"
+                    }
+                  ]
+                },
+                {
+                  "text": "أي مما يلي له حجم ثابت وشكل ثابت؟",
+                  "choices": [
+                    {
+                      "text": "كتاب من الحديد",
+                      "correct": true
+                    },
+                    {
+                      "text": "ماء في كوب",
+                      "correct": false
+                    },
+                    {
+                      "text": "هواء في بالون",
+                      "correct": false
+                    },
+                    {
+                      "text": "زيت في زجاجة",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "CRYSTALLINE-AMORPHOUS",
+              "name": "المواد البلورية وغير البلورية",
+              "page": 23,
+              "threshold": 0.75,
+              "difficulty": 0.3,
+              "prerequisites": [
+                "SOLID-PROPERTIES"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "GLASS-CRYSTALLINE",
+                  "name": "الزجاج مادة بلورية",
+                  "description": "يظن الطالب أن شفافية الزجاج ونقاءه تدل على أنه بلوري.",
+                  "remediation": "البلورية ترتيب هندسي داخلي منتظم لجزيئات المادة؛ الزجاج جزيئاته عشوائية الترتيب فهو غير بلوري مهما بدا نقيًا أو شفافًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "من أمثلة المواد غير البلورية:",
+                  "choices": [
+                    {
+                      "text": "الزجاج",
+                      "correct": true
+                    },
+                    {
+                      "text": "الياقوت",
+                      "correct": false,
+                      "misconception": "GLASS-CRYSTALLINE"
+                    },
+                    {
+                      "text": "ملح الطعام",
+                      "correct": false,
+                      "misconception": "GLASS-CRYSTALLINE"
+                    },
+                    {
+                      "text": "السكر النقي",
+                      "correct": false,
+                      "misconception": "GLASS-CRYSTALLINE"
+                    }
+                  ]
+                },
+                {
+                  "text": "تتميز المواد البلورية بأن جزيئاتها:",
+                  "choices": [
+                    {
+                      "text": "تتناسق في بناء هندسي منتظم",
+                      "correct": true
+                    },
+                    {
+                      "text": "متنافرة ومتباعدة",
+                      "correct": false
+                    },
+                    {
+                      "text": "عشوائية الترتيب تمامًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "ساكنة لا تهتز",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "LIQUID-STATE",
+          "name": "الحالة السائلة",
+          "startPage": 25,
+          "endPage": 27,
+          "estimatedMins": 45,
+          "reading": "تتميز السوائل بحجم ثابت وشكل غير ثابت، إذ تأخذ شكل الإناء الذي يحتويها، وترجع هذه الظاهرة إلى قدر من حرية الحركة بين جزيئاتها. وتتميز بخاصية الانسياب والتدرج التلقائي من المرتفعات إلى المنخفضات، وعند خلط سائلين قابلين للامتزاج مثل الماء والكحول تتداخل جزيئاتهما فيقل حجم المخلوط عن المجموع الحسابي للحجمين.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "LIQUID-PROPERTIES",
+              "name": "خصائص الحالة السائلة",
+              "page": 25,
+              "threshold": 0.7,
+              "difficulty": 0.2,
+              "prerequisites": [],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "تأخذ السوائل شكل الإناء الذي تحتويه، بينما يبقى حجمها:",
+                  "choices": [
+                    {
+                      "text": "ثابتًا",
+                      "correct": true
+                    },
+                    {
+                      "text": "متغيرًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "مساويًا لشكل الإناء",
+                      "correct": false
+                    },
+                    {
+                      "text": "غير معروف",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "ينساب الماء من المرتفع إلى المنخفض تلقائيًا بسبب خاصية:",
+                  "choices": [
+                    {
+                      "text": "الانسياب",
+                      "correct": true
+                    },
+                    {
+                      "text": "التماسك الشديد",
+                      "correct": false
+                    },
+                    {
+                      "text": "الانضغاط",
+                      "correct": false
+                    },
+                    {
+                      "text": "التوصل الكهربائي",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "LIQUID-MIXING",
+              "name": "الانسياب وتداخل الجزيئات",
+              "page": 26,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "LIQUID-PROPERTIES"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "VOLUMES-ADD-EXACTLY",
+                  "name": "حجوم السوائل تُجمع حسابيًا دائمًا",
+                  "description": "يظن الطالب أن حجم أي مخلوط يساوي مجموع حجوم مكوناته دائمًا.",
+                  "remediation": "الأعداد تُجمع، أما الفراغات بين الجزيئات فلا؛ عند امتزاج سائلين تتداخل جزيئاتهما في فراغات بعضهما فيقل الحجم. المجامعة الحسابية تسلم فقط عند عدم الامتزاج."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "عند خلط 50 سم³ ماء مع 50 سم³ كحول يكون حجم المخلوط:",
+                  "choices": [
+                    {
+                      "text": "أقل من 100 سم³",
+                      "correct": true
+                    },
+                    {
+                      "text": "مساويًا 100 سم³",
+                      "correct": false,
+                      "misconception": "VOLUMES-ADD-EXACTLY"
+                    },
+                    {
+                      "text": "أكثر من 100 سم³",
+                      "correct": false,
+                      "misconception": "VOLUMES-ADD-EXACTLY"
+                    },
+                    {
+                      "text": "مساويًا 50 سم³",
+                      "correct": false,
+                      "misconception": "VOLUMES-ADD-EXACTLY"
+                    }
+                  ]
+                },
+                {
+                  "text": "سبب نقصان الحجم عند خلط الماء بالكحول هو:",
+                  "choices": [
+                    {
+                      "text": "تداخل جزيئات السائلين في فراغات بينها",
+                      "correct": true
+                    },
+                    {
+                      "text": "تبخر جزء من السائلين",
+                      "correct": false
+                    },
+                    {
+                      "text": "تفاعل كيميائي بينهما",
+                      "correct": false
+                    },
+                    {
+                      "text": "زيادة تماسك جزيئات الماء",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "GAS-STATE",
+          "name": "الحالة الغازية",
+          "startPage": 28,
+          "endPage": 31,
+          "estimatedMins": 45,
+          "reading": "ليس للغازات شكل ثابت ولا حجم ثابت، وتتحرك جزيئاتها بسرعة وعشوائية في جميع الاتجاهات، متباعدة عن بعضها بقوى تماسك ضعيفة جدًا، ولذلك فهي قابلة للانضغاط وتنتشر في أي وعاء. ويحدث ضغط الغاز من تصادم جزيئاته السريعة بجدران الوعاء، فإذا قلّصنا حجم الغاز في إناء زاد عدد التصادمات وزاد الضغط.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "GAS-PROPERTIES",
+              "name": "خصائص الحالة الغازية",
+              "page": 28,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "GAS-HAS-FIXED-VOLUME",
+                  "name": "الغاز له حجم ثابت داخل الإناء",
+                  "description": "يظن الطالب أن الغاز يملأ جزءًا من الإناء وله سطح مثل السائل.",
+                  "remediation": "الغاز يملأ الإناء كله مهما كان حجمه؛ الحجم الذي نعزوه للغاز هو حجم وعائه، ولهذا يوصف بأنه غير محدد الشكل والحجم معًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "قوى التماسك بين جزيئات الغاز:",
+                  "choices": [
+                    {
+                      "text": "ضعيفة جدًا",
+                      "correct": true
+                    },
+                    {
+                      "text": "شديدة جدًا",
+                      "correct": false,
+                      "misconception": "GAS-HAS-FIXED-VOLUME"
+                    },
+                    {
+                      "text": "متوسطة",
+                      "correct": false,
+                      "misconception": "GAS-HAS-FIXED-VOLUME"
+                    },
+                    {
+                      "text": "لا توجد فراغات بينها",
+                      "correct": false,
+                      "misconception": "GAS-HAS-FIXED-VOLUME"
+                    }
+                  ]
+                },
+                {
+                  "text": "تتميز جزيئات الغاز بأنها تتحرك:",
+                  "choices": [
+                    {
+                      "text": "بسرعة وعشوائية في جميع الاتجاهات",
+                      "correct": true
+                    },
+                    {
+                      "text": "في اتجاه واحد فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "حركة اهتزازية حول مواضعها",
+                      "correct": false
+                    },
+                    {
+                      "text": "ببطء شديد ومنتظم",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "GAS-PRESSURE",
+              "name": "ضغط الغاز",
+              "page": 29,
+              "threshold": 0.75,
+              "difficulty": 0.4,
+              "prerequisites": [
+                "GAS-PROPERTIES"
+              ],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "ينشأ ضغط الغاز على جدران الوعاء من:",
+                  "choices": [
+                    {
+                      "text": "تصادم جزيئاته السريعة بها",
+                      "correct": true
+                    },
+                    {
+                      "text": "وزن الجزيئات الساكن",
+                      "correct": false
+                    },
+                    {
+                      "text": "تماسك الجزيئات ببعضها",
+                      "correct": false
+                    },
+                    {
+                      "text": "برودة الجزيئات الشديدة",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "إذا قلّصنا حجم كمية من الغاز في إناء محكم فإن ضغطها:",
+                  "choices": [
+                    {
+                      "text": "يزداد لزيادة عدد تصادمات الجزيئات مع الجدران",
+                      "correct": true
+                    },
+                    {
+                      "text": "ينقص لقرب الجزيئات من بعضها",
+                      "correct": false
+                    },
+                    {
+                      "text": "يبقى ثابتًا لأن الكتلة لم تتغير",
+                      "correct": false
+                    },
+                    {
+                      "text": "ينعدم",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "STATE-CHANGES",
+          "name": "تحولات حالات المادة",
+          "startPage": 32,
+          "endPage": 36,
+          "estimatedMins": 45,
+          "reading": "تتحول المادة من حالة إلى أخرى باكتساب الحرارة أو فقدانها. فالانصهار تحول المادة الصلبة إلى سائلة باكتسابها الحرارة عند نقطة الانصهار، والتجمد تحولها من سائلة إلى صلبة بفقدانها الحرارة عند نقطة التجمد. والتبخر تحول السائل إلى غاز باكتساب الحرارة عند نقطة الغليان، والتكثيف تحول الغاز إلى سائل بفقدان الحرارة.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "MELTING-AND-FREEZING",
+              "name": "الانصهار والتجمد",
+              "page": 32,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "HEAT-LOSS-EVAPORATES",
+                  "name": "فقدان الحرارة يبخّر المادة",
+                  "description": "يربط الطالب تغير الحالة باكتساب الحرارة فقط فيظن أن فقدانها تبخير.",
+                  "remediation": "التبخر والتسخين اكتساب للحرارة؛ أما الفقدان فمساره معاكس: تكثيف وتجمد. قاعدة عامة: اكتساب الحرارة يباعد الجزيئات، وفقدها يقرّبها."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تحول المادة من الحالة الصلبة إلى السائلة يُسمى:",
+                  "choices": [
+                    {
+                      "text": "الانصهار",
+                      "correct": true
+                    },
+                    {
+                      "text": "التجمد",
+                      "correct": false
+                    },
+                    {
+                      "text": "التكثيف",
+                      "correct": false
+                    },
+                    {
+                      "text": "التبخر",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "عندما تفقد المادة السائلة حرارة فإنها تتحول إلى الحالة:",
+                  "choices": [
+                    {
+                      "text": "الصلبة",
+                      "correct": true
+                    },
+                    {
+                      "text": "الغازية",
+                      "correct": false,
+                      "misconception": "HEAT-LOSS-EVAPORATES"
+                    },
+                    {
+                      "text": "البخارية",
+                      "correct": false,
+                      "misconception": "HEAT-LOSS-EVAPORATES"
+                    },
+                    {
+                      "text": "البلورية",
+                      "correct": false,
+                      "misconception": "HEAT-LOSS-EVAPORATES"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "EVAPORATION-AND-CONDENSATION",
+              "name": "التبخر والتكثيف",
+              "page": 34,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "MELTING-AND-FREEZING"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "STEAM-IS-AIR",
+                  "name": "بخار الماء هو الهواء نفسه",
+                  "description": "يظن الطالب أن البخار المنبعث شفاف هو هواء لا ماء.",
+                  "remediation": "بخار الماء ماء في الحالة الغازية، يتكثف عند ملامسة سطح بارد فيظهر كقطرات؛ والهواء مخلوط غازات مختلفة منه النيتروجين والأكسجين."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تحول الغاز إلى سائل بفقدان الحرارة يُسمى:",
+                  "choices": [
+                    {
+                      "text": "التكثيف",
+                      "correct": true
+                    },
+                    {
+                      "text": "التبخر",
+                      "correct": false,
+                      "misconception": "STEAM-IS-AIR"
+                    },
+                    {
+                      "text": "الانصهار",
+                      "correct": false,
+                      "misconception": "STEAM-IS-AIR"
+                    },
+                    {
+                      "text": "التسامي",
+                      "correct": false,
+                      "misconception": "STEAM-IS-AIR"
+                    }
+                  ]
+                },
+                {
+                  "text": "تكوّن قطرات الماء على السطح الخارجي لكوب بارد يُعد تطبيقًا على:",
+                  "choices": [
+                    {
+                      "text": "تكثيف بخار الماء الموجود في الهواء",
+                      "correct": true
+                    },
+                    {
+                      "text": "تبخر الماء داخل الكوب",
+                      "correct": false
+                    },
+                    {
+                      "text": "انصهار الجليد",
+                      "correct": false
+                    },
+                    {
+                      "text": "تسرب الماء عبر الزجاج",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "PURE-AND-IMPURE",
+      "name": "المواد النقية وغير النقية",
+      "startPage": 39,
+      "endPage": 56,
+      "lessons": [
+        {
+          "slug": "PURE-AND-IMPURE-MATTER",
+          "name": "المادة النقية وغير النقية",
+          "startPage": 40,
+          "endPage": 47,
+          "estimatedMins": 45,
+          "reading": "المركب الكيميائي مادة تتكون من اتحاد عنصرين أو أكثر بنسبة وزنية ثابتة نتيجة تغير كيميائي، وتختلف خواصه الكلية عن خواص العناصر المكونة له. أما المخلوط فمزيج من عدة مواد بأي نسبة دون حدوث تفاعل كيميائي، مع احتفاظ كل مادة بخواصها الأصلية. والمادة النقية تتكون بالكامل من نوع واحد من الجزيئات أو الذرات، بينما غير النقية تحتوي على شوائب وتداخل لمواد أخرى.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "CHEMICAL-COMPOUND",
+              "name": "المركب الكيميائي",
+              "page": 40,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "يتكون المركب الكيميائي من اتحاد عنصرين أو أكثر بنسبة:",
+                  "choices": [
+                    {
+                      "text": "وزنية ثابتة نتيجة تغير كيميائي",
+                      "correct": true
+                    },
+                    {
+                      "text": "وزنية متغيرة حسب الرغبة",
+                      "correct": false
+                    },
+                    {
+                      "text": "حجمية ثابتة دون تفاعل",
+                      "correct": false
+                    },
+                    {
+                      "text": "عشوائية غير محددة",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "الماء مركب كيميائي لأنه:",
+                  "choices": [
+                    {
+                      "text": "يتكون من هيدروجين وأكسجين بنسبة ثابتة وتغيرت خواصهما",
+                      "correct": true
+                    },
+                    {
+                      "text": "مزيج من غازين يمكن فصلهما بالترشيح",
+                      "correct": false
+                    },
+                    {
+                      "text": "عنصر نقي سائل",
+                      "correct": false
+                    },
+                    {
+                      "text": "مخلوط متجانس من ذرتين",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "MIXTURE",
+              "name": "المخلوط",
+              "page": 43,
+              "threshold": 0.75,
+              "difficulty": 0.3,
+              "prerequisites": [
+                "CHEMICAL-COMPOUND"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "MIXTURE-FIXED-RATIO",
+                  "name": "للمخلوط نسبة ثابتة مثل المركب",
+                  "description": "يظن الطالب أن كل مادة مكونة من مواد أخرى لها نسبة ثابتة.",
+                  "remediation": "الثبات صفة المركب الكيميائي لا المخلوط؛ مخلوط الرمل والملح يمكن أن يكون أي نسبة ويظل مخلوطًا، وهذا بالضبط ما يميزه عن المركب."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "من خصائص المخلوط أن مكوناته:",
+                  "choices": [
+                    {
+                      "text": "تحتفظ بخواصها الأصلية ويمكن فصلها بالطرق الفيزيائية",
+                      "correct": true
+                    },
+                    {
+                      "text": "تفقد خواصها تمامًا",
+                      "correct": false,
+                      "misconception": "MIXTURE-FIXED-RATIO"
+                    },
+                    {
+                      "text": "تتحد بنسبة وزنية ثابتة",
+                      "correct": false,
+                      "misconception": "MIXTURE-FIXED-RATIO"
+                    },
+                    {
+                      "text": "لا يمكن فصلها إطلاقًا",
+                      "correct": false,
+                      "misconception": "MIXTURE-FIXED-RATIO"
+                    }
+                  ]
+                },
+                {
+                  "text": "أي مما يلي يُعد مخلوطًا؟",
+                  "choices": [
+                    {
+                      "text": "هواء الجو",
+                      "correct": true
+                    },
+                    {
+                      "text": "الأكسجين النقي",
+                      "correct": false
+                    },
+                    {
+                      "text": "الماء المقطر",
+                      "correct": false
+                    },
+                    {
+                      "text": "الذهب النقي",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "PURE-MATTER",
+              "name": "المادة النقية وغير النقية",
+              "page": 45,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "MIXTURE"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "CLEAR-MEANS-PURE",
+                  "name": "الصافي نقي",
+                  "description": "يحكم الطالب على النقاء بالشفافية أو الصفاء الظاهري.",
+                  "remediation": "النقاء يُقاس بما تتكون منه المادة لا بمظهرها؛ ماء البحر صافٍ وغير نقي، لأن الشوائب الذائبة فيه تُخفيها الشفافية ولا تلغيها."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "المادة النقية هي التي تتكون من:",
+                  "choices": [
+                    {
+                      "text": "نوع واحد من الجزيئات أو الذرات",
+                      "correct": true
+                    },
+                    {
+                      "text": "عدة مواد ذائبة",
+                      "correct": false
+                    },
+                    {
+                      "text": "ماء وشوائب قليلة",
+                      "correct": false
+                    },
+                    {
+                      "text": "عناصر بنسبة ثابتة",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "ماء يحتوي على أملاح ذائبة يُصنف بأنه مادة:",
+                  "choices": [
+                    {
+                      "text": "غير نقية",
+                      "correct": true
+                    },
+                    {
+                      "text": "نقية لأنه سائل صافٍ",
+                      "correct": false,
+                      "misconception": "CLEAR-MEANS-PURE"
+                    },
+                    {
+                      "text": "نقية لأن الشوائب ذائبة",
+                      "correct": false,
+                      "misconception": "CLEAR-MEANS-PURE"
+                    },
+                    {
+                      "text": "مركبة لأنها متجانسة",
+                      "correct": false,
+                      "misconception": "CLEAR-MEANS-PURE"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "SEPARATION-METHODS",
+          "name": "طرق فصل وتنقية المواد",
+          "startPage": 48,
+          "endPage": 54,
+          "estimatedMins": 45,
+          "reading": "تُفصل المواد بطرق فيزيائية بحسب خواصها: الفصل بالمغناطيس يجذب برادة الحديد، والغربلة تفصل المواد حسب الحجم بالمنخل، والترشيح يفصل المواد الصلبة العالقة في السائل بوسط مسامي. أما التقطير فيعتمد على تبخير السائل وتكثيف البخار للحصول على سائل نقي، والتبلور يفصل مادة صلبة ذائبة في محلول مشبع على هيئة بلورات.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "PHYSICAL-SEPARATION",
+              "name": "الفصل بالمغناطيس والغربلة والترشيح",
+              "page": 48,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "FILTER-DISSOLVED",
+                  "name": "الترشيح يفصل المواد الذائبة",
+                  "description": "يظن الطالب أن ورق الترشيح يمسك بالملح الذائب في الماء.",
+                  "remediation": "الترشيح يفصل العالق لا الذائب؛ المادة الذائبة تمر مع السائل عبر المسام، وفصلها يحتاج تبخيرًا أو تبلورًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "للفصل بين برادة الحديد والرمل نستخدم:",
+                  "choices": [
+                    {
+                      "text": "المغناطيس",
+                      "correct": true
+                    },
+                    {
+                      "text": "الترشيح",
+                      "correct": false
+                    },
+                    {
+                      "text": "التقطير",
+                      "correct": false
+                    },
+                    {
+                      "text": "التبلور",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "يفصل الترشيح:",
+                  "choices": [
+                    {
+                      "text": "المواد الصلبة العالقة في السائل",
+                      "correct": true
+                    },
+                    {
+                      "text": "مادتين سائلتين ممتزجتين",
+                      "correct": false,
+                      "misconception": "FILTER-DISSOLVED"
+                    },
+                    {
+                      "text": "الأملاح الذائبة في الماء",
+                      "correct": false,
+                      "misconception": "FILTER-DISSOLVED"
+                    },
+                    {
+                      "text": "برادة الحديد عن الكبريت",
+                      "correct": false,
+                      "misconception": "FILTER-DISSOLVED"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "DISTILLATION-AND-CRYSTALLISATION",
+              "name": "التقطير والتبلور",
+              "page": 51,
+              "threshold": 0.75,
+              "difficulty": 0.4,
+              "prerequisites": [
+                "PHYSICAL-SEPARATION"
+              ],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "يعتمد التقطير على:",
+                  "choices": [
+                    {
+                      "text": "تبخير السائل ثم تكثيف البخار الناتج",
+                      "correct": true
+                    },
+                    {
+                      "text": "ترسيب الشوائب بالترويق",
+                      "correct": false
+                    },
+                    {
+                      "text": "جذب المواد بالمغناطيس",
+                      "correct": false
+                    },
+                    {
+                      "text": "فصل الحبيبات بالمنخل",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "للفصل بين ملح ذائب وماءه نستخدم:",
+                  "choices": [
+                    {
+                      "text": "التبخر أو التبلور",
+                      "correct": true
+                    },
+                    {
+                      "text": "الترشيح بورق ترشيح",
+                      "correct": false
+                    },
+                    {
+                      "text": "المغناطيس",
+                      "correct": false
+                    },
+                    {
+                      "text": "الغربلة بالمنخل",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "WATER-PURIFICATION",
+          "name": "تطبيقات على طرق تنقية مياه الشرب",
+          "startPage": 55,
+          "endPage": 56,
+          "estimatedMins": 45,
+          "reading": "تُنقَّى مياه الشرب في المدن عبر مراحل متتابعة: الغربلة لإزالة الشوائب الكبيرة، ثم التعقيم بالكلور أو الأشعة فوق البنفسجية لقتل الميكروبات والجراثيم، والتلبد والترويق لترسيب العوالق الدقيقة، وأخيرًا الترشيح الرملي لاعتراض ما تبقى من شوائب قبل وصول الماء إلى المنازل.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "DRINKING-WATER-STAGES",
+              "name": "مراحل تنقية مياه الشرب",
+              "page": 55,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "STERILIZE-FIRST",
+                  "name": "التعقيم أول مراحل التنقية",
+                  "description": "يظن الطالب أن قتل الجراثيم يكفي أولًا فيصبح الماء صالحًا.",
+                  "remediation": "لو عُقّم الماء العكر لبقيت عوالقه وروائحه؛ الترتيب هدفه فيزيائي أولًا (غربلة وتلبد وترويق وترشيح) ثم كيميائي حيوي (تعقيم) على ماء صافٍ."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الغرض من التعقيم بالكلور في تنقية مياه الشرب هو:",
+                  "choices": [
+                    {
+                      "text": "قتل الميكروبات والجراثيم",
+                      "correct": true
+                    },
+                    {
+                      "text": "ترسيب الرمال",
+                      "correct": false
+                    },
+                    {
+                      "text": "إزالة طعم الماء",
+                      "correct": false
+                    },
+                    {
+                      "text": "زيادة نسبة الأملاح",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "المرحلة التي تعترض ما تبقى من شوائب دقيقة بعد الترويق هي:",
+                  "choices": [
+                    {
+                      "text": "الترشيح الرملي",
+                      "correct": true
+                    },
+                    {
+                      "text": "الغربلة",
+                      "correct": false,
+                      "misconception": "STERILIZE-FIRST"
+                    },
+                    {
+                      "text": "التلبد",
+                      "correct": false,
+                      "misconception": "STERILIZE-FIRST"
+                    },
+                    {
+                      "text": "التعقيم",
+                      "correct": false,
+                      "misconception": "STERILIZE-FIRST"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "PROPERTIES-AND-MEASUREMENT",
+      "name": "خواص الأجسام وقياساتها",
+      "startPage": 58,
+      "endPage": 83,
+      "lessons": [
+        {
+          "slug": "VOLUMES-AND-MEASUREMENT",
+          "name": "حجوم الأجسام وقياساتها",
+          "startPage": 59,
+          "endPage": 64,
+          "estimatedMins": 45,
+          "reading": "الحجم هو مقدار الحيز من الفراغ الذي يشغله الجسم المادي، ويقاس في النظام الدولي بالمتر المكعب (m³). وتقاس حجوم الأجسام المنتظمة بحساب أبعادها، أما الأجسام غير المنتظمة فتُغمر في مخبار مدرج به سائل لا يذيبها، ويكون الحجم بمقدار إزاحة السائل. وإذا كان الجسم يذوب في الماء استُخدم سائل آخر لا يذيبه كزيت الطبخ.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "VOLUME",
+              "name": "الحجم ووحداته",
+              "page": 59,
+              "threshold": 0.7,
+              "difficulty": 0.2,
+              "prerequisites": [],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "الحجم هو مقدار:",
+                  "choices": [
+                    {
+                      "text": "الحيز من الفراغ الذي يشغله الجسم",
+                      "correct": true
+                    },
+                    {
+                      "text": "المادة التي يحويها الجسم",
+                      "correct": false
+                    },
+                    {
+                      "text": "قوة الجاذبية على الجسم",
+                      "correct": false
+                    },
+                    {
+                      "text": "كتلة وحدة الحجوم",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "وحدة قياس الحجم في النظام الدولي هي:",
+                  "choices": [
+                    {
+                      "text": "المتر المكعب",
+                      "correct": true
+                    },
+                    {
+                      "text": "الكيلوجرام",
+                      "correct": false
+                    },
+                    {
+                      "text": "النيوتن",
+                      "correct": false
+                    },
+                    {
+                      "text": "المتر الطولي",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "IRREGULAR-VOLUME",
+              "name": "قياس حجم جسم غير منتظم",
+              "page": 61,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "VOLUME"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "DISSOLVES-STILL-WATER",
+                  "name": "الماء مناسب لقياس حجم أي جسم",
+                  "description": "يغمر الطالب جسمًا يذوب في الماء فيفقد الجسمُ حجمه أثناء القياس نفسه.",
+                  "remediation": "شرط السائل المُغمِر ألا يذيب الجسم ولا يتفاعل معه؛ قطعة سكر تُقاس في زيت الطبخ، وإلا فالحجم المقروء حجم ما تبقى من الجسم لا حجمه كاملًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "لقياس حجم حجر صغير غير منتظم لا يذوب في الماء نستخدم:",
+                  "choices": [
+                    {
+                      "text": "مخبارًا مدرجًا ونعين مقدار إزاحة السائل",
+                      "correct": true
+                    },
+                    {
+                      "text": "الميزان ذا الكفتين",
+                      "correct": false,
+                      "misconception": "DISSOLVES-STILL-WATER"
+                    },
+                    {
+                      "text": "شريط قياس وطول أضلاعه",
+                      "correct": false,
+                      "misconception": "DISSOLVES-STILL-WATER"
+                    },
+                    {
+                      "text": "الثلرمومتر",
+                      "correct": false,
+                      "misconception": "DISSOLVES-STILL-WATER"
+                    }
+                  ]
+                },
+                {
+                  "text": "إذا كان الجسم يذوب في الماء فإن حجمه يقاس بغمره في:",
+                  "choices": [
+                    {
+                      "text": "زيت الطبخ",
+                      "correct": true
+                    },
+                    {
+                      "text": "ماء مقطر",
+                      "correct": false
+                    },
+                    {
+                      "text": "محلول ملحي",
+                      "correct": false
+                    },
+                    {
+                      "text": "كحول يذيبه",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "MASS-AND-MEASUREMENT",
+          "name": "كتلة الأجسام وقياسها",
+          "startPage": 65,
+          "endPage": 68,
+          "estimatedMins": 45,
+          "reading": "الكتلة هي مقدار ما يحويه الجسم المادي من مادة، وهي قيمة ثابتة مستقلة لا تتغير بتغير المكان في الكون، وتقاس بالكيلوجرام والجرام باستخدام موازين مثل الميزان ذي الكفتين والميزان الحساس.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "MASS",
+              "name": "الكتلة",
+              "page": 65,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "MASS-CHANGES-PLACE",
+                  "name": "الكتلة تتغير بتغير المكان",
+                  "description": "يخلط الطالب بين الكتلة والوزن فيظن أن كليهما يتغير مع الجاذبية.",
+                  "remediation": "الكتلة مقدار المادة في الجسم وهي ملازمة له أينما ذهب؛ الذي يتغير بتغير الجاذبية هو الوزن لأنه قوة جذب. الكتلة تصحب الجسم، والوزن يمنحه المكان."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الكتلة هي مقدار:",
+                  "choices": [
+                    {
+                      "text": "ما يحويه الجسم من مادة",
+                      "correct": true
+                    },
+                    {
+                      "text": "الحيز الذي يشغله الجسم",
+                      "correct": false
+                    },
+                    {
+                      "text": "قوة جذب الأرض للجسم",
+                      "correct": false
+                    },
+                    {
+                      "text": "سرعة الجسم المتحرك",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "إذا نُقل جسم من الأرض إلى القمر فإن كتلته:",
+                  "choices": [
+                    {
+                      "text": "تبقى ثابتة",
+                      "correct": true
+                    },
+                    {
+                      "text": "تزداد",
+                      "correct": false,
+                      "misconception": "MASS-CHANGES-PLACE"
+                    },
+                    {
+                      "text": "تنقص إلى السدس",
+                      "correct": false,
+                      "misconception": "MASS-CHANGES-PLACE"
+                    },
+                    {
+                      "text": "تنعدم لعدم وجود جاذبية",
+                      "correct": false,
+                      "misconception": "MASS-CHANGES-PLACE"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "WEIGHT-AND-MEASUREMENT",
+          "name": "الوزن وقياسه",
+          "startPage": 69,
+          "endPage": 72,
+          "estimatedMins": 45,
+          "reading": "الوزن مقدار قوة الجاذبية الأرضية التي تجذب الجسم باتجاه مركز الأرض، ويتغير باختلاف المكان والارتفاع عن سطح الأرض. ويقاس الوزن بالميزان الزنبركي بوحدة النيوتن (أو الداين)، حيث يعادل الثقل كيلوجرام واحد تقريبًا 9.8 نيوتن.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "WEIGHT",
+              "name": "الوزن",
+              "page": 69,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "WEIGHT-IS-MASS",
+                  "name": "الوزن هو الكتلة نفسها",
+                  "description": "يستخدم الطالب الكلمتين مترادفتين ويقيس الوزن بالكيلوجرام.",
+                  "remediation": "الكتلة مقدار مادة وتقاس بالكيلوجرام بميزان الكفتين؛ والوزن قوة جاذبية وتقاس بالنيوتن بالميزان الزنبركي. الثقل كيلوجرام ≈ 9.8 نيوتن يربط بينهما."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الوزن هو مقدار قوة:",
+                  "choices": [
+                    {
+                      "text": "الجاذبية الأرضية التي تجذب الجسم",
+                      "correct": true
+                    },
+                    {
+                      "text": "المادة التي يحويها الجسم",
+                      "correct": false,
+                      "misconception": "WEIGHT-IS-MASS"
+                    },
+                    {
+                      "text": "دفع الهواء على الجسم",
+                      "correct": false,
+                      "misconception": "WEIGHT-IS-MASS"
+                    },
+                    {
+                      "text": "احتكاك الجسم بالأرض",
+                      "correct": false,
+                      "misconception": "WEIGHT-IS-MASS"
+                    }
+                  ]
+                },
+                {
+                  "text": "يقاس الوزن بوحدة:",
+                  "choices": [
+                    {
+                      "text": "النيوتن",
+                      "correct": true
+                    },
+                    {
+                      "text": "الكيلوجرام",
+                      "correct": false
+                    },
+                    {
+                      "text": "الجرام",
+                      "correct": false
+                    },
+                    {
+                      "text": "المتر المكعب",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "DENSITY-AND-MEASUREMENT",
+          "name": "الكثافة وقياسها",
+          "startPage": 73,
+          "endPage": 76,
+          "estimatedMins": 45,
+          "reading": "الكثافة هي كتلة وحدة الحجوم من المادة، وتحسب بقسمة كتلة الجسم على حجمه، وتقاس بالجرام لكل سنتيمتر مكعب أو الكيلوجرام لكل متر مكعب. والأجسام ذات الكثافة الأقل من كثافة السائل تطفو على سطحه، بينما تغوص الأجسام ذات الكثافة الأكبر من كثافة السائل.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "DENSITY",
+              "name": "الكثافة",
+              "page": 73,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "الكثافة هي:",
+                  "choices": [
+                    {
+                      "text": "كتلة وحدة الحجوم من المادة",
+                      "correct": true
+                    },
+                    {
+                      "text": "حجم وحدة الكتل",
+                      "correct": false
+                    },
+                    {
+                      "text": "كتلة الجسم مضروبة في حجمه",
+                      "correct": false
+                    },
+                    {
+                      "text": "وزن الجسم في الماء",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "جسم كتلته 20 جم وحجمه 4 سم³، فكثافته:",
+                  "choices": [
+                    {
+                      "text": "5 جم/سم³",
+                      "correct": true
+                    },
+                    {
+                      "text": "80 جم/سم³",
+                      "correct": false
+                    },
+                    {
+                      "text": "0.2 جم/سم³",
+                      "correct": false
+                    },
+                    {
+                      "text": "24 جم/سم³",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "FLOATING-AND-SINKING",
+              "name": "الطفو والغوص",
+              "page": 75,
+              "threshold": 0.75,
+              "difficulty": 0.4,
+              "prerequisites": [
+                "DENSITY"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "HEAVY-ALWAYS-SINKS",
+                  "name": "الثقيل يغوص دائمًا",
+                  "description": "يحكم الطالب بالوزن الظاهري فيغرق سفينة حديدية في ذهنه ويسبق الخشبَ خشبٌ.",
+                  "remediation": "المقارنة بين كثافة الجسم وكثافة السائل لا بين أوزان الأجسام: سفينة حديد مجوفة متوسط كثافتها أقل من الماء فتطفو، ودبوس خشبي صلب قد يتشبع ماءً فيغوص."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "يطفو الجسم على سطح السائل إذا كانت كثافته:",
+                  "choices": [
+                    {
+                      "text": "أقل من كثافة السائل",
+                      "correct": true
+                    },
+                    {
+                      "text": "أكبر من كثافة السائل",
+                      "correct": false,
+                      "misconception": "HEAVY-ALWAYS-SINKS"
+                    },
+                    {
+                      "text": "مساوية لكتلته",
+                      "correct": false,
+                      "misconception": "HEAVY-ALWAYS-SINKS"
+                    },
+                    {
+                      "text": "مساوية لكثافة السائل تمامًا",
+                      "correct": false,
+                      "misconception": "HEAVY-ALWAYS-SINKS"
+                    }
+                  ]
+                },
+                {
+                  "text": "تطفو قطعة خشب على الماء وتغوص قطعة حديد مساوية لها في الحجم لأن:",
+                  "choices": [
+                    {
+                      "text": "كثافة الخشب أقل من كثافة الماء وكثافة الحديد أكبر منها",
+                      "correct": true
+                    },
+                    {
+                      "text": "الخشب أخف وزنًا في الهواء",
+                      "correct": false
+                    },
+                    {
+                      "text": "الماء يرفع الخشب لخفته",
+                      "correct": false
+                    },
+                    {
+                      "text": "الحديد يصدأ في الماء",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "TYPES-OF-MOTION",
+          "name": "أنواع الحركة",
+          "startPage": 77,
+          "endPage": 82,
+          "estimatedMins": 45,
+          "reading": "الحركة تغير في موضع الجسم بمرور الزمن بالنسبة إلى نقطة مرجعية، والسرعة هي معدل تغير المسافة بالنسبة للزمن وتحسب بقسمة المسافة على الزمن وتقاس بالمتر/الثانية. ومن أنواع الحركة: الخطية المستقيمة والدائرية والاهتزازية كالبندول والبيضاوية. وتكون الحركة منتظمة عند قطع مسافات متساوية في أزمنة متساوية، وغير منتظمة وإلا فتُحسب لها سرعة متوسطة.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "MOTION-AND-SPEED",
+              "name": "الحركة والسرعة",
+              "page": 77,
+              "threshold": 0.7,
+              "difficulty": 0.35,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "NO-REFERENCE-NO-MOTION",
+                  "name": "الحركة مطلقة لا تحتاج مرجعًا",
+                  "description": "يصف الطالب الجسم بأنه متحرك أو ساكن دون تحديد نقطة مرجعية.",
+                  "remediation": "راكب القطار ساكن بالنسبة إلى مقعده ومتحرك بالنسبة إلى المحطة؛ الحركة وصف نسبي لا يُقال إلا بالنسبة إلى مرجع معلن."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الحركة هي:",
+                  "choices": [
+                    {
+                      "text": "تغير موضع الجسم بمرور الزمن بالنسبة إلى نقطة مرجعية",
+                      "correct": true
+                    },
+                    {
+                      "text": "انتقال الجسم بسرعة كبيرة دائمًا",
+                      "correct": false,
+                      "misconception": "NO-REFERENCE-NO-MOTION"
+                    },
+                    {
+                      "text": "بقاء الجسم ساكنًا",
+                      "correct": false,
+                      "misconception": "NO-REFERENCE-NO-MOTION"
+                    },
+                    {
+                      "text": "قوة جذب الجسم",
+                      "correct": false,
+                      "misconception": "NO-REFERENCE-NO-MOTION"
+                    }
+                  ]
+                },
+                {
+                  "text": "سيارة قطعت 100 متر في 20 ثانية، فسرعتها:",
+                  "choices": [
+                    {
+                      "text": "5 م/ث",
+                      "correct": true
+                    },
+                    {
+                      "text": "2000 م/ث",
+                      "correct": false
+                    },
+                    {
+                      "text": "0.2 م/ث",
+                      "correct": false
+                    },
+                    {
+                      "text": "80 م/ث",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "MOTION-TYPES",
+              "name": "أنواع الحركة وانتظامها",
+              "page": 79,
+              "threshold": 0.75,
+              "difficulty": 0.4,
+              "prerequisites": [
+                "MOTION-AND-SPEED"
+              ],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "حركة البندول ذهابًا وإيابًا حول موضع سكونه تُعد حركة:",
+                  "choices": [
+                    {
+                      "text": "اهتزازية",
+                      "correct": true
+                    },
+                    {
+                      "text": "خطية مستقيمة",
+                      "correct": false
+                    },
+                    {
+                      "text": "دائرية",
+                      "correct": false
+                    },
+                    {
+                      "text": "بيضاوية",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "تكون الحركة منتظمة إذا قطع الجسم:",
+                  "choices": [
+                    {
+                      "text": "مسافات متساوية في أزمنة متساوية",
+                      "correct": true
+                    },
+                    {
+                      "text": "مسافات متساوية في أزمنة مختلفة",
+                      "correct": false
+                    },
+                    {
+                      "text": "مسافات مختلفة في أزمنة متساوية",
+                      "correct": false
+                    },
+                    {
+                      "text": "أي مسافة في أي زمن",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "HEAT",
+      "name": "الحرارة",
+      "startPage": 86,
+      "endPage": 102,
+      "lessons": [
+        {
+          "slug": "HEAT-TRANSFERS",
+          "name": "الحرارة تنتقل",
+          "startPage": 87,
+          "endPage": 90,
+          "estimatedMins": 45,
+          "reading": "تنتقل الحرارة بثلاث طرق: التوصيل في الأجسام الصلبة وخاصة المعادن، حيث تنتقل الطاقة عبر اهتزاز الجزيئات دون انتقالها فعليًا من مواضعها؛ والحمل في السوائل والغازات حيث تصعد جزيئات المادة الساخنة الأقل كثافة إلى أعلى وتحل محلها الباردة؛ والإشعاع حيث تنتقل الطاقة الحرارية في الفراغ أو الأوساط الشفافة على هيئة أشعة دون حاجة إلى وسط مادي ناقل.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "CONDUCTION",
+              "name": "التوصيل الحراري",
+              "page": 87,
+              "threshold": 0.75,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "MOLECULES-TRAVEL-IN-CONDUCTION",
+                  "name": "الجزيئات تنتقل في التوصيل",
+                  "description": "يظن الطالب أن سخونة طرف الملعقة تعني أن جزيئات اللهب انتقلت إليها.",
+                  "remediation": "جزيئات المعدن تظل في مواضعها؛ الذي ينتقل هو الطاقة عبر اهتزازها المتتالي من جار إلى جار، ولهذا يكون التوصيل في الصلب حيث الجيران ملتصقون."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "ينتقل الحرارة بالتوصيل في:",
+                  "choices": [
+                    {
+                      "text": "الأجسام الصلبة وخاصة المعادن",
+                      "correct": true
+                    },
+                    {
+                      "text": "الفراغ بين الشمس والأرض",
+                      "correct": false,
+                      "misconception": "MOLECULES-TRAVEL-IN-CONDUCTION"
+                    },
+                    {
+                      "text": "السوائل فقط",
+                      "correct": false,
+                      "misconception": "MOLECULES-TRAVEL-IN-CONDUCTION"
+                    },
+                    {
+                      "text": "الغازات فقط",
+                      "correct": false,
+                      "misconception": "MOLECULES-TRAVEL-IN-CONDUCTION"
+                    }
+                  ]
+                },
+                {
+                  "text": "في التوصيل الحراري تنتقل الطاقة عبر:",
+                  "choices": [
+                    {
+                      "text": "اهتزاز الجزيئات دون انتقالها من مواضعها",
+                      "correct": true
+                    },
+                    {
+                      "text": "انتقال الجزيئات نفسها من مكانها",
+                      "correct": false
+                    },
+                    {
+                      "text": "أشعة غير مرئية",
+                      "correct": false
+                    },
+                    {
+                      "text": "تصاعد تيارات الحمل",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "CONVECTION",
+              "name": "الحمل الحراري",
+              "page": 88,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "CONDUCTION"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "CONVECTION-IN-SOLIDS",
+                  "name": "الحمل يحدث في الصلب أيضًا",
+                  "description": "يعمم الطالب تيارات الحمل على كل حالة.",
+                  "remediation": "الحمل يحتاج جزيئات حرة تنتقل بحمل حرارتها معها، وهذا لا يتأتى في الصلب الذي تهتز جزيئاته ولا تبرح مواضعها؛ لذا ينحصر الحمل في السوائل والغازات."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "ينتقل الحرارة بالحمل في:",
+                  "choices": [
+                    {
+                      "text": "السوائل والغازات",
+                      "correct": true
+                    },
+                    {
+                      "text": "المعادن الصلبة",
+                      "correct": false,
+                      "misconception": "CONVECTION-IN-SOLIDS"
+                    },
+                    {
+                      "text": "الفراغ",
+                      "correct": false,
+                      "misconception": "CONVECTION-IN-SOLIDS"
+                    },
+                    {
+                      "text": "العوازل الصلبة",
+                      "correct": false,
+                      "misconception": "CONVECTION-IN-SOLIDS"
+                    }
+                  ]
+                },
+                {
+                  "text": "تصعد التيارات الحملية الساخنة إلى أعلى لأن:",
+                  "choices": [
+                    {
+                      "text": "كثافة المادة الساخنة أقل",
+                      "correct": true
+                    },
+                    {
+                      "text": "كتلة المادة الساخنة أكبر",
+                      "correct": false
+                    },
+                    {
+                      "text": "الجزيئات الساخنة أثقل",
+                      "correct": false
+                    },
+                    {
+                      "text": "الضغط الجوي يدفعها",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "RADIATION",
+              "name": "الإشعاع الحراري",
+              "page": 90,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "CONVECTION"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "RADIATION-NEEDS-MEDIUM",
+                  "name": "الإشعاع يحتاج وسطًا ماديًا",
+                  "description": "يظن الطالب أن كل انتقال للحرارة يحتاج مادة تنقله.",
+                  "remediation": "بين الشمس والأرض فراغ لا يوصل ولا يحمل، ومع ذلك تصل الحرارة؛ الأشعة الحرارية تنقل الطاقة بنفسها دون وسط، ولهذا تشعر بدفء النار ووجهك بعيد عنها."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الطريقة الوحيدة التي تنتقل بها حرارة الشمس إلى الأرض هي:",
+                  "choices": [
+                    {
+                      "text": "الإشعاع",
+                      "correct": true
+                    },
+                    {
+                      "text": "التوصيل",
+                      "correct": false,
+                      "misconception": "RADIATION-NEEDS-MEDIUM"
+                    },
+                    {
+                      "text": "الحمل",
+                      "correct": false,
+                      "misconception": "RADIATION-NEEDS-MEDIUM"
+                    },
+                    {
+                      "text": "التبخر",
+                      "correct": false,
+                      "misconception": "RADIATION-NEEDS-MEDIUM"
+                    }
+                  ]
+                },
+                {
+                  "text": "يتميز الإشعاع الحراري بأنه:",
+                  "choices": [
+                    {
+                      "text": "لا يحتاج إلى وسط مادي ناقل",
+                      "correct": true
+                    },
+                    {
+                      "text": "يحتاج إلى معادن موصلة",
+                      "correct": false
+                    },
+                    {
+                      "text": "يحدث في السوائل فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "ينتقل بتيارات صاعدة",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "MEASURING-TEMPERATURE",
+          "name": "أنا أقيس درجة الحرارة وأقدر كميتها",
+          "startPage": 91,
+          "endPage": 95,
+          "estimatedMins": 45,
+          "reading": "يُقاس أعلى درجة حرارة للجو بثرمومتر النهاية العظمى (الزئبقي)، وأدنى درجة بثرمومتر النهاية الصغرى (الكحولي). وتتوقف كمية الحرارة التي يكتسبها أو يفقدها الجسم على ثلاثة عوامل: كتلة الجسم، ومقدار التغير في درجة حرارته، ونوع المادة التي يتكون منها.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "THERMOMETERS",
+              "name": "الثرمومترات",
+              "page": 91,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "MAX-MIN-SWAP",
+                  "name": "عكس استخدامي الثرمومترين",
+                  "description": "يخلط الطالب بين ثرمومتر النهاية العظمى والصغرى.",
+                  "remediation": "الزئبق يتمدد بانتظام ويظل سائلًا في الحرارة المرتفعة فهو للنهاية العظمى؛ والكحول يتجمد عند درجات منخفضة جدًا ويقيسها فهو للنهاية الصغرى."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "يُستخدم ثرمومتر النهاية الصغرى لقياس:",
+                  "choices": [
+                    {
+                      "text": "أدنى درجة حرارة للجو",
+                      "correct": true
+                    },
+                    {
+                      "text": "أعلى درجة حرارة للجو",
+                      "correct": false,
+                      "misconception": "MAX-MIN-SWAP"
+                    },
+                    {
+                      "text": "حرارة جسم الإنسان",
+                      "correct": false,
+                      "misconception": "MAX-MIN-SWAP"
+                    },
+                    {
+                      "text": "غليان الماء دائمًا",
+                      "correct": false,
+                      "misconception": "MAX-MIN-SWAP"
+                    }
+                  ]
+                },
+                {
+                  "text": "السائل المستخدم في ثرمومتر النهاية العظمى للجو هو:",
+                  "choices": [
+                    {
+                      "text": "الزئبق",
+                      "correct": true
+                    },
+                    {
+                      "text": "الكحول",
+                      "correct": false
+                    },
+                    {
+                      "text": "الماء",
+                      "correct": false
+                    },
+                    {
+                      "text": "زيت الطبخ",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "HEAT-QUANTITY-FACTORS",
+              "name": "عوامل كمية الحرارة",
+              "page": 93,
+              "threshold": 0.75,
+              "difficulty": 0.4,
+              "prerequisites": [
+                "THERMOMETERS"
+              ],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "كل العوامل التالية تتوقف عليها كمية الحرارة التي يكتسبها الجسم ما عدا:",
+                  "choices": [
+                    {
+                      "text": "لون الجسم",
+                      "correct": true
+                    },
+                    {
+                      "text": "كتلة الجسم",
+                      "correct": false
+                    },
+                    {
+                      "text": "مقدار التغير في درجة الحرارة",
+                      "correct": false
+                    },
+                    {
+                      "text": "نوع المادة",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "لرفع درجة حرارة كمية ماء تحتاج طاقة، فإن ضاعفنا الكتلة مع بقاء فرق درجات الحرارة احتجنا:",
+                  "choices": [
+                    {
+                      "text": "ضعف كمية الحرارة",
+                      "correct": true
+                    },
+                    {
+                      "text": "نصف كمية الحرارة",
+                      "correct": false
+                    },
+                    {
+                      "text": "الكمية نفسها",
+                      "correct": false
+                    },
+                    {
+                      "text": "أربعة أمثالها",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "THERMAL-EXPANSION",
+          "name": "الحرارة تؤثر على أطوال وحجوم الأجسام",
+          "startPage": 96,
+          "endPage": 101,
+          "estimatedMins": 45,
+          "reading": "تتمدد المواد الصلبة والسائلة والغازية بالتسخين وتنكمش بالتبريد، وتُعد الغازات أكثرها تمددًا لأن جزيئاتها حرة بعيدة التقارب. ومن أغرب ظواهر الماء أنه يتمدد و تنخفض كثافته بالتبريد في المدى بين صفر وأربع درجات مئوية، ولذلك يبقى الماء السفلي في البحيرات عند 4°م فلا تتجمد الأحياء المائية في القاع خلال الشتاء.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "EXPANSION-AND-CONTRACTION",
+              "name": "التمدد والانكماش الحراري",
+              "page": 96,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "SOLIDS-EXPAND-MOST",
+                  "name": "الصلب يتمدد أكثر من غيره",
+                  "description": "يقيس الطالب التمدد بالمقدار المطلق المرئي في قضيب معدني فيعمم.",
+                  "remediation": "التمدد النسبي في الغازات أكبر بكثير: جزيئاتها حرة فتتباعد بلا قيود تقريبًا؛ قولبة قليلًا من الهواء في قارورة مكبوسة تُظهر ذلك بوضوح."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تتمدد المواد بالتسخين لأن:",
+                  "choices": [
+                    {
+                      "text": "تهتز جزيئاتها بشدة وتتباعد أكثر",
+                      "correct": true
+                    },
+                    {
+                      "text": "تزيد كتلتها بالحرارة",
+                      "correct": false
+                    },
+                    {
+                      "text": "تذوب فتزيد حجومها",
+                      "correct": false
+                    },
+                    {
+                      "text": "تفقد جزيئات منها",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "أكثر المواد تمددًا بالتسخين هي:",
+                  "choices": [
+                    {
+                      "text": "الغازات",
+                      "correct": true
+                    },
+                    {
+                      "text": "الصلبة",
+                      "correct": false,
+                      "misconception": "SOLIDS-EXPAND-MOST"
+                    },
+                    {
+                      "text": "السائلة",
+                      "correct": false,
+                      "misconception": "SOLIDS-EXPAND-MOST"
+                    },
+                    {
+                      "text": "جميعها بالتساوي",
+                      "correct": false,
+                      "misconception": "SOLIDS-EXPAND-MOST"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "WATER-ANOMALY",
+              "name": "شذوذ الماء",
+              "page": 99,
+              "threshold": 0.75,
+              "difficulty": 0.45,
+              "prerequisites": [
+                "EXPANSION-AND-CONTRACTION"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "ICE-SINKS",
+                  "name": "الجليد أثقل من الماء فيغوص",
+                  "description": "يربط الطالب التجمد بزيادة الكثافة دائمًا.",
+                  "remediation": "الماء يشذ عن القاعدة: بين 4°م و0°م يتمدد بالتبريد فتنقص كثافته ويطفو الجليد؛ ولولا ذلك لجمدت البحيرات من القاع إلى السطح واندثرت الأحياء فيها."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "يبلغ الماء أقصى كثافته عند درجة حرارة:",
+                  "choices": [
+                    {
+                      "text": "4°م",
+                      "correct": true
+                    },
+                    {
+                      "text": "0°م",
+                      "correct": false,
+                      "misconception": "ICE-SINKS"
+                    },
+                    {
+                      "text": "100°م",
+                      "correct": false,
+                      "misconception": "ICE-SINKS"
+                    },
+                    {
+                      "text": "-4°م",
+                      "correct": false,
+                      "misconception": "ICE-SINKS"
+                    }
+                  ]
+                },
+                {
+                  "text": "الفائدة البيولوجية من شذوذ الماء أن الأحياء المائية:",
+                  "choices": [
+                    {
+                      "text": "تبقى حية في القاع لأن الماء السفلي لا يتجمد",
+                      "correct": true
+                    },
+                    {
+                      "text": "تسبح أسرع في الشتاء",
+                      "correct": false
+                    },
+                    {
+                      "text": "تتنفس الأكسجين المتجمد",
+                      "correct": false
+                    },
+                    {
+                      "text": "تبيض في الجليد",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "DIVERSITY-OF-LIVING-THINGS",
+      "name": "تنوع الكائنات الحية",
+      "startPage": 105,
+      "endPage": 117,
+      "lessons": [
+        {
+          "slug": "MONERA",
+          "name": "البدائيات",
+          "startPage": 106,
+          "endPage": 107,
+          "estimatedMins": 45,
+          "reading": "تضم مملكة البدائيات (البكتيريا) كائنات مجهرية دقيقة وحيدة الخلية، نواتها بدائية غير محاطة بغلاف نووي. ومنها أنواع نافعة للإنسان كبكتيريا الزبادي التي تحول الحليب، وأنواع ضارة تسبب الأمراض كالتيفوئيد.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "MONERA-KINGDOM",
+              "name": "مملكة البدائيات",
+              "page": 106,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "ALL-BACTERIA-HARMFUL",
+                  "name": "كل البكتيريا ضارة",
+                  "description": "يعمم الطالب أمراض البكتيريا على المملكة كلها.",
+                  "remediation": "معظم البكتيريا غير ضارة وبعضها ضروري: بكتيريا الزبادي تصنع غذاءنا، وأخرى في أمعائنا تعيننا على الهضم، وأخرى تُخصب التربة بتثبيت النيتروجين. الضرر صفة أنواع محددة لا المملكة بأسرها."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تتميز البدائيات بأن نواتها:",
+                  "choices": [
+                    {
+                      "text": "بدائية غير محاطة بغلاف نووي",
+                      "correct": true
+                    },
+                    {
+                      "text": "حقيقية محاطة بغلاف نووي",
+                      "correct": false
+                    },
+                    {
+                      "text": "غير موجودة إطلاقًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "متعددة النوى دائمًا",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "من الأمثلة على البكتيريا النافعة:",
+                  "choices": [
+                    {
+                      "text": "بكتيريا الزبادي",
+                      "correct": true
+                    },
+                    {
+                      "text": "بكتيريا التيفوئيد",
+                      "correct": false,
+                      "misconception": "ALL-BACTERIA-HARMFUL"
+                    },
+                    {
+                      "text": "بكتيريا الكوليرا",
+                      "correct": false,
+                      "misconception": "ALL-BACTERIA-HARMFUL"
+                    },
+                    {
+                      "text": "بكتيريا الطاعون",
+                      "correct": false,
+                      "misconception": "ALL-BACTERIA-HARMFUL"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "PROTISTS",
+          "name": "الطلائعيات",
+          "startPage": 108,
+          "endPage": 109,
+          "estimatedMins": 45,
+          "reading": "تضم مملكة الطلائعيات كائنات حية نواتها حقيقية محاطة بغلاف نووي، وتنقسم إلى طلائعيات أولية تتغذى تغذية حيوانية كاليوجلينا، وطلائعيات طحلبية تحتوي على الكلوروفيل وتصنع غذاءها بنفسها كالسبيروجيرا.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "PROTIST-KINGDOM",
+              "name": "مملكة الطلائعيات",
+              "page": 108,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "ALL-PROTISTS-ANIMAL-LIKE",
+                  "name": "الطلائعيات كلها حيوانية التغذية",
+                  "description": "يعمم الطالب نمط اليوجلينا على المملكة.",
+                  "remediation": "في الطلائعيات نمطان: أولية تتغذى تغذية حيوانية، وطحلبية ذات كلوروفيل ذاتية التغذية؛ والخلط بينهما يضيع أساس التصنيف في هذه المملكة."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تتميز الطلائعيات بأن نواتها:",
+                  "choices": [
+                    {
+                      "text": "حقيقية محاطة بغلاف نووي",
+                      "correct": true
+                    },
+                    {
+                      "text": "بدائية دون غلاف نووي",
+                      "correct": false
+                    },
+                    {
+                      "text": "غائبة",
+                      "correct": false
+                    },
+                    {
+                      "text": "منتشرة في السيتوبلازم",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "السبيروجيرا طلائعيات طحلبية لأنها:",
+                  "choices": [
+                    {
+                      "text": "تصنع غذاءها بنفسها بالكلوروفيل",
+                      "correct": true
+                    },
+                    {
+                      "text": "تتغذى تغذية حيوانية",
+                      "correct": false,
+                      "misconception": "ALL-PROTISTS-ANIMAL-LIKE"
+                    },
+                    {
+                      "text": "تعيش متطفلة على الحيوان",
+                      "correct": false,
+                      "misconception": "ALL-PROTISTS-ANIMAL-LIKE"
+                    },
+                    {
+                      "text": "لا تحتوي على نواة",
+                      "correct": false,
+                      "misconception": "ALL-PROTISTS-ANIMAL-LIKE"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "FUNGI",
+          "name": "الفطريات",
+          "startPage": 110,
+          "endPage": 113,
+          "estimatedMins": 45,
+          "reading": "تضم مملكة الفطريات كائنات غير ذاتية التغذية خالية من الكلوروفيل، ومنها وحيدة الخلية كالخميرة التي تعتمد في تغذيتها على التحلل، ومنها عديدة الخلايا كعفن الخبز وعش الغراب الذي يتغذى على مواد عضوية متحللة.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "FUNGI-KINGDOM",
+              "name": "مملكة الفطريات",
+              "page": 110,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "FUNGI-ARE-PLANTS",
+                  "name": "الفطريات نباتات بلا كلوروفيل",
+                  "description": "يصنف الطالب الفطريات نباتات فاقدة الكلوروفيل فقط.",
+                  "remediation": "غياب الكلوروفيل ليس الفارق الوحيد: الفطريات مملكة قائمة بذاتها غير ذاتية التغذية، جدارها الخلوي من مادة الكيتين لا السيلولوز، وتتكاثر بالأبواغ؛ فهي ليست نباتات ناقصة بل مملكة كاملة."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تتميز الفطريات بأنها:",
+                  "choices": [
+                    {
+                      "text": "غير ذاتية التغذية وخالية من الكلوروفيل",
+                      "correct": true
+                    },
+                    {
+                      "text": "ذاتية التغذية بضوء الشمس",
+                      "correct": false,
+                      "misconception": "FUNGI-ARE-PLANTS"
+                    },
+                    {
+                      "text": "تصنع غذاءها بنفسها",
+                      "correct": false,
+                      "misconception": "FUNGI-ARE-PLANTS"
+                    },
+                    {
+                      "text": "تتغذى بالتركيب الضوئي",
+                      "correct": false,
+                      "misconception": "FUNGI-ARE-PLANTS"
+                    }
+                  ]
+                },
+                {
+                  "text": "من الفطريات وحيدة الخلية:",
+                  "choices": [
+                    {
+                      "text": "الخميرة",
+                      "correct": true
+                    },
+                    {
+                      "text": "عش الغراب",
+                      "correct": false
+                    },
+                    {
+                      "text": "عفن الخبز",
+                      "correct": false
+                    },
+                    {
+                      "text": "السبيروجيرا",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "PLANTS",
+          "name": "النباتات",
+          "startPage": 114,
+          "endPage": 115,
+          "estimatedMins": 45,
+          "reading": "تضم المملكة النباتية كائنات ذاتية التغذية تحتوي على الكلوروفيل. وتقسم إلى نباتات بذرية زهرية منها مغطاة البذور وعاريات البذور كالصنوبر، ونباتات لازهرية لا تحمل أزهارًا ولا بذورًا وتتكاثر بالأبواغ كالسراخس وكزبرة البئر.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "PLANT-KINGDOM",
+              "name": "المملكة النباتية",
+              "page": 114,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "SEED-EVERYWHERE",
+                  "name": "كل النباتات تُكاثر بالبذور",
+                  "description": "يظن الطالب أن البذرة طريق التكاثر الوحيد في النباتات.",
+                  "remediation": "اللازهريات كالسراخس وكزبرة البئر تتكاثر بالأبواغ لا بالبذور؛ البذرة صفة النباتات البذرية وحدها، والتمييز بين المجموعتين أساس التصنيف النباتي."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تتميز النباتات بأنها كائنات:",
+                  "choices": [
+                    {
+                      "text": "ذاتية التغذية تحتوي على الكلوروفيل",
+                      "correct": true
+                    },
+                    {
+                      "text": "غير ذاتية التغذية",
+                      "correct": false
+                    },
+                    {
+                      "text": "وحيدة الخلية دائمًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "تعيش متطفلة دائمًا",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "من النباتات اللازهارية التي تتكاثر بالأبواغ:",
+                  "choices": [
+                    {
+                      "text": "السراخس",
+                      "correct": true
+                    },
+                    {
+                      "text": "الصنوبر",
+                      "correct": false,
+                      "misconception": "SEED-EVERYWHERE"
+                    },
+                    {
+                      "text": "الفاصوليا",
+                      "correct": false,
+                      "misconception": "SEED-EVERYWHERE"
+                    },
+                    {
+                      "text": "النخيل",
+                      "correct": false,
+                      "misconception": "SEED-EVERYWHERE"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "ANIMALS",
+          "name": "الحيوانات",
+          "startPage": 116,
+          "endPage": 117,
+          "estimatedMins": 45,
+          "reading": "تنقسم المملكة الحيوانية إلى لافقاريات ليس لها عمود فقري وتشكل نحو 95% من أنواع الحيوانات كالحشرات والديدان، وفقاريات تمتلك عمودًا فقريًا وتضم الأسماك والبرمائيات والزواحف والطيور والثدييات.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "ANIMAL-KINGDOM",
+              "name": "الفقاريات واللافقاريات",
+              "page": 116,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "SIZE-DEFINES-VERTEBRATE",
+                  "name": "الحجم يحدد الفقاري",
+                  "description": "يصنف الطالب الحيوان فقاريًا إذا كان كبير الحجم.",
+                  "remediation": "الفارق تشريحي لا حجمي: بعض اللافقاريات كالأخطبوط أكبر من سمكة صغيرة؛ العبرة بوجود العمود الفقري لا بمنظر الحيوان."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الصفة المميزة للفقاريات هي:",
+                  "choices": [
+                    {
+                      "text": "امتلاك عمود فقري",
+                      "correct": true
+                    },
+                    {
+                      "text": "الحجم الكبير دائمًا",
+                      "correct": false,
+                      "misconception": "SIZE-DEFINES-VERTEBRATE"
+                    },
+                    {
+                      "text": "العيش في الماء",
+                      "correct": false,
+                      "misconception": "SIZE-DEFINES-VERTEBRATE"
+                    },
+                    {
+                      "text": "امتلاك ستة أرجل",
+                      "correct": false,
+                      "misconception": "SIZE-DEFINES-VERTEBRATE"
+                    }
+                  ]
+                },
+                {
+                  "text": "تُعد دودة الأرض من:",
+                  "choices": [
+                    {
+                      "text": "اللافقاريات",
+                      "correct": true
+                    },
+                    {
+                      "text": "الفقاريات",
+                      "correct": false
+                    },
+                    {
+                      "text": "الثدييات",
+                      "correct": false
+                    },
+                    {
+                      "text": "الزواحف",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ENVIRONMENT",
+      "name": "البيئة والكائنات الحية",
+      "startPage": 119,
+      "endPage": 141,
+      "lessons": [
+        {
+          "slug": "ECOSYSTEM",
+          "name": "مم يتكون النظام البيئي؟",
+          "startPage": 120,
+          "endPage": 123,
+          "estimatedMins": 45,
+          "reading": "البيئة هي موطن الكائن الحي وما يحيط به من عوامل. أما النظام البيئي فوحدة طبيعية تشمل مكونات حية: منتجة تصنع غذاءها كالنباتات، ومستهلكة تتغذى على غيرها كالحيوانات، ومحللة تفكك بقايا الكائنات كالفطريات والبكتيريا؛ ومكونات غير حية كالماء والتربة والضوء والحرارة، وتتفاعل هذه المكونات جميعًا في مسار دائري متزن.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "ECOSYSTEM-COMPONENTS",
+              "name": "مكونات النظام البيئي",
+              "page": 120,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "ONLY-LIVING-COMPONENTS",
+                  "name": "النظام البيئي مكوناته حية فقط",
+                  "description": "يحصر الطالب النظام البيئي في الكائنات وينسى عوامل الوسط.",
+                  "remediation": "الماء والتربة والضوء والحرارة شركاء أصليون في النظام البيئي؛ بلا ضوء تتوقف المنتجات فينهار النظام كله — فالمكونات غير الحية شق لا يقل أصلًا."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الكائنات المحللة في النظام البيئي مثل:",
+                  "choices": [
+                    {
+                      "text": "الفطريات والبكتيريا",
+                      "correct": true
+                    },
+                    {
+                      "text": "الأرانب والغزلان",
+                      "correct": false,
+                      "misconception": "ONLY-LIVING-COMPONENTS"
+                    },
+                    {
+                      "text": "الأشجار والأعشاب",
+                      "correct": false,
+                      "misconception": "ONLY-LIVING-COMPONENTS"
+                    },
+                    {
+                      "text": "الشمس والماء",
+                      "correct": false,
+                      "misconception": "ONLY-LIVING-COMPONENTS"
+                    }
+                  ]
+                },
+                {
+                  "text": "تُصنف النباتات الخضراء في النظام البيئي على أنها مكون:",
+                  "choices": [
+                    {
+                      "text": "منتتج",
+                      "correct": true
+                    },
+                    {
+                      "text": "مستهلك",
+                      "correct": false
+                    },
+                    {
+                      "text": "محلل",
+                      "correct": false
+                    },
+                    {
+                      "text": "غير حي",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "DESERT-ADAPTATION",
+          "name": "نباتات وحيوانات تكيفت للمعيشة في الصحراء",
+          "startPage": 124,
+          "endPage": 129,
+          "estimatedMins": 45,
+          "reading": "تكيفت الكائنات الصحراوية لقلة الماء وشدة الحرارة: فالتين الشوكي حوّر أوراقه إلى أشواك تقلل النتح وسوقه إلى صفائح لحمية تخزن الماء، ونمت للسنط جذور عميقة تصل إلى المياه الجوفية. وللجمل خف يعينه على الرمال، وشفة مشقوقة وفتحات أنف يمكن إغلاقها لتحميه من الرمال والحرارة.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "DESERT-ADAPTATIONS",
+              "name": "التكيف للمعيشة في الصحراء",
+              "page": 124,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "SPINES-FOR-DEFENSE-ONLY",
+                  "name": "الأشواك للحماية فقط",
+                  "description": "يرد الطالب أشواك الصبار إلى الدفاع عن النبات وحده.",
+                  "remediation": "للأشواك وظيفة أعمق: الورقة الشائكة مساحتها ضئيلة فتقلل النتح — تبخر الماء — وهو سر بقاء النبات في الصحراء، والتخزين تولاه السيقان اللحمية."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تحورت أوراق التين الشوكي إلى أشواك من أجل:",
+                  "choices": [
+                    {
+                      "text": "تقليل فقد الماء بالنتح",
+                      "correct": true
+                    },
+                    {
+                      "text": "جذب الحشرات للتلقيح",
+                      "correct": false,
+                      "misconception": "SPINES-FOR-DEFENSE-ONLY"
+                    },
+                    {
+                      "text": "زيادة صنع الغذاء",
+                      "correct": false,
+                      "misconception": "SPINES-FOR-DEFENSE-ONLY"
+                    },
+                    {
+                      "text": "تخزين الماء فيها",
+                      "correct": false,
+                      "misconception": "SPINES-FOR-DEFENSE-ONLY"
+                    }
+                  ]
+                },
+                {
+                  "text": "يتميز الجمل بفتحات أنف يمكن إغلاقها لـ:",
+                  "choices": [
+                    {
+                      "text": "حمايته من رمال الصحراء",
+                      "correct": true
+                    },
+                    {
+                      "text": "التنفس تحت الماء",
+                      "correct": false
+                    },
+                    {
+                      "text": "زيادة حاسة الشم",
+                      "correct": false
+                    },
+                    {
+                      "text": "طرد الحرارة الزائدة فقط",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "AQUATIC-ADAPTATION",
+          "name": "نباتات وحيوانات تكيفت للمعيشة في الماء",
+          "startPage": 130,
+          "endPage": 134,
+          "estimatedMins": 45,
+          "reading": "تكيفت الكائنات المائية للحياة في الماء: فللسمكة شكل انسيابي يقلل مقاومة الماء، وزعانف للسباحة والتوجيه، وخياشيم تتنفس بها الأكسجين المذاب، ومثانة هوائية تعينها على الاتزان والتحكم في العمق. ونباتات المائية أوراقها وسيقانها لينة تنثني مع التيارات دون أن تتكسر.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "AQUATIC-ADAPTATIONS",
+              "name": "التكيف للمعيشة في الماء",
+              "page": 130,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "SWIM-BLADDER-BREATHING",
+                  "name": "المثانة الهوائية للتنفس",
+                  "description": "يوحي اسم (الهوائية) للطالب بأنها عضو تنفس.",
+                  "remediation": "التنفس للخياشيم وحدها؛ المثانة جيب يملؤه السمك ويفرغه ليتغير عمقها فيطفو أو تغوص — وظيفتها الاتزان والتحكم في العمق لا التنفس."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "الشكل الانسيابي لجسم السمكة يكسبها:",
+                  "choices": [
+                    {
+                      "text": "تقليل مقاومة الماء أثناء السباحة",
+                      "correct": true
+                    },
+                    {
+                      "text": "زيادة كثافتها",
+                      "correct": false,
+                      "misconception": "SWIM-BLADDER-BREATHING"
+                    },
+                    {
+                      "text": "القدرة على الطيران",
+                      "correct": false,
+                      "misconception": "SWIM-BLADDER-BREATHING"
+                    },
+                    {
+                      "text": "التنفس الهوائي",
+                      "correct": false,
+                      "misconception": "SWIM-BLADDER-BREATHING"
+                    }
+                  ]
+                },
+                {
+                  "text": "تستخدم السمكة المثانة الهوائية في:",
+                  "choices": [
+                    {
+                      "text": "الاتزان والتحكم في العمق",
+                      "correct": true
+                    },
+                    {
+                      "text": "التنفس داخل الماء",
+                      "correct": false
+                    },
+                    {
+                      "text": "هضم الغذاء",
+                      "correct": false
+                    },
+                    {
+                      "text": "إخراج الفضلات",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "TERRESTRIAL-DIVERSITY",
+          "name": "نباتات وحيوانات برية متنوعة",
+          "startPage": 135,
+          "endPage": 141,
+          "estimatedMins": 45,
+          "reading": "التنوع الحيوي هو مجموع أعداد وأنواع الكائنات الحية التي تعيش في بيئة معينة. ويؤدي الاحتطاب والرعي الجائر والصيد الجائر إلى التصحر وانقراض الأنواع وتدمير التوازن الطبيعي، ولذلك تنشأ المحميات الطبيعية لحماية الكائنات وتكاثرها والحفاظ على هذا التوازن.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "BIODIVERSITY",
+              "name": "التنوع الحيوي والتوازن الطبيعي",
+              "page": 135,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "RESERVES-FOR-SCENERY",
+                  "name": "المحميات للمناظر والترفيه",
+                  "description": "يظن الطالب المحمية حديقة عامة غرضها الجمال والتنزه.",
+                  "remediation": "المحمية بيئة محمية بنظام عن الصيد والاحتطاب والرعي الجائر، غايتها أن تتكاثر الأنواع المهددة ويستعيد النظام البيئي توازنه — حماية وظيفية لا منظرية."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "التنوع الحيوي هو مجموع:",
+                  "choices": [
+                    {
+                      "text": "أعداد وأنواع الكائنات الحية التي تعيش في بيئة معينة",
+                      "correct": true
+                    },
+                    {
+                      "text": "النباتات فقط في بيئة معينة",
+                      "correct": false,
+                      "misconception": "RESERVES-FOR-SCENERY"
+                    },
+                    {
+                      "text": "الحيوانات فقط في بيئة معينة",
+                      "correct": false,
+                      "misconception": "RESERVES-FOR-SCENERY"
+                    },
+                    {
+                      "text": "المياه الجوفية في المنطقة",
+                      "correct": false,
+                      "misconception": "RESERVES-FOR-SCENERY"
+                    }
+                  ]
+                },
+                {
+                  "text": "تُنشأ المحميات الطبيعية من أجل:",
+                  "choices": [
+                    {
+                      "text": "حماية الكائنات الحية والحفاظ على التوازن الطبيعي",
+                      "correct": true
+                    },
+                    {
+                      "text": "تربية المواشي في حماية",
+                      "correct": false
+                    },
+                    {
+                      "text": "التنزه وصيد الطيور",
+                      "correct": false
+                    },
+                    {
+                      "text": "استخراج المعادن بأمان",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "CELLS-AND-TISSUES",
+      "name": "الخلايا والأنسجة",
+      "startPage": 144,
+      "endPage": 154,
+      "lessons": [
+        {
+          "slug": "BODY-COMPONENTS",
+          "name": "مكونات جسم الكائن الحي",
+          "startPage": 145,
+          "endPage": 148,
+          "estimatedMins": 45,
+          "reading": "الخلية هي وحدة البناء والوظيفة في جسم الكائن الحي. وتتميز الخلية النباتية عن الحيوانية بوجود جدار خلوي صلب من السيلولوز، وبلاستيدات خضراء تصنع الغذاء، وفجوة عصارية مركزية كبيرة تخزن العصارات، ونواة جانبية الموضع غالبًا.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "THE-CELL",
+              "name": "الخلية",
+              "page": 145,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "CELL-IS-TINY-ORGAN",
+                  "name": "الخلية عضو صغير",
+                  "description": "يتصور الطالب الخلية نسخة مصغرة من الجسم بأعضائها.",
+                  "remediation": "الخلية وحدة مستقلة لها غشاء وسيتوبلازم ونواة تؤدي وظائف الحياة كلها؛ الأعضاء تُبنى من أنسجة، والأنسجة من خلايا — لا العكس."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "وحدة البناء والوظيفة في جسم الكائن الحي هي:",
+                  "choices": [
+                    {
+                      "text": "الخلية",
+                      "correct": true
+                    },
+                    {
+                      "text": "النسيج",
+                      "correct": false,
+                      "misconception": "CELL-IS-TINY-ORGAN"
+                    },
+                    {
+                      "text": "العضو",
+                      "correct": false,
+                      "misconception": "CELL-IS-TINY-ORGAN"
+                    },
+                    {
+                      "text": "الجهاز",
+                      "correct": false,
+                      "misconception": "CELL-IS-TINY-ORGAN"
+                    }
+                  ]
+                },
+                {
+                  "text": "تتكون الأنسجة من تجمع خلايا:",
+                  "choices": [
+                    {
+                      "text": "متشابهة في الشكل والوظيفة",
+                      "correct": true
+                    },
+                    {
+                      "text": "مختلفة تمامًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "متنافرة لا تعمل معًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "من كائنات مختلفة",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "PLANT-VS-ANIMAL-CELL",
+              "name": "الخلية النباتية والحيوانية",
+              "page": 146,
+              "threshold": 0.75,
+              "difficulty": 0.3,
+              "prerequisites": [
+                "THE-CELL"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "ALL-CELLS-IDENTICAL",
+                  "name": "كل الخلايا متماثلة",
+                  "description": "يعمم الطالب شكل الخلية الحيوانية على كل الخلايا.",
+                  "remediation": "للخلية النباتية ثلاثة فوارق بنيوية: جدار خلوي صلب، وبلاستيدات خضراء، وفجوة عصارية مركزية كبيرة — وفوارق البناء تتبعها فوارق الوظيفة: التركيب الضوئي في النبات دون الحيوان."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "من المكونات الموجودة في الخلية النباتية دون الحيوانية:",
+                  "choices": [
+                    {
+                      "text": "البلاستيدات الخضراء",
+                      "correct": true
+                    },
+                    {
+                      "text": "النواة",
+                      "correct": false,
+                      "misconception": "ALL-CELLS-IDENTICAL"
+                    },
+                    {
+                      "text": "الغشاء البلازمي",
+                      "correct": false,
+                      "misconception": "ALL-CELLS-IDENTICAL"
+                    },
+                    {
+                      "text": "السيتوبلازم",
+                      "correct": false,
+                      "misconception": "ALL-CELLS-IDENTICAL"
+                    }
+                  ]
+                },
+                {
+                  "text": "الجدار الخلوي في الخلية النباتية:",
+                  "choices": [
+                    {
+                      "text": "صلب يكسب الخلية الدعامة والحماية",
+                      "correct": true
+                    },
+                    {
+                      "text": "لين يسمح بانقسام الخلية دائمًا",
+                      "correct": false
+                    },
+                    {
+                      "text": "مسؤول عن صنع الغذاء",
+                      "correct": false
+                    },
+                    {
+                      "text": "موجود في الخلية الحيوانية أيضًا",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "PROTECTIVE-AND-TRANSPORT-TISSUES",
+          "name": "أنسجة الحماية والنقل في جسمك",
+          "startPage": 149,
+          "endPage": 152,
+          "estimatedMins": 45,
+          "reading": "الأنسجة الطلائية تبطن الأعضاء والأسطح وتمتص الغذاء وتحمي الجسم، ومنها البسيطة المفردة الطبقة والطبقية المتعددة الطبقات. والأنسجة الضامة تقوم بالتدعيم كالعظام والغضاريف، وبنقل الأكسجين والمغذيات كما في الدم.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "EPITHELIAL-AND-CONNECTIVE",
+              "name": "الأنسجة الطلائية والضامة",
+              "page": 149,
+              "threshold": 0.7,
+              "difficulty": 0.3,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "BONE-EPITHELIAL",
+                  "name": "العظام نسيج طلائي",
+                  "description": "يصنف الطالب النسيج بوظيفة الحماية وحدها فيلحق العظام بالطلائي.",
+                  "remediation": "الطلائي يبطن الأسطح ويمتص؛ أما العظام فنسيج ضام وظيفته التدعيم — والحماية فيها حماية ميكانيكية ببنية ضامة لا بطانة سطحية."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "من وظائف الأنسجة الطلائية:",
+                  "choices": [
+                    {
+                      "text": "تبطين الأعضاء وامتصاص الغذاء وحماية الجسم",
+                      "correct": true
+                    },
+                    {
+                      "text": "نقل الأكسجين في الدم",
+                      "correct": false,
+                      "misconception": "BONE-EPITHELIAL"
+                    },
+                    {
+                      "text": "تدعيم الجسم بالعظام",
+                      "correct": false,
+                      "misconception": "BONE-EPITHELIAL"
+                    },
+                    {
+                      "text": "الحركة الإرادية",
+                      "correct": false,
+                      "misconception": "BONE-EPITHELIAL"
+                    }
+                  ]
+                },
+                {
+                  "text": "النسيج المسؤول عن نقل الأكسجين والمغذيات إلى خلايا الجسم هو:",
+                  "choices": [
+                    {
+                      "text": "الدم",
+                      "correct": true
+                    },
+                    {
+                      "text": "النسيج الطلائي",
+                      "correct": false
+                    },
+                    {
+                      "text": "الغضروف",
+                      "correct": false
+                    },
+                    {
+                      "text": "النسيج العضلي",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "MUSCLE-NERVE-TISSUES",
+          "name": "أنسجة الحركة والاتصال",
+          "startPage": 153,
+          "endPage": 154,
+          "estimatedMins": 45,
+          "reading": "الأنسجة العضلية تمكن الجسم من الحركة، وتنقسم إلى هيكلية إرادية تحرك العظام، وملساء لاإرادية في جدار الأعضاء، وقلبية لاإرادية في القلب. والأنسجة العصبية تتكون من الخلايا العصبية وتقوم بتنظيم العمليات الحيوية باستقبال المؤثرات ورد الفعل عبر الدماغ والنخاع الشوكي.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "MUSCULAR-AND-NERVOUS-TISSUES",
+              "name": "الأنسجة العضلية والعصبية",
+              "page": 153,
+              "threshold": 0.7,
+              "difficulty": 0.35,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "HEART-MUSCLE-VOLUNTARY",
+                  "name": "عضلة القلب إرادية",
+                  "description": "يتصور الطالب أنه يتحكم بنبض قلبه كما يتحكم بعضلات يديه.",
+                  "remediation": "لا إرادة مع القلب ولا المعدة؛ الهيكلي وحده إرادي، والملساء والقلبي لاإراديان يعملان بغير أمر منك — ولذا لا تنسى أن تتنفس ولا ينسى قلبك أن ينبض."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "النسيج العضلي الذي يتحكم فيه الإنسان بإرادته هو:",
+                  "choices": [
+                    {
+                      "text": "الهيكلي",
+                      "correct": true
+                    },
+                    {
+                      "text": "الملساء",
+                      "correct": false,
+                      "misconception": "HEART-MUSCLE-VOLUNTARY"
+                    },
+                    {
+                      "text": "القلبي",
+                      "correct": false,
+                      "misconception": "HEART-MUSCLE-VOLUNTARY"
+                    },
+                    {
+                      "text": "العصبي",
+                      "correct": false,
+                      "misconception": "HEART-MUSCLE-VOLUNTARY"
+                    }
+                  ]
+                },
+                {
+                  "text": "تتكون الأنسجة العصبية من:",
+                  "choices": [
+                    {
+                      "text": "الخلايا العصبية",
+                      "correct": true
+                    },
+                    {
+                      "text": "الألياف العضلية فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "خلايا الدم الحمراء",
+                      "correct": false
+                    },
+                    {
+                      "text": "الغضاريف",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "MOVEMENT-AND-SENSATION",
+      "name": "الحركة والإحساس",
+      "startPage": 157,
+      "endPage": 170,
+      "lessons": [
+        {
+          "slug": "SUPPORT-AND-MOVEMENT",
+          "name": "الدعامة والحركة",
+          "startPage": 158,
+          "endPage": 163,
+          "estimatedMins": 45,
+          "reading": "يدعم الهيكل العظمي جسم الإنسان ويحمي أعضاءه الداخلية: فالجمجمة تحمي الدماغ، والقفص الصدري يحمي القلب والرئتين. وترتبط العظام بالمفاصل وتربطها بالعضلات أوتار تنقل قوة الشدة العضلية، وتتم الحركة بالانقباض والانبساط المتبادل بين مجموعتي عضلات متضادتين.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "SKELETAL-SYSTEM",
+              "name": "الهيكل العظمي",
+              "page": 158,
+              "threshold": 0.7,
+              "difficulty": 0.25,
+              "prerequisites": [],
+              "misconceptions": [
+                {
+                  "slug": "BONES-DEAD-TISSUE",
+                  "name": "العظام نسيج ميت لا يتغير",
+                  "description": "يظن الطالب أن العظم مادة صلبة جامدة كالحجر لا حياة فيها.",
+                  "remediation": "العظم نسيج حي تنمو فيه الخلايا وتتجدد مواده، وتخزن الدهون وتصنع خلايا الدم في نخاعه؛ ولهذا تلتئم الكسور — وال Stones لا تلتئم."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "يحمي القفص الصدري:",
+                  "choices": [
+                    {
+                      "text": "القلب والرئتين",
+                      "correct": true
+                    },
+                    {
+                      "text": "المخ",
+                      "correct": false,
+                      "misconception": "BONES-DEAD-TISSUE"
+                    },
+                    {
+                      "text": "المعدة",
+                      "correct": false,
+                      "misconception": "BONES-DEAD-TISSUE"
+                    },
+                    {
+                      "text": "النخاع الشوكي",
+                      "correct": false,
+                      "misconception": "BONES-DEAD-TISSUE"
+                    }
+                  ]
+                },
+                {
+                  "text": "وظيفة الهيكل العظمي في الجسم:",
+                  "choices": [
+                    {
+                      "text": "الدعامة وحماية الأعضاء الداخلية",
+                      "correct": true
+                    },
+                    {
+                      "text": "صنع الدم فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "الهضم وامتصاص الغذاء",
+                      "correct": false
+                    },
+                    {
+                      "text": "التنفس وإخراج الفضلات",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "JOINTS-AND-MUSCLES",
+              "name": "المفاصل والعضلات",
+              "page": 160,
+              "threshold": 0.75,
+              "difficulty": 0.35,
+              "prerequisites": [
+                "SKELETAL-SYSTEM"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "MUSCLES-PUSH",
+                  "name": "العضلات تدفع العظام",
+                  "description": "يظن الطالب أن العضلة تدفع العظم لتحريكه.",
+                  "remediation": "العضلة لا تعمل إلا بالشد: تنقبض فتقصر وتجر العظم بالوتر نحوها؛ فإذا أردنا الدفع في الاتجاه الآخر تولته عضلة مضادة تنقبض في المقابل."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "تربط العضلات بالعظام عن طريق:",
+                  "choices": [
+                    {
+                      "text": "الأوتار",
+                      "correct": true
+                    },
+                    {
+                      "text": "الغضاريف",
+                      "correct": false,
+                      "misconception": "MUSCLES-PUSH"
+                    },
+                    {
+                      "text": "الأربطة الدموية",
+                      "correct": false,
+                      "misconception": "MUSCLES-PUSH"
+                    },
+                    {
+                      "text": "الجلد",
+                      "correct": false,
+                      "misconception": "MUSCLES-PUSH"
+                    }
+                  ]
+                },
+                {
+                  "text": "تتم حركة الذراع بانقباض عضلة وانبساط:",
+                  "choices": [
+                    {
+                      "text": "العضلة المضادة لها في الاتجاه المعاكس",
+                      "correct": true
+                    },
+                    {
+                      "text": "العضلة نفسها في الوقت ذاته",
+                      "correct": false
+                    },
+                    {
+                      "text": "العظم المرتبط بها",
+                      "correct": false
+                    },
+                    {
+                      "text": "الوتر وحده دون عضلة",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "SENSATION",
+          "name": "الإحساس بما حولنا",
+          "startPage": 164,
+          "endPage": 170,
+          "estimatedMins": 45,
+          "reading": "تستقبل أعضاء الحس الخمسة المؤثرات الخارجية: فالعين للضوء، والأذن للصوت، والأنف للروائح، واللسان للطعم، والجلد لللمس والحرارة. ورد الفعل المنعكس استجابة سريعة لاإرادية ومباشرة ينسقها الحبل الشوكي دون انتظار الدماغ، لحماية الجسم من المخاطر المفاجئة.",
+          "extraResources": [],
+          "concepts": [
+            {
+              "slug": "SENSE-ORGANS",
+              "name": "أعضاء الحس",
+              "page": 164,
+              "threshold": 0.7,
+              "difficulty": 0.2,
+              "prerequisites": [],
+              "misconceptions": [],
+              "questions": [
+                {
+                  "text": "العضو المسؤول عن استقبال المؤثرات الضوئية هو:",
+                  "choices": [
+                    {
+                      "text": "العين",
+                      "correct": true
+                    },
+                    {
+                      "text": "الأذن",
+                      "correct": false
+                    },
+                    {
+                      "text": "الجلد",
+                      "correct": false
+                    },
+                    {
+                      "text": "اللسان",
+                      "correct": false
+                    }
+                  ]
+                },
+                {
+                  "text": "يستقبل الجلد مؤثرات:",
+                  "choices": [
+                    {
+                      "text": "اللمس والحرارة",
+                      "correct": true
+                    },
+                    {
+                      "text": "الضوء فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "الطعم فقط",
+                      "correct": false
+                    },
+                    {
+                      "text": "الروائح فقط",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "slug": "REFLEX-ACTION",
+              "name": "رد الفعل المنعكس",
+              "page": 167,
+              "threshold": 0.75,
+              "difficulty": 0.3,
+              "prerequisites": [
+                "SENSE-ORGANS"
+              ],
+              "misconceptions": [
+                {
+                  "slug": "REFLEX-IS-VOLUNTARY",
+                  "name": "رد الفعل المنعكس قرار واعٍ",
+                  "description": "يظن الطالب أنه (قرر) سحب يده قبل أن يحس بالألم.",
+                  "remediation": "لو انتظر الوعي لاحترقت اليد قبل قرارك؛ الحبل الشوكي يأمر بالسحب فورًا ويخبر الدماغ لاحقًا — ولذلك تسبق الحركةَ الشعورُ بالألم لا العكس."
+                }
+              ],
+              "questions": [
+                {
+                  "text": "رد الفعل المنعكس استجابة:",
+                  "choices": [
+                    {
+                      "text": "سريعة لاإرادية ينسقها الحبل الشوكي",
+                      "correct": true
+                    },
+                    {
+                      "text": "بطيئة إرادية يقررها المخ",
+                      "correct": false,
+                      "misconception": "REFLEX-IS-VOLUNTARY"
+                    },
+                    {
+                      "text": "متعلمة بالتكرار",
+                      "correct": false,
+                      "misconception": "REFLEX-IS-VOLUNTARY"
+                    },
+                    {
+                      "text": "تحدث في النباتات أيضًا",
+                      "correct": false,
+                      "misconception": "REFLEX-IS-VOLUNTARY"
+                    }
+                  ]
+                },
+                {
+                  "text": "فائدة رد الفعل المنعكس:",
+                  "choices": [
+                    {
+                      "text": "حماية الجسم من المخاطر المفاجئة",
+                      "correct": true
+                    },
+                    {
+                      "text": "زيادة سرعة الهضم",
+                      "correct": false
+                    },
+                    {
+                      "text": "تخزين المعلومات طويلة المدى",
+                      "correct": false
+                    },
+                    {
+                      "text": "تنظيم درجة حرارة الجسم",
+                      "correct": false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "exams": [
+    {
+      "key": "EXAM-SCI-G07-U01-01",
+      "title": "تقويم الوحدة الأولى: تركيب المادة",
+      "description": "أسئلة تكيّفيّة على مفاهيم وحدة تركيب المادة.",
+      "unitSlug": "STRUCTURE-OF-MATTER",
+      "isAdaptive": true,
+      "timeLimitMins": 10,
+      "passingScore": 0.5
+    }
+  ]
+}

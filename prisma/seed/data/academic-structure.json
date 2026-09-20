@@ -1,0 +1,49 @@
+{
+  "$comment": [
+    "Reference data for the academic calendar, migrated from the legacy",
+    "db/db_data/academic_structure.json.",
+    "",
+    "Data, not code: adding a grade or a term must not require editing a seed",
+    "script. The legacy system learned this the hard way — its first seed",
+    "hardcoded one grade and every later curriculum needed a code change.",
+    "",
+    "Term keys are year-scoped here ('2026-2027-T01'), unlike legacy's bare",
+    "'T1'. The new schema requires it: Term.key is globally unique, so 'T1'",
+    "could only ever exist for one academic year.",
+    "",
+    "Every section below is named after the Prisma model it fills, and every",
+    "field is named after a real column on that model. A key ending in 'Key'",
+    "is a reference resolved to an id by the seed (Term.academicYearKey ->",
+    "AcademicYear.id). tests/unit/seed-foundation-data.test.ts checks this",
+    "against the generated Prisma schema, so a rename cannot drift silently."
+  ],
+  "AcademicYear": [
+    {
+      "key": "2026-2027",
+      "startsOn": "2026-09-01",
+      "endsOn": "2027-06-30",
+      "isCurrent": true
+    }
+  ],
+  "Term": [
+    { "key": "2026-2027-T01", "academicYearKey": "2026-2027", "ordinal": 1, "name": "الفصل الدراسي الأول" },
+    { "key": "2026-2027-T02", "academicYearKey": "2026-2027", "ordinal": 2, "name": "الفصل الدراسي الثاني" }
+  ],
+  "Grade": [
+    { "key": "G01", "ordinal": 1, "name": "الصف الأول", "stage": "primary", "isActive": true },
+    { "key": "G02", "ordinal": 2, "name": "الصف الثاني", "stage": "primary", "isActive": true },
+    { "key": "G03", "ordinal": 3, "name": "الصف الثالث", "stage": "primary", "isActive": true },
+    { "key": "G04", "ordinal": 4, "name": "الصف الرابع", "stage": "primary", "isActive": true },
+    { "key": "G05", "ordinal": 5, "name": "الصف الخامس", "stage": "primary", "isActive": true },
+    { "key": "G06", "ordinal": 6, "name": "الصف السادس", "stage": "primary", "isActive": true },
+    { "key": "G07", "ordinal": 7, "name": "الصف السابع", "stage": "preparatory", "isActive": true },
+    { "key": "G08", "ordinal": 8, "name": "الصف الثامن", "stage": "preparatory", "isActive": true },
+    { "key": "G09", "ordinal": 9, "name": "الصف التاسع", "stage": "preparatory", "isActive": true },
+    { "key": "G10", "ordinal": 10, "name": "الصف العاشر", "stage": "secondary", "isActive": true },
+    { "key": "G11", "ordinal": 11, "name": "الصف الحادي عشر", "stage": "secondary", "isActive": true },
+    { "key": "G12", "ordinal": 12, "name": "الصف الثاني عشر", "stage": "secondary", "isActive": true }
+  ],
+  "School": [
+    { "key": "sch_demo", "name": "مدرسة صنعاء النموذجية", "city": "صنعاء", "isActive": true }
+  ]
+}

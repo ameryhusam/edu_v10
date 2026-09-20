@@ -1,0 +1,147 @@
+{
+  "$comment": [
+    "Demo accounts, migrated from legacy db/db_data/demo_users.json.",
+    "",
+    "Role mapping from the legacy vocabulary — each is a decision, not a rename:",
+    "",
+    "  legacy SUPER_ADMIN -> SYSTEM_ADMIN   platform-wide, schoolId MUST be null",
+    "  legacy ADMIN       -> SCHOOL_ADMIN   scoped to one school",
+    "  legacy SUPERVISOR  -> (dropped)      the new system has no supervisor role;",
+    "                                       inventing one to preserve a legacy",
+    "                                       label would add an unenforced",
+    "                                       permission surface.",
+    "",
+    "SYSTEM_ADMIN and SCHOOL_ADMIN are NOT the same account and must never be",
+    "merged. PLATFORM_WIDE_ROLES puts SYSTEM_ADMIN outside any school, so it",
+    "sees every school; SCHOOL_ADMIN is bound to sch_demo and sees only that.",
+    "Seeding one account with both roles would make it impossible to test that",
+    "the boundary actually holds.",
+    "",
+    "`password` is present because these are development accounts and a seeded",
+    "credential nobody can read is useless. The seed prints them.",
+    "",
+    "The 'User' section is named after the Prisma model, and nested objects are",
+    "named after the models they create: learnerProfile -> LearnerProfile,",
+    "guardianProfile -> GuardianProfile. Fields ending in 'Key' are references",
+    "the seed resolves to ids (schoolKey -> School.id, gradeKey -> Grade.id).",
+    "",
+    "Every user carries phone, status and locale explicitly rather than relying",
+    "on column defaults. A default is a decision the file cannot show you: with",
+    "status written out, suspending a demo account to exercise the blocked",
+    "sign-in path is a one-word edit here instead of a hand-run UPDATE.",
+    "",
+    "All nine accounts appear in the development sign-in box. arch:check fails",
+    "if this file and web/src/features/auth/demo-credentials.dev.ts disagree,",
+    "because a stale button returns a 401 that looks like a broken login."
+  ],
+  "password": "demo1234",
+  "User": [
+    {
+      "key": "usr_demo_sysadmin",
+      "username": "superadmin",
+      "fullName": "مدير النظام",
+      "email": "superadmin@edu7.local",
+      "phone": "+967700000001",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "roles": [{ "role": "SYSTEM_ADMIN", "schoolKey": null }]
+    },
+    {
+      "key": "usr_demo_admin",
+      "username": "admin",
+      "fullName": "مدير المدرسة",
+      "email": "admin@edu7.local",
+      "phone": "+967700000002",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "roles": [{ "role": "SCHOOL_ADMIN", "schoolKey": "sch_demo" }]
+    },
+    {
+      "key": "usr_demo_author",
+      "username": "author",
+      "fullName": "مؤلف المحتوى",
+      "email": "author@edu7.local",
+      "phone": "+967700000003",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "roles": [{ "role": "CONTENT_AUTHOR", "schoolKey": null }]
+    },
+    {
+      "key": "usr_demo_reviewer",
+      "username": "reviewer",
+      "fullName": "مراجع المحتوى",
+      "email": "reviewer@edu7.local",
+      "phone": "+967700000004",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "$comment": "A second author, because SUBMIT and APPROVE must be two different people for the separation to mean anything.",
+      "roles": [{ "role": "CONTENT_AUTHOR", "schoolKey": null }]
+    },
+    {
+      "key": "usr_demo_teacher",
+      "username": "teacher",
+      "fullName": "المعلم النموذجي",
+      "email": "teacher@edu7.local",
+      "phone": "+967700000005",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "educatorProfile": {
+        "key": "edu_demo_teacher",
+        "employeeCode": "EMP-0001",
+        "specialty": "الرياضيات"
+      },
+      "roles": [{ "role": "TEACHER", "schoolKey": "sch_demo" }]
+    },
+    {
+      "key": "usr_demo_student",
+      "username": "student",
+      "fullName": "طالب تجريبي",
+      "email": "student@edu7.local",
+      "phone": "+967700000006",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "learnerProfile": { "key": "lrn_demo_student", "gradeKey": "G07", "xpTotal": 0, "level": 1, "streakDays": 0 },
+      "roles": [{ "role": "STUDENT", "schoolKey": "sch_demo" }]
+    },
+    {
+      "key": "usr_demo_student_2",
+      "username": "ahmed",
+      "fullName": "أحمد حسام",
+      "email": "ahmed@edu7.local",
+      "phone": "+967700000007",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "learnerProfile": { "key": "lrn_demo_ahmed", "gradeKey": "G07", "xpTotal": 0, "level": 1, "streakDays": 0 },
+      "roles": [{ "role": "STUDENT", "schoolKey": "sch_demo" }]
+    },
+    {
+      "key": "usr_demo_student_3",
+      "username": "sara",
+      "fullName": "سارة محمد",
+      "email": "sara@edu7.local",
+      "phone": "+967700000008",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "learnerProfile": { "key": "lrn_demo_sara", "gradeKey": "G03", "xpTotal": 0, "level": 1, "streakDays": 0 },
+      "$comment": "A different grade, so roster scoping is testable rather than assumed.",
+      "roles": [{ "role": "STUDENT", "schoolKey": "sch_demo" }]
+    },
+    {
+      "key": "usr_demo_parent",
+      "username": "parent",
+      "fullName": "حسام عباس",
+      "email": "parent@edu7.local",
+      "phone": "+967700000009",
+      "status": "ACTIVE",
+      "locale": "ar",
+      "guardianProfile": {
+        "key": "gdn_demo_parent",
+        "children": [
+          { "learnerKey": "lrn_demo_student", "relation": "father", "isVerified": true },
+          { "learnerKey": "lrn_demo_ahmed", "relation": "father", "isVerified": true }
+        ]
+      },
+      "roles": [{ "role": "PARENT", "schoolKey": "sch_demo" }]
+    }
+  ]
+}
