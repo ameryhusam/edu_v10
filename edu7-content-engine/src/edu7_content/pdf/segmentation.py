@@ -18,6 +18,27 @@ def slugify(text: str, fallback: str = "item") -> str:
     return clean or fallback
 
 
+def _text_sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _build_grounding_chunks(text: str, max_chars: int = 1800) -> List[str]:
+    """Build deterministic, evidence-preserving chunks without an AI writer."""
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    chunks: List[str] = []
+    current = ""
+    for paragraph in paragraphs:
+        candidate = f"{current}\n\n{paragraph}" if current else paragraph
+        if current and len(candidate) > max_chars:
+            chunks.append(current)
+            current = paragraph
+        else:
+            current = candidate
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 def compute_sha256(file_path: Path) -> str:
     """Compute sha256 hex digest of a file."""
     h = hashlib.sha256()
@@ -190,12 +211,27 @@ class LessonSegmenter:
                 self.reader.copy_pages_to_pdf([p - 1 for p in pdf_pages], lesson_pdf_path)
                 aggregated_text = []
                 page_image_files = []
+                grounding_pages = []
+                grounding_chunks = []
 
                 for p_print, p_pdf in zip(printed_pages, pdf_pages):
                     pdf_idx = p_pdf - 1
                     if 0 <= pdf_idx < self.reader.page_count:
-                        lesson_doc.insert_pdf(self.reader.doc, from_page=pdf_idx, to_page=pdf_idx)
                         p_text = self.reader.extract_page_text(pdf_idx)
+                        grounding_pages.append({
+                            "printedPage": p_print,
+                            "pdfPage": p_pdf,
+                            "textSha256": _text_sha256(p_text),
+                            "textChars": len(p_text),
+                        })
+                        for chunk_text in _build_grounding_chunks(p_text):
+                            grounding_chunks.append({
+                                "ordinal": len(grounding_chunks),
+                                "printedPage": p_print,
+                                "pdfPage": p_pdf,
+                                "text": chunk_text,
+                                "textSha256": _text_sha256(chunk_text),
+                            })
                         (text_dir / f"page_{p_print:03d}.txt").write_text(p_text, encoding="utf-8")
                         aggregated_text.append(f"--- [صفحة {p_print}] ---\n{p_text}")
 
@@ -244,6 +280,22 @@ class LessonSegmenter:
                 })
 
                 (l_dir / "lesson_full_text.txt").write_text("\n\n".join(aggregated_text), encoding="utf-8")
+                grounding_manifest = {
+                    "schemaVersion": "1.0",
+                    "textbookKey": textbook_key,
+                    "unitSlug": u_slug,
+                    "lessonSlug": l_slug,
+                    "pageNumbering": {
+                        "printedPageIsCanonical": True,
+                        "pdfPageIsPhysical": True,
+                        "formula": "pdfPage = printedPage + detectedOffset",
+                    },
+                    "pages": grounding_pages,
+                    "chunks": grounding_chunks,
+                }
+                (l_dir / "grounding_manifest.json").write_text(
+                    json.dumps(grounding_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
 
                 lesson_manifest = {
                     "schemaVersion": "1.1",
@@ -262,6 +314,11 @@ class LessonSegmenter:
                     "pdfPageStart": pdf_pages[0] if pdf_pages else None,
                     "pdfPageEnd": pdf_pages[-1] if pdf_pages else None,
                     "pageImages": page_image_files,
+                    "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
+                    "grounding": {
+                        "pageCount": len(grounding_pages),
+                        "chunkCount": len(grounding_chunks),
+                    },
                     "pdfFile": l_rel_path,
                     "sha256": l_sha,
                 }
