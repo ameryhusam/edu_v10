@@ -577,6 +577,7 @@ enum ContentAssetType {
   PAGE_IMAGE
   PAGE_TEXT
   RESOURCE_FILE
+  IMAGE_SUMMARY
   AUDIO
   VIDEO
 }
