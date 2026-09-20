@@ -1,0 +1,22 @@
+{
+  "name": "Edu7 Adaptive Learning",
+  "short_name": "Edu7",
+  "description": "منصة تعلم تكيفي للمناهج اليمنية مع مسارات تعلم واختبارات وبنك أسئلة.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "dir": "rtl",
+  "lang": "ar-YE",
+  "background_color": "#0b1020",
+  "theme_color": "#2563eb",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

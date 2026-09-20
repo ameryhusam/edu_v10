@@ -1,0 +1,151 @@
+@import 'tailwindcss';
+@import './design-system/tokens/tokens.css';
+
+/**
+ * Global baseline.
+ *
+ * Kept deliberately short. Anything that looks like component styling belongs
+ * in a component; this file only establishes the document.
+ */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    /* Percentages and counts read as Western digits even in Arabic text.
+     * Chosen because every key, score and page number in this product is
+     * Western, and mixing numeral systems inside one sentence is harder to
+     * read than either alone. Revisit only as a product decision. */
+    font-variant-numeric: tabular-nums;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-canvas);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: 1.8;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* One focus ring for the whole product, and it is never removed.
+   * `:focus-visible` keeps it off mouse clicks without hiding it from
+   * keyboard users — removing outlines outright is the single most common
+   * accessibility regression in a design system. */
+  :focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: var(--radius-xs);
+  }
+
+  /* Respecting a system-level preference is not optional. Animation is
+   * reduced to a near-instant transition rather than removed, so state
+   * changes are still perceivable. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Headings inherit the display face and lose the browser's margins, which
+   * fight the spacing scale. */
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  p { margin: 0; }
+
+  /* Buttons and inputs do not inherit the font by default. In an Arabic-first
+   * product that means form controls silently render in a Latin fallback. */
+  button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  [hidden] { display: none !important; }
+
+  /* Scrollbars matched to the active identity. The token does the theming,
+   * so this never needs a dark variant of its own. */
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: var(--radius-lg);
+  }
+}
+
+@layer utilities {
+  /* Visible only to assistive technology. Used for live regions and for
+   * labels that would be redundant on screen. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /**
+   * Mirror an icon that encodes direction.
+   *
+   * Applied only to glyphs whose meaning is directional — "next", "back",
+   * chevrons that point along the reading order. A play button, a logo or a
+   * clock must NOT get this class: §8 asks for meaning-aware mirroring, not a
+   * blanket flip.
+   */
+  [dir='rtl'] .rtl-mirror {
+    transform: scaleX(-1);
+  }
+}
+
+@layer components {
+  /**
+   * The aurora — «Nebula's» quiet backdrop: three very large, very faint
+   * radial fields behind every screen. A class rather than inline styles
+   * because two unrelated surfaces (the application shell, the sign-in
+   * screen) share it, and because its colours are pure token references —
+   * it themes by itself and FE2 has nothing to object to.
+   */
+  .aurora {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        60rem 40rem at 85% -10%,
+        color-mix(in oklab, var(--color-aurora-emerald) 14%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        50rem 36rem at -10% 20%,
+        color-mix(in oklab, var(--color-aurora-indigo) 12%, transparent),
+        transparent 60%
+      ),
+      radial-gradient(
+        46rem 34rem at 55% 115%,
+        color-mix(in oklab, var(--color-aurora-teal) 10%, transparent),
+        transparent 62%
+      );
+  }
+}
