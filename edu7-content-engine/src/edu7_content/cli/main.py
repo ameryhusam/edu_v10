@@ -131,10 +131,17 @@ def _cmd_info():
 
     print("\n── Edu7 Content Engine — System Info ──────────────────")
 
-    # PyMuPDF
-    import pymupdf
-    ver = pymupdf.__version__
-    print(f"  PyMuPDF      : {ver}")
+    # PDF backend
+    try:
+        import pymupdf
+        print(f"  PyMuPDF      : {pymupdf.__version__} (preferred)")
+    except Exception:
+        print("  PyMuPDF      : ✗ unavailable; using pypdf fallback")
+        try:
+            import pypdf
+            print(f"  pypdf        : {pypdf.__version__}")
+        except Exception:
+            print("  pypdf        : ✗ unavailable")
 
     # Tesseract
     tess = shutil.which("tesseract")
