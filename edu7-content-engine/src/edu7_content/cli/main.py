@@ -193,48 +193,50 @@ def _cmd_prepare(args):
     mapper.detect_mapping()
     print(f"[+] Page offset: {mapper.detected_offset}  (PDF page = Printed page + {mapper.detected_offset})")
 
-    # ── TOC Extraction ───────────────────────────────────────────────────────
+    # ── TOC Extraction: AI-assisted first, deterministic fallback ─────────────
+    # The first ten PDF pages are always the AI inspection window. The AI output
+    # is the segmentation source when it is valid; printed page numbers remain
+    # canonical and PageMappingEngine converts them to physical PDF pages.
     units = []
-    print("\n[*] Extracting Table of Contents...")
+    print("\n[*] Extracting Table of Contents from the first ten pages...")
 
-    force_vision = getattr(args, "force_vision", False)
+    model_arg = getattr(args, "model", None)
+    use_ollama = not getattr(args, "no_ollama", False)
+    use_gemini = not getattr(args, "no_gemini", False)
+    vision_pages = min(getattr(args, "vision_pages", 10), 10)
+    dpi = getattr(args, "dpi", 150)
 
-    # Step 1: Rule-based TocExtractor (works only on text-based PDFs)
-    if not pdf_is_image and not force_vision:
+    if model_arg and str(model_arg).startswith("gemini"):
+        use_ollama = False
+    elif model_arg and not str(model_arg).startswith("gemini"):
+        use_gemini = False
+
+    # AI-assisted TOC extraction is attempted first, even for text PDFs.
+    ai_units = extract_toc_via_vision(
+        reader,
+        max_pages=vision_pages,
+        dpi=dpi,
+        api_key=os.environ.get("GEMINI_API_KEY"),
+        model_name=model_arg,
+        use_ollama=use_ollama,
+        use_gemini=use_gemini,
+    )
+
+    if ai_units:
+        units = ai_units
+        print("[+] Segmentation source: AI-extracted TOC from first ten pages.")
+    else:
+        # Deterministic fallback for installations without an available AI
+        # provider or when AI cannot establish a reliable TOC.
         toc = TocExtractor(reader)
-        toc_pages = toc.find_toc_pages()
-        print(f"[+] TOC pages detected: {[p+1 for p in toc_pages]}")
+        toc_pages = toc.find_toc_pages(max_search=10)
+        print(f"[+] Rule-based TOC pages: {[p + 1 for p in toc_pages]}")
         if toc_pages:
             units = toc.extract_hierarchy(toc_pages)
-            print(f"[+] Rule-based TOC: {len(units)} units, {sum(len(u['lessons']) for u in units)} lessons.")
-
-    # Step 2+: Vision AI fallback (for image PDFs or when rule-based finds nothing)
-    if not units:
-        model_arg = getattr(args, "model", None)
-        use_ollama = not getattr(args, "no_ollama", False)
-        use_gemini = not getattr(args, "no_gemini", False)
-        vision_pages = getattr(args, "vision_pages", 10)
-        dpi = getattr(args, "dpi", 150)
-
-        # Force Gemini-only if model starts with "gemini"
-        if model_arg and str(model_arg).startswith("gemini"):
-            use_ollama = False
-
-        # Force Ollama-only if model doesn't start with "gemini"
-        if model_arg and not str(model_arg).startswith("gemini"):
-            use_gemini = False
-
-        print("\n[*] Starting Vision AI extraction pipeline...")
-        units = extract_toc_via_vision(
-            reader,
-            max_pages=vision_pages,
-            dpi=dpi,
-            api_key=os.environ.get("GEMINI_API_KEY"),
-            model_name=model_arg,
-            use_ollama=use_ollama,
-            use_gemini=use_gemini,
-        )
-
+            print(
+                f"[+] Rule-based TOC: {len(units)} units, "
+                f"{sum(len(u['lessons']) for u in units)} lessons."
+            )
     # Summary
     total_lessons = sum(len(u.get("lessons", [])) for u in units)
     if units:
