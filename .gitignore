@@ -1,0 +1,22 @@
+node_modules/
+dist/
+coverage/
+.pgdata/
+.env
+.env.local
+*.log
+.DS_Store
+
+# Converted content packages.
+#
+# Generated, not authored: `node scripts/convert-legacy-curriculum.mjs`
+# reproduces them byte-for-byte from legacy/data/demo, which IS committed.
+# Storing 1.1 MB of derived JSON would make every regeneration a large,
+# unreviewable diff of content nobody edited by hand.
+content-packages/
+
+# The previous system, kept for reference and comparison — see legacy/ABOUT-THIS-DIRECTORY.md.
+# It is committed, but nothing of its build output is.
+legacy/node_modules/
+legacy/dist/
+legacy/.env
