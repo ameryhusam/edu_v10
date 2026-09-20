@@ -100,12 +100,17 @@ def extract_toc_via_vision(
     -------
     list of unit dicts or []
     """
-    # ── Render pages ──────────────────────────────────────────────────────
-    print(f"[*] Rendering first {max_pages} pages for vision analysis (DPI={dpi})...")
+    # ── Prepare the first pages ──────────────────────────────────────────
+    print(f"[*] Preparing first {max_pages} pages for AI TOC analysis (DPI={dpi})...")
     images_b64 = render_pages_to_b64(reader, max_pages=max_pages, dpi=dpi)
+    page_texts = [
+        {"pdfPage": i + 1, "text": reader.extract_page_text(i)}
+        for i in range(min(max_pages, reader.page_count))
+    ]
 
-    if not images_b64:
-        print("[!] Could not render any pages.")
+    # pypdf cannot render pages. Keep the text path available for Gemini.
+    if not images_b64 and not any(p["text"].strip() for p in page_texts):
+        print("[!] First pages contain neither renderable images nor text.")
         return []
 
     # ── Layer 3: Ollama (local, free, no API key) ─────────────────────────
@@ -136,12 +141,17 @@ def extract_toc_via_vision(
             print(f"[*] Trying Gemini Vision ({gemini_model})...")
             from ..ai.gemini import GeminiFreeProvider
             provider = GeminiFreeProvider(api_key=gemini_key, model_name=gemini_model)
-            units = provider.extract_toc_from_page_images(images_b64)
+            units = (
+                provider.extract_toc_from_page_images(images_b64)
+                if images_b64
+                else provider.extract_toc_from_page_texts(page_texts)
+            )
             if units:
                 total_lessons = sum(len(u.get("lessons", [])) for u in units)
-                print(f"[+] Gemini Vision TOC: {len(units)} units, {total_lessons} lessons.")
+                mode = "Vision" if images_b64 else "text/pypdf"
+                print(f"[+] Gemini {mode} TOC: {len(units)} units, {total_lessons} lessons.")
                 return units
-            print("[!] Gemini Vision returned no results.")
+            print("[!] Gemini TOC analysis returned no results.")
         else:
             print("[!] Gemini Vision skipped (GEMINI_API_KEY not set).")
 
