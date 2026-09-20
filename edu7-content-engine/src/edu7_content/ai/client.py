@@ -33,10 +33,13 @@ class GeminiClient:
         self.key_index = 0
         self.max_retries = int(os.environ.get("GEMINI_MAX_RETRIES", "3"))
         self.timeout = int(os.environ.get("GEMINI_TIMEOUT_SECONDS", "120"))
-        self._validate_models()
         self.model_name = model_name or self.models[0]
         if self.model_name not in SUPPORTED_MODELS:
-            raise ValueError(f"Unsupported Gemini model: {self.model_name}. Supported models: {", ".join(SUPPORTED_MODELS)}")
+            raise ValueError(
+                f"Unsupported Gemini model: {self.model_name}. "
+                f"Supported models: {', '.join(SUPPORTED_MODELS)}"
+            )
+        self._validate_models()
 
     def _validate_models(self) -> None:
         unsupported = [m for m in self.models if m not in SUPPORTED_MODELS]
@@ -45,8 +48,6 @@ class GeminiClient:
                 f"Unsupported Gemini model(s): {', '.join(unsupported)}. "
                 f"Supported models: {', '.join(SUPPORTED_MODELS)}"
             )
-        if self.model_name if hasattr(self, "model_name") else False:
-            pass
 
     def generate(self, payload: Dict[str, Any], *, timeout: Optional[int] = None) -> Dict[str, Any]:
         if not self.api_keys:
