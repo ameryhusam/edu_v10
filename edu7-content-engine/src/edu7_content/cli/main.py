@@ -80,7 +80,7 @@ def main():
     p_analyze = sub.add_parser("analyze", help="Analyze lesson content with AI (single lesson dir or full workspace dir)")
     p_analyze.add_argument("target", help="Lesson directory (units/XX/lessons/YY) OR full workspace directory")
     p_analyze.add_argument("--model", default="heuristic-micro-engine",
-                           help="Model: heuristic-micro-engine | gemini | gemini-2.5-flash | ollama-qwen2.5:7b | ...")
+                           help="Model: heuristic-micro-engine | gemini | gemini-3.6-flash | gemini-3.5-flash | ollama-qwen2.5:7b | ...")
     p_analyze.add_argument("--delay", type=float, default=4.0,
                            help="Delay in seconds between lessons for Gemini Free Tier rate-limiting (default: 4.0s)")
 
@@ -168,13 +168,24 @@ def _cmd_info():
         print("  Ollama       : ✗ not running")
         print("    → Install: https://ollama.ai | Then: ollama pull llava:7b")
 
-    # Gemini
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if api_key:
-        print(f"  Gemini       : ✓ GEMINI_API_KEY set ({api_key[:8]}...)")
+    # Gemini — report configuration without exposing keys.
+    api_keys = [
+        k.strip()
+        for k in os.environ.get("GEMINI_API_KEYS", "").replace(";", ",").split(",")
+        if k.strip()
+    ]
+    if not api_keys and os.environ.get("GEMINI_API_KEY", "").strip():
+        api_keys = [os.environ["GEMINI_API_KEY"].strip()]
+    if api_keys:
+        models = [
+            m.strip()
+            for m in os.environ.get("GEMINI_MODELS", os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")).replace(";", ",").split(",")
+            if m.strip()
+        ]
+        print(f"  Gemini       : ✓ configured ({len(api_keys)} API key(s); models: {', '.join(models)})")
     else:
-        print("  Gemini       : ✗ GEMINI_API_KEY not set (optional)")
-        print("    → Free tier: https://aistudio.google.com/apikey")
+        print("  Gemini       : ✗ API keys not set (optional)")
+        print("    → Configure GEMINI_API_KEYS in .env")
 
     print("──────────────────────────────────────────────────────\n")
 
@@ -223,7 +234,7 @@ def _cmd_prepare(args):
         reader,
         max_pages=vision_pages,
         dpi=dpi,
-        api_key=os.environ.get("GEMINI_API_KEY"),
+        api_key=None,
         model_name=model_arg,
         use_ollama=use_ollama,
         use_gemini=use_gemini,
@@ -556,9 +567,9 @@ def _print_help_tips():
          ollama pull llava-llama3:8b   (5 GB, best quality)
     3. Run: edu7-content prepare books_input/book1.pdf
 
-  Option B — Gemini Vision (free tier, 15 RPM, needs internet):
+  Option B — Gemini Vision (configured free tier, needs internet):
     1. Get free API key: https://aistudio.google.com/apikey
-    2. Set: $env:GEMINI_API_KEY = "AIza..."
+    2. Set GEMINI_API_KEYS in edu7-content-engine/.env (comma-separated keys).
     3. Run: edu7-content prepare books_input/book1.pdf
 
   Option C — Tesseract OCR (free, offline, for text-extractable PDFs):
