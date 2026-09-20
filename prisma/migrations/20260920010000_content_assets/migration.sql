@@ -1,7 +1,7 @@
 -- Phase G1: persistent physical content assets.
 CREATE TYPE "ContentAssetType" AS ENUM (
   'TEXTBOOK_PDF', 'UNIT_PDF', 'LESSON_PDF', 'PAGE_IMAGE',
-  'PAGE_TEXT', 'RESOURCE_FILE', 'AUDIO', 'VIDEO'
+  'PAGE_TEXT', 'RESOURCE_FILE', 'IMAGE_SUMMARY', 'AUDIO', 'VIDEO'
 );
 
 CREATE TABLE "content_assets" (
