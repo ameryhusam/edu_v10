@@ -64,6 +64,15 @@ class PageMappingEngine:
 
         return self.mapping
 
+    def calibrate_from_pdf_page(self, printed_page: int, pdf_page: int) -> int:
+        """Register an evidence-backed printed-to-physical mapping."""
+        if printed_page < 1 or pdf_page < 1 or pdf_page > self.reader.page_count:
+            raise ValueError("Printed/PDF page numbers are outside the document.")
+        self.mapping[int(printed_page)] = int(pdf_page)
+        self.reverse_mapping[int(pdf_page)] = int(printed_page)
+        self.detected_offset = int(pdf_page) - int(printed_page)
+        return self.detected_offset
+
     def get_pdf_page(self, printed_page: int) -> int:
         if printed_page in self.mapping:
             return self.mapping[printed_page]
