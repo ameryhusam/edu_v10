@@ -118,12 +118,44 @@ class GeminiFreeProvider(AIProvider):
                 }
             })
 
+        toc_schema = {
+            "type": "object",
+            "properties": {
+                "units": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "number": {"type": "integer"},
+                            "title": {"type": "string"},
+                            "startPage": {"type": "integer"},
+                            "lessons": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "number": {"type": "integer"},
+                                        "title": {"type": "string"},
+                                        "startPage": {"type": "integer"}
+                                    },
+                                    "required": ["number", "title", "startPage"]
+                                }
+                            }
+                        },
+                        "required": ["number", "title", "startPage", "lessons"]
+                    }
+                }
+            },
+            "required": ["units"]
+        }
+
         payload = {
             "contents": [{"parts": parts}],
             "generationConfig": {
                 "responseMimeType": "application/json",
+                "responseSchema": toc_schema,
                 "temperature": 0.1,
-                "maxOutputTokens": 4096
+                "maxOutputTokens": 8192
             }
         }
 
@@ -172,12 +204,44 @@ class GeminiFreeProvider(AIProvider):
             "إذا لم يظهر فهرس موثوق أرجع {\"units\":[]}. "
             "يمكن أن يمتد الفهرس عبر عدة صفحات من أول عشر صفحات."
         )
+        toc_schema = {
+            "type": "object",
+            "properties": {
+                "units": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "number": {"type": "integer"},
+                            "title": {"type": "string"},
+                            "startPage": {"type": "integer"},
+                            "lessons": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "number": {"type": "integer"},
+                                        "title": {"type": "string"},
+                                        "startPage": {"type": "integer"}
+                                    },
+                                    "required": ["number", "title", "startPage"]
+                                }
+                            }
+                        },
+                        "required": ["number", "title", "startPage", "lessons"]
+                    }
+                }
+            },
+            "required": ["units"]
+        }
+
         payload = {
             "contents": [{"parts": [{"text": prompt_text + "\n\n" + source}]}],
             "generationConfig": {
                 "responseMimeType": "application/json",
+                "responseSchema": toc_schema,
                 "temperature": 0.0,
-                "maxOutputTokens": 4096,
+                "maxOutputTokens": 8192,
             },
         }
         try:
