@@ -176,31 +176,34 @@ export class WorkspaceImporterService {
       };
     }
 
+    // Physical segmentation is performed by edu7-content-engine (Python).
+    // Never manufacture unit/lesson PDFs here. If a generated workspace already
+    // exists, reconcile it; otherwise return the source workspace and an explicit
+    // segmentation-required state.
     if (input.autoSegment !== false) {
-      const segmentRes = await this.workspaceManager.segmentWorkspace(
-        storeRes.workspaceDir,
-        input.units || [],
-      );
+      const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
+      const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
+      if (index && pkg) {
+        const segmentRes = await this.workspaceManager.segmentWorkspace(storeRes.workspaceDir);
+        return { ...storeRes, ...segmentRes, segmentationStatus: 'RECONCILED' as const };
+      }
       return {
         ...storeRes,
-        ...segmentRes,
+        indexManifest: index,
+        package: pkg,
+        segmentationStatus: 'REQUIRES_CONTENT_ENGINE' as const,
       };
     }
 
     const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
     const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
-
-    return {
-      ...storeRes,
-      indexManifest: index,
-      package: pkg,
-    };
+    return { ...storeRes, indexManifest: index, package: pkg, segmentationStatus: 'NOT_REQUESTED' as const };
   }
 
   /**
    * Segments an existing workspace
    */
-  async segmentWorkspace(workspaceDir: string, units?: Array<any>) {
-    return this.workspaceManager.segmentWorkspace(workspaceDir, units);
+  async segmentWorkspace(workspaceDir: string) {
+    return this.workspaceManager.segmentWorkspace(workspaceDir);
   }
 }
