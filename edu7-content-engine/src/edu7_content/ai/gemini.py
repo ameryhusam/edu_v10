@@ -6,7 +6,7 @@ import urllib.error
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from .base import AIProvider
-from .client import GeminiClient
+from .client import GeminiClient, SUPPORTED_MODELS
 from ..content.models import (
     LessonAnalysisResult, ExtractedConcept, ExtractedQuestion,
     QuestionChoice, ExtractedObjective, ExtractedMisconception,
@@ -48,14 +48,20 @@ class GeminiFreeProvider(AIProvider):
       - Vision-based TOC extraction from page images (extract_toc_from_page_images)
       - Automatic rate-limit handling (429 backoff)
       - Auto-detection from environment variable or .env file
-    Default model: gemini-2.5-flash
+    Supported models: gemini-3.6-flash, gemini-3.5-flash
     """
 
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
         _load_env_file()
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
-        self.model_name = model_name
-        self.client = GeminiClient(self.api_key, model_name)
+        configured = model_name or os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+        if configured not in SUPPORTED_MODELS:
+            raise ValueError(
+                f"Unsupported Gemini model: {configured}. "
+                f"Supported models: {', '.join(SUPPORTED_MODELS)}"
+            )
+        self.model_name = configured
+        self.client = GeminiClient(api_key=api_key, model_name=configured)
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEYS", os.environ.get("GEMINI_API_KEY", ""))
 
     @property
     def provider_name(self) -> str:
@@ -82,8 +88,8 @@ class GeminiFreeProvider(AIProvider):
         Send page images (base64-encoded PNG) to Gemini Vision and extract
         the TOC structure. Returns list matching TocExtractor format, or [].
         """
-        if not self.api_key:
-            print("[!] GEMINI_API_KEY not set - cannot use Vision TOC extraction.")
+        if not self.client.api_keys:
+            print("[!] GEMINI_API_KEYS (or GEMINI_API_KEY) not set - cannot use Vision TOC extraction.")
             return []
 
         prompt_text = (
@@ -143,7 +149,7 @@ class GeminiFreeProvider(AIProvider):
         This is the AI path used when PyMuPDF rendering is unavailable and the
         PdfReader has fallen back to pypdf.
         """
-        if not self.api_key:
+        if not self.client.api_keys:
             return []
 
         pages = page_texts[:10]
@@ -242,8 +248,8 @@ class GeminiFreeProvider(AIProvider):
         If lesson_text is empty (scanned/image PDF), loads page images
         from lesson_dir/pages and analyzes them multimodally.
         """
-        if not self.api_key:
-            print("[!] GEMINI_API_KEY not set. Falling back to HeuristicExtractorProvider...")
+        if not self.client.api_keys:
+            print("[!] GEMINI_API_KEYS (or GEMINI_API_KEY) not set. Falling back to HeuristicExtractorProvider...")
             from .heuristic import HeuristicExtractorProvider
             return HeuristicExtractorProvider().analyze_lesson(lesson_manifest, lesson_text)
 
