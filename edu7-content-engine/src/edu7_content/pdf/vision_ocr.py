@@ -26,23 +26,38 @@ except Exception:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def is_image_based_pdf(reader, sample_pages: int = 8) -> bool:
-    """
-    Returns True if the PDF has no real selectable Arabic text.
-    Checks first `sample_pages` pages for meaningful Arabic content.
-    Includes both standard Arabic (0x0600-0x06FF) and Arabic Presentation Forms (0xFB50-0xFEFF).
-    Ignores watermarks and URL-only overlays.
+    """Detect whether sampled pages are visually image-dominant.
+
+    A scanned textbook can contain an OCR text layer, so Arabic character
+    counts alone cannot prove that the PDF is text-native. Embedded page
+    images are used as an independent signal.
     """
     limit = min(sample_pages, reader.page_count)
     arabic_chars = 0
+    pages_with_images = 0
+
     for i in range(limit):
         t = reader.extract_page_text(i)
-        # Count all Arabic codepoints (standard + presentation forms)
         arabic_chars += sum(
             1 for ch in t
             if ('\u0600' <= ch <= '\u06FF') or ('\u0750' <= ch <= '\u077F') or
                ('\uFB50' <= ch <= '\uFDFF') or ('\uFE70' <= ch <= '\uFEFF')
         )
-    # < 50 Arabic chars across sample pages → treat as image PDF
+        try:
+            if reader.backend == "pymupdf":
+                if reader.doc[i].get_images(full=True):
+                    pages_with_images += 1
+            elif hasattr(reader.doc.pages[i], "images") and len(reader.doc.pages[i].images) > 0:
+                pages_with_images += 1
+        except Exception:
+            pass
+
+    if limit == 0:
+        return False
+
+    if pages_with_images / limit >= 0.75:
+        return True
+
     return arabic_chars < 50
 
 
@@ -80,6 +95,7 @@ def extract_toc_via_vision(
     model_name: Optional[str] = None,
     use_ollama: bool = True,
     use_gemini: bool = True,
+    force_vision: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Multi-layer TOC extraction for image-based or text-layer-failed PDFs.
@@ -106,8 +122,13 @@ def extract_toc_via_vision(
         for i in range(min(max_pages, reader.page_count))
     ]
 
-    # A scanned PDF must reach a vision provider with actual page images.
-    # pypdf can slice/extract metadata but cannot render pages itself.
+    # A forced visual run must never silently fall back to a text-only OCR layer.
+    if force_vision and not images_b64:
+        print("[!] Visual extraction was requested, but no page renderer is available.")
+        print("[!] Install PyMuPDF, or a system renderer such as pdftoppm/mutool.")
+        return []
+
+    # A scanned PDF with no usable text and no renderer cannot reach a vision model.
     if not images_b64 and not any(p["text"].strip() for p in page_texts):
         print("[!] Scanned PDF has no text layer and no available renderer.")
         print("[!] Install PyMuPDF, or a system renderer such as pdftoppm/mutool.")
