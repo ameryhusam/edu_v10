@@ -29,7 +29,6 @@ from pathlib import Path
 from ..pdf.reader import PdfReader
 from ..pdf.page_mapping import PageMappingEngine
 from ..pdf.toc import TocExtractor
-from ..pdf.pdf_ocr import ArabicPdfExtractor
 from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
@@ -132,10 +131,17 @@ def _cmd_info():
 
     print("\n── Edu7 Content Engine — System Info ──────────────────")
 
-    # PyMuPDF
-    import pymupdf
-    ver = pymupdf.__version__
-    print(f"  PyMuPDF      : {ver}")
+    # PDF backend
+    try:
+        import pymupdf
+        print(f"  PyMuPDF      : {pymupdf.__version__} (preferred)")
+    except Exception:
+        print("  PyMuPDF      : ✗ unavailable; using pypdf fallback")
+        try:
+            import pypdf
+            print(f"  pypdf        : {pypdf.__version__}")
+        except Exception:
+            print("  pypdf        : ✗ unavailable")
 
     # Tesseract
     tess = shutil.which("tesseract")
@@ -193,47 +199,51 @@ def _cmd_prepare(args):
     mapper.detect_mapping()
     print(f"[+] Page offset: {mapper.detected_offset}  (PDF page = Printed page + {mapper.detected_offset})")
 
-    # ── TOC Extraction ───────────────────────────────────────────────────────
+    # ── TOC Extraction: AI-assisted first, deterministic fallback ─────────────
+    # The first ten PDF pages are always the AI inspection window. The AI output
+    # is the segmentation source when it is valid; printed page numbers remain
+    # canonical and PageMappingEngine converts them to physical PDF pages.
     units = []
-    print("\n[*] Extracting Table of Contents...")
+    print("\n[*] Extracting Table of Contents from the first ten pages...")
 
-    force_vision = getattr(args, "force_vision", False)
+    model_arg = getattr(args, "model", None)
+    use_ollama = not getattr(args, "no_ollama", False)
+    use_gemini = not getattr(args, "no_gemini", False)
+    vision_pages = min(getattr(args, "vision_pages", 10), 10)
+    dpi = getattr(args, "dpi", 150)
 
-    # Step 1: Rule-based TocExtractor (works only on text-based PDFs)
-    if not pdf_is_image and not force_vision:
+    if model_arg and str(model_arg).startswith("gemini"):
+        use_ollama = False
+    elif model_arg and not str(model_arg).startswith("gemini"):
+        use_gemini = False
+
+    # AI-assisted TOC extraction is attempted first, even for text PDFs.
+    ai_units = extract_toc_via_vision(
+        reader,
+        max_pages=vision_pages,
+        dpi=dpi,
+        api_key=os.environ.get("GEMINI_API_KEY"),
+        model_name=model_arg,
+        use_ollama=use_ollama,
+        use_gemini=use_gemini,
+    )
+
+    if ai_units:
+        units = ai_units
+        print("[+] Segmentation source: AI-extracted TOC from first ten pages.")
+    else:
+        # Deterministic fallback for installations without an available AI
+        # provider or when AI cannot establish a reliable TOC.
         toc = TocExtractor(reader)
-        toc_pages = toc.find_toc_pages()
-        print(f"[+] TOC pages detected: {[p+1 for p in toc_pages]}")
+        toc_pages = toc.find_toc_pages(max_search=10)
+        print(f"[+] Rule-based TOC pages: {[p + 1 for p in toc_pages]}")
         if toc_pages:
             units = toc.extract_hierarchy(toc_pages)
-            print(f"[+] Rule-based TOC: {len(units)} units, {sum(len(u['lessons']) for u in units)} lessons.")
-
-    # Step 2+: Vision AI fallback (for image PDFs or when rule-based finds nothing)
-    if not units:
-        model_arg = getattr(args, "model", None)
-        use_ollama = not getattr(args, "no_ollama", False)
-        use_gemini = not getattr(args, "no_gemini", False)
-        vision_pages = getattr(args, "vision_pages", 10)
-        dpi = getattr(args, "dpi", 150)
-
-        # Force Gemini-only if model starts with "gemini"
-        if model_arg and str(model_arg).startswith("gemini"):
-            use_ollama = False
-
-        # Force Ollama-only if model doesn't start with "gemini"
-        if model_arg and not str(model_arg).startswith("gemini"):
-            use_gemini = False
-
-        print("\n[*] Starting Vision AI extraction pipeline...")
-        units = extract_toc_via_vision(
-            reader,
-            max_pages=vision_pages,
-            dpi=dpi,
-            api_key=os.environ.get("GEMINI_API_KEY"),
-            model_name=model_arg,
-            use_ollama=use_ollama,
-            use_gemini=use_gemini,
-        )
+            print(
+                f"[+] Rule-based TOC: {len(units)} units, "
+                f"{sum(len(u['lessons']) for u in units)} lessons."
+            )
+    _finalize_toc_page_bounds(units, mapper, reader.page_count)
 
     # Summary
     total_lessons = sum(len(u.get("lessons", [])) for u in units)
@@ -258,6 +268,37 @@ def _cmd_prepare(args):
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
     print(f"[SUCCESS] Book prepared at: {ws_path}\n")
 
+
+def _finalize_toc_page_bounds(units, mapper, pdf_page_count):
+    """Turn TOC start pages into deterministic printed-page ranges.
+
+    The TOC is authoritative for starts. End pages are derived only from the
+    next lesson/unit boundary; the final lesson ends at the last physical PDF
+    page converted back to the printed-page numbering.
+    """
+    flat = [
+        lesson
+        for unit in units
+        for lesson in unit.get("lessons", [])
+    ]
+    for idx, lesson in enumerate(flat):
+        start = int(lesson.get("startPage", 1))
+        if idx + 1 < len(flat):
+            next_start = int(flat[idx + 1].get("startPage", start))
+            lesson["endPage"] = max(start, next_start - 1)
+        else:
+            final_printed = mapper.get_printed_page(pdf_page_count)
+            lesson["endPage"] = max(start, final_printed)
+
+    for unit in units:
+        lessons = unit.get("lessons", [])
+        if lessons:
+            unit["startPage"] = min(int(l["startPage"]) for l in lessons)
+            unit["endPage"] = max(int(l["endPage"]) for l in lessons)
+        else:
+            start = int(unit.get("startPage", 1))
+            unit["startPage"] = start
+            unit["endPage"] = start
 
 def _find_lesson_dirs(target_path: Path) -> List[Path]:
     """Find all lesson directories in workspace supporting both new and legacy layouts."""

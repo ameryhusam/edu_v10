@@ -137,6 +137,54 @@ class GeminiFreeProvider(AIProvider):
             print(f"[!] Gemini Vision TOC extraction failed: {err}")
             return []
 
+    def extract_toc_from_page_texts(self, page_texts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Extract the printed-page TOC from the first ten PDF pages using text only.
+
+        This is the AI path used when PyMuPDF rendering is unavailable and the
+        PdfReader has fallen back to pypdf.
+        """
+        if not self.api_key:
+            return []
+
+        pages = page_texts[:10]
+        source = "\n\n".join(
+            f"--- PDF page {p.get('pdfPage', i + 1)} ---\n{p.get('text', '')}"
+            for i, p in enumerate(pages)
+            if p.get("text", "").strip()
+        )
+        if not source.strip():
+            return []
+
+        prompt_text = (
+            "أنت خبير في استخراج فهرس الكتب المدرسية العربية. حلل النص المستخرج من أول "
+            "عشر صفحات من كتاب واحد. استخرج فهرس المحتويات فقط إذا كان موجوداً. "
+            "أرقام startPage/endPage يجب أن تكون أرقام الصفحات المطبوعة داخل الكتاب، "
+            "وليس أرقام صفحات PDF. لا تخمن أرقاماً غير ظاهرة. "
+            "أرجع JSON فقط بالشكل: "
+            '{"units":[{"number":1,"title":"...","startPage":1,"lessons":' 
+            '[{"number":1,"title":"...","startPage":2}]}]}. '
+            "إذا لم يظهر فهرس موثوق أرجع {\"units\":[]}. "
+            "يمكن أن يمتد الفهرس عبر عدة صفحات من أول عشر صفحات."
+        )
+        payload = {
+            "contents": [{"parts": [{"text": prompt_text + "\n\n" + source}]}],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": 0.0,
+                "maxOutputTokens": 4096,
+            },
+        }
+        try:
+            response = self._call_api(payload, timeout=120)
+            text_resp = self._extract_text(response).strip()
+            if text_resp.startswith("```"):
+                parts = text_resp.split("\n")
+                text_resp = "\n".join(parts[1:]).rsplit("```", 1)[0]
+            return self._map_toc_response(json.loads(text_resp))
+        except Exception as err:
+            print(f"[!] Gemini text TOC extraction failed: {err}")
+            return []
+
     def _map_toc_response(self, data: dict) -> List[Dict[str, Any]]:
         units_raw = data.get("units", [])
         units = []
@@ -158,10 +206,18 @@ class GeminiFreeProvider(AIProvider):
                 }
                 lessons.append(entry)
                 all_lessons_flat.append(entry)
+            u_start = u_raw.get("startPage")
+            try:
+                u_start = int(u_start) if u_start is not None else (
+                    lessons[0]["startPage"] if lessons else 1
+                )
+            except (TypeError, ValueError):
+                u_start = lessons[0]["startPage"] if lessons else 1
             units.append({
                 "id": f"unit-{u_num:02d}",
                 "number": u_num,
                 "title": u_title,
+                "startPage": u_start,
                 "lessons": lessons
             })
         for idx, les in enumerate(all_lessons_flat):
