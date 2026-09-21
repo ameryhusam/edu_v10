@@ -102,6 +102,7 @@ import { PublishingService } from '../contexts/content/application/publishing.se
 import { TextbookAdministrationService } from '../contexts/content/application/textbook-administration.service.js';
 import { LocalContentStorage } from '../infrastructure/storage/local-content-storage.js';
 import { WorkspaceManager } from '../infrastructure/storage/workspace-manager.js';
+import { ContentEngineService } from '../infrastructure/content/content-engine.service.js';
 import { PrismaContentAssetRepository } from '../infrastructure/database/content-asset.repository.js';
 import { AssignmentService } from '../contexts/instruction/application/assignment.service.js';
 import { DueWorkService } from '../contexts/instruction/application/due-work.service.js';
@@ -181,6 +182,7 @@ export interface Container {
     readonly contentImport: ContentImportService;
     readonly contentAsset: ContentAssetService;
     readonly workspaceImporter: WorkspaceImporterService;
+    readonly contentUploadMaxBytes: number;
     readonly publishing: PublishingService;
     /** The admin surface over the textbook catalogue and its deployment. */
     readonly textbookAdministration: TextbookAdministrationService;
@@ -267,7 +269,8 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
   const contentStorage = new LocalContentStorage({
     rootDir: process.env.STORAGE_ROOT || './data/storage',
   });
-  const workspaceManager = new WorkspaceManager(process.env.WORKSPACE_ROOT);
+  const workspaceManager = new WorkspaceManager();
+  const contentEngine = new ContentEngineService(env.CONTENT_ENGINE_PYTHON, env.CONTENT_ENGINE_ROOT);
   const contentAssetRepository = new PrismaContentAssetRepository(db);
 
   const contentRepository = new PrismaContentRepository(db);
@@ -499,7 +502,10 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
         workspaceManager,
         new ContentImportService(contentAuthoring, itemBank),
         contentAsset,
+        contentEngine,
+        env.CONTENT_ENGINE_TIMEOUT_MS,
       ),
+      contentUploadMaxBytes: env.CONTENT_UPLOAD_MAX_BYTES,
       publishing: new PublishingService(
         contentRepository,
         clock,
