@@ -123,6 +123,18 @@ export class WorkspaceManager {
     return path.join(base, `ED${editionNorm}`);
   }
 
+  /** Resolves the canonical workspace path from the derived textbook key. */
+  getWorkspaceDirFromTextbookKey(textbookKey: string): string {
+    const match = /^EDU-(.+?)-G(\\d+)-T(\\d+)-ED(.+)$/i.exec(textbookKey.trim());
+    if (!match) throw new Error(`Invalid textbook key: ${textbookKey}`);
+    return this.getWorkspaceDir({
+      subject: match[1],
+      grade: `G${match[2]}`,
+      term: `T${match[3]}`,
+      edition: match[4],
+    });
+  }
+
   /**
    * Initializes workspace directories and stores the source textbook PDF
    */
