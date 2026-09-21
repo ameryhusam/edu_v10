@@ -101,7 +101,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         unitCount: row._count.units,
         questionCount: questionCountByKey.get(row.key) ?? 0,
         updatedAt: row.updatedAt,
-        coverUrl: row.assets[0] ? `/api/v1/content/assets/${encodeURIComponent(row.assets[0].key)}` : null,
+        coverUrl: row.assets[0] ? `/api/v1/content/assets/${encodeURIComponent(row.assets[0].key)}/stream` : null,
       })),
     };
   }
