@@ -77,7 +77,7 @@ class LessonSegmenter:
         edition = str(coords.get("edition", "2026"))
         title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
 
-        textbook_key = f"EDU-{subject}-{grade}-{term}-ED{edition}"
+        textbook_key = f"EDU-{subject}-G{int(str(grade).replace('G', '')):02d}-T{int(str(term).replace('T', ''))}-ED{edition}"
 
         # 1. Record source provenance only. The original book PDF is temporary
         # input and is never copied into workspace. Lesson PDFs are the only
