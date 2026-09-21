@@ -9,10 +9,10 @@ Usage examples:
   # Prepare a specific PDF:
   python -m edu7_content.cli.main prepare books_input/<book>.pdf
 
-  # Force Ollama vision extraction with specific model:
-  python -m edu7_content.cli.main prepare books_input/book1.pdf --model llava:7b
+  # Optional future/local Ollama support (explicit opt-in):
+  python -m edu7_content.cli.main prepare books_input/book1.pdf --ollama --model llava:7b
 
-  # Use Gemini Vision (free tier):
+  # Use Gemini Vision:
   python -m edu7_content.cli.main prepare books_input/book1.pdf --model gemini
 
   # Analyze a lesson with Gemini:
@@ -64,16 +64,18 @@ def main():
     p_prep.add_argument("--model", default=None,
                         help=(
                             "AI model for vision TOC extraction when rule-based fails.\n"
-                            "Free local: llava:7b | llava:13b | minicpm-v:8b | qwen2.5vl:7b\n"
-                            "Free cloud: gemini-3.6-flash | gemini-3.5-flash\n"
-                            "Default: auto (tries Ollama first, then Gemini if key set)"
+                            "Gemini: gemini-3.6-flash | gemini-3.5-flash\n"
+                            "Ollama: optional future/local adapter; requires --ollama and EDU7_ENABLE_OLLAMA=true\n"
+                            "Default: Gemini when configured; Ollama is never used implicitly"
                         ))
     p_prep.add_argument("--vision-pages", type=int, default=10,
                         help="Pages to render for vision analysis (default: 10)")
     p_prep.add_argument("--dpi", type=int, default=150,
                         help="Render DPI for vision analysis (default: 150, higher=better quality)")
+    p_prep.add_argument("--ollama", action="store_true",
+                        help="Explicitly enable optional Ollama vision support (disabled by default)")
     p_prep.add_argument("--no-ollama", action="store_true",
-                        help="Skip Ollama local vision models")
+                        help="Deprecated compatibility flag; Ollama is already disabled by default")
     p_prep.add_argument("--no-gemini", action="store_true",
                         help="Skip Gemini API even if GEMINI_API_KEYS are configured")
     p_prep.add_argument("--force-vision", action="store_true",
@@ -103,7 +105,7 @@ def main():
     p_exp.add_argument("--out", default="./out")
 
     # ── info ─────────────────────────────────────────────────────────────────
-    p_info = sub.add_parser("info", help="Show system capabilities (Tesseract, Ollama, Gemini)")
+    p_info = sub.add_parser("info", help="Show system capabilities (Tesseract, optional Ollama, Gemini)")
 
     args = parser.parse_args()
     if not args.command:
@@ -209,14 +211,17 @@ def _cmd_info():
         print("  Tesseract    : ✗ not installed")
         print("    → Install: https://github.com/UB-Mannheim/tesseract/wiki")
 
-    # Ollama
-    from ..ai.ollama_vision import _ollama_available, _list_ollama_models
-    if _ollama_available():
-        models = _list_ollama_models()
-        print(f"  Ollama       : ✓ running | models: {models}")
-    else:
-        print("  Ollama       : ✗ not running")
-        print("    → Install: https://ollama.ai | Then: ollama pull llava:7b")
+    # Ollama is retained but never enabled implicitly.
+    try:
+        from ..ai.ollama_vision import _ollama_available, _list_ollama_models
+        ollama_enabled = os.environ.get("EDU7_ENABLE_OLLAMA", "").strip().lower() in {"1", "true", "yes", "on"}
+        if _ollama_available():
+            models = _list_ollama_models()
+            print(f"  Ollama       : ✓ reachable | enabled={ollama_enabled} | models: {models}")
+        else:
+            print(f"  Ollama       : ✗ not reachable | enabled={ollama_enabled}")
+    except Exception as err:
+        print(f"  Ollama       : optional adapter unavailable ({err})")
 
     # Gemini — report configuration without exposing keys.
     api_keys = [
@@ -286,14 +291,15 @@ def _cmd_prepare(args):
     print("\n[*] Extracting Table of Contents from the first ten pages...")
 
     model_arg = getattr(args, "model", None)
-    use_ollama = not getattr(args, "no_ollama", False)
+    use_ollama = bool(getattr(args, "ollama", False)) and not getattr(args, "no_ollama", False)
     use_gemini = not getattr(args, "no_gemini", False)
     vision_pages = min(getattr(args, "vision_pages", 10), 10)
     dpi = getattr(args, "dpi", 150)
 
     if model_arg and str(model_arg).startswith("gemini"):
         use_ollama = False
-    elif model_arg and not str(model_arg).startswith("gemini"):
+    elif model_arg and (str(model_arg).startswith("ollama-") or str(model_arg) in {"ollama", "llava:7b", "llava:13b", "minicpm-v:8b", "qwen2.5vl:7b"}):
+        use_ollama = True
         use_gemini = False
 
     # AI-assisted TOC extraction is attempted first, even for text PDFs.
