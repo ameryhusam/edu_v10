@@ -308,3 +308,20 @@ A package is importable only when:
 - checksums are recorded
 - no blocking conflicts remain
 - retry is idempotent
+
+
+## 16. Schema gate: Textbook and academic-year coupling
+
+The current Prisma schema must be treated as the persisted-data source of truth during implementation review. It currently defines Textbook.termId, and Term belongs to AcademicYear; Textbook also has a uniqueness constraint over subjectId + gradeId + termId + edition.
+
+Therefore the target rule that a printed textbook identity is reusable across academic years is a **target decision, not a current schema fact**. TextbookAdoption already models school + academic year usage, but the existing Textbook.termId relation still couples the current row to a Term/AcademicYear.
+
+Do not silently solve this by documentation only. Before implementing cross-year reuse, perform a dedicated schema/domain gate:
+
+1. decide whether Textbook should remain term-scoped;
+2. if not, define the smallest compatible schema change;
+3. migrate existing keys/data without creating duplicate textbooks;
+4. update canonical key resolution and import reconciliation;
+5. verify TextbookAdoption remains the owner of school/year deployment.
+
+Until that gate is approved, import code must resolve against the current schema rather than assuming the target separation already exists.
