@@ -6,7 +6,12 @@ import urllib.request
 from typing import Any, Dict, List, Optional
 
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
-SUPPORTED_MODELS = ("gemini-3.6-flash", "gemini-3.5-flash")
+SUPPORTED_MODELS = (
+    "gemini-3.8-flash",
+    "gemini-3.7-flash",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+)
 
 
 class GeminiClient:
@@ -59,8 +64,8 @@ class GeminiClient:
         delay = 2.0
         last_error: Optional[Exception] = None
 
-        # Retry each configured key/model combination independently. A transient
-        # 5xx must not discard the remaining configured keys or models.
+        # Failover: transient retry, then rotate key/model on pressure, quota,
+        # authentication, service, or network failures.
         for model_index, model in enumerate(self.models):
             self.model_index = model_index
             for key_index, key in enumerate(self.api_keys):
@@ -77,21 +82,38 @@ class GeminiClient:
                     )
                     try:
                         with urllib.request.urlopen(req, timeout=timeout or self.timeout) as resp:
+                            self.model_name = model
                             return json.loads(resp.read().decode("utf-8"))
                     except urllib.error.HTTPError as exc:
                         last_error = exc
+                        body = ""
+                        try:
+                            body = exc.read().decode("utf-8", errors="replace")
+                        except Exception:
+                            pass
+                        error_code, _ = self._classify_http_error(exc.code, body)
 
-                        # Quota/rate-limit: move immediately to the next key.
                         if exc.code == 429:
+                            # Retry short-lived pressure once; quota exhaustion
+                            # immediately advances to the next key/model.
+                            if error_code in {"rate_limit_exceeded", "too_many_requests"} and attempt < 1:
+                                retry_after = self._retry_after_seconds(exc)
+                                time.sleep(retry_after if retry_after is not None else delay)
+                                delay = min(delay * 2.0, 20.0)
+                                continue
+                            print(f"[!] Gemini {model} HTTP 429 ({error_code or 'quota'}); failing over.")
                             break
 
-                        # Service/transient failures: retry the current key first,
-                        # then continue with the next key/model after exhaustion.
                         if exc.code in (408, 500, 502, 503, 504):
                             if attempt < self.max_retries:
                                 time.sleep(delay)
                                 delay = min(delay * 2.0, 20.0)
                                 continue
+                            print(f"[!] Gemini {model} transient HTTP {exc.code}; failing over.")
+                            break
+
+                        if exc.code in (401, 403):
+                            print(f"[!] Gemini {model} access error ({error_code or exc.code}); trying next key.")
                             break
 
                         raise
@@ -102,6 +124,7 @@ class GeminiClient:
                             time.sleep(delay)
                             delay = min(delay * 2.0, 20.0)
                             continue
+                        print(f"[!] Gemini {model} network error; failing over.")
                         break
 
         self.model_index = len(self.models) - 1
@@ -109,6 +132,37 @@ class GeminiClient:
         if last_error is not None:
             raise last_error
         raise RuntimeError("Gemini request failed without a response.")
+
+    @staticmethod
+    def _classify_http_error(status: int, body: str) -> tuple[str, str]:
+        try:
+            payload = json.loads(body)
+            error = payload.get("error", {}) if isinstance(payload, dict) else {}
+            code = str(error.get("status") or error.get("code") or "").lower()
+            message = str(error.get("message") or "").lower()
+        except Exception:
+            code = ""
+            message = body.lower()
+
+        if status == 429:
+            if "quota" in code or "quota" in message or "daily" in message or "per day" in message:
+                return "quota_exceeded", message
+            if "rate" in code or "rate" in message or "too many" in message:
+                return "rate_limit_exceeded", message
+            return "resource_exhausted", message
+        if status == 503:
+            return "service_unavailable", message
+        return code, message
+
+    @staticmethod
+    def _retry_after_seconds(exc: urllib.error.HTTPError) -> Optional[float]:
+        raw = exc.headers.get("Retry-After") if exc.headers else None
+        if not raw:
+            return None
+        try:
+            return max(0.0, min(float(raw), 60.0))
+        except (TypeError, ValueError):
+            return None
 
     @staticmethod
     def text(response: Dict[str, Any]) -> str:
