@@ -51,6 +51,7 @@ const schema = z.object({
   CONTENT_ENGINE_ROOT: z.string().default('./edu7-content-engine'),
   CONTENT_ENGINE_TIMEOUT_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   CONTENT_UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(250 * 1024 * 1024),
+  WORKSPACE_ROOT: z.string().default('./workspaces'),
 
   /**
    * Whether the refresh cookie may travel in a cross-site context.
