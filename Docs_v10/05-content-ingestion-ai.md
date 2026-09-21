@@ -1,209 +1,311 @@
 # Content Ingestion, Workspace, Grounding and AI
 
-**Status:** ADOPTED; target production contract. Implementation status is tracked only in `Docs_v10/11-current-state.md`.
+**Status:** ADOPTED; target production contract.  
+**Implementation status:** tracked only in Docs_v10/11-current-state.md.
 
-## 1. Canonical pipeline
+## 1. Purpose
 
-```text
-External source
-      ↓
-Python Content Engine
-  PDF reading / TOC / page mapping / segmentation / rendering
-      ↓
-Workspace + grounding artifacts
-      ↓
-Node reconciliation + validation
-      ↓
-Canonical application services
-      ↓
-PostgreSQL / asset storage
-```
+The ingestion system turns an external educational source into a validated, traceable Edu7 content package and then canonical content.
 
-AI enrichment sits after deterministic grounding:
+It supports both a raw PDF and an already-prepared workspace/package. Re-uploading a prepared book must not force PDF extraction again.
 
-```text
-Source pages
-  ↓
-grounding
-  ↓
-AI proposal
-  ↓
-normalization
-  ↓
-evidence validation
-  ↓
-PROPOSED / NEEDS_REVIEW
-  ↓
-human review
-  ↓
-canonical authoring/import
-```
+## 2. Canonical pipeline
 
-## 2. Python boundary
+    External source
+          ↓
+    input fingerprint + identity
+          ↓
+    Python Content Engine
+      PDF / TOC / mapping / segmentation / rendering
+          ↓
+    workspace + grounding
+          ↓
+    readiness validation
+          ↓
+    Node reconciliation
+          ↓
+    dry-run
+          ↓
+    human Apply when required
+          ↓
+    canonical application services
+          ↓
+    PostgreSQL / asset storage
 
-Python may:
+AI enrichment is downstream of deterministic grounding.
 
-- read PDFs;
-- inspect TOCs;
-- map printed pages to physical PDF pages;
-- segment units/lessons;
-- render page images;
-- generate deterministic grounding manifests;
-- run local/remote AI preparation;
-- write workspace files.
+## 3. Upload modes
 
-Python must not:
+### Mode A — raw PDF
 
-- import Prisma;
-- connect to PostgreSQL;
-- publish content;
-- write mastery/evidence/XP;
-- enforce authorization;
-- become a second canonical authoring service.
+    PDF
+     → SHA-256
+     → identity/edition
+     → TOC
+     → printed↔PDF mapping
+     → segmentation
+     → page rendering
+     → grounding
+     → package validation
 
-## 3. Printed page vs PDF page
+### Mode B — prepared package/workspace
 
-Printed page number is educational identity.
+Use when textbook identity, lesson hierarchy, extracted pages, page text and manifests already exist.
 
-PDF page number is physical location.
+    prepared package
+     → fingerprint
+     → manifest/schema validation
+     → identity validation
+     → completeness validation
+     → compare/reconcile
 
-Both must be preserved when known.
+No raw PDF is required when the package satisfies the import contract.
 
-Grounding records should include:
+### Mode C — same textbook, new material
 
-- printed page;
-- PDF page;
-- text;
-- stable ordinal;
-- SHA-256 fingerprint.
+Examples: AI page explanations, corrected page image, question file, flashcards or physical resource.
 
-Missing source, invalid mapping, or checksum mismatch is a blocking error for grounded analysis.
+These are additive/reconciliation operations and must not recreate the textbook.
 
-## 4. Canonical workspace
+## 4. Prepared-book readiness model
 
-The workspace is an evidence/preparation boundary, not a database.
+The product must distinguish uploaded, prepared, importable and learner-ready.
 
-Production identity is organized as `workspace/T01/G04/SCI/ED2026/` (term/grade/subject/printed edition). Multiple printed editions are sibling directories. The canonical textbook key is derived from subject + grade + term + printed edition, for example `EDU-SCI-G04-T1-ED2026`.
+| State | Meaning | Learner delivery |
+|---|---|---|
+| RECEIVED | accepted and fingerprinted | No |
+| IDENTIFYING | identity/edition unresolved | No |
+| PREPARING | extraction/segmentation/rendering | No |
+| PREPARED | package exists; validation pending | No |
+| READY_FOR_IMPORT | all import gates pass | No |
+| IMPORTING | canonical reconciliation/apply | No |
+| READY | canonical content/assets satisfy delivery prerequisites | Yes, subject to entitlement |
+| NEEDS_REVIEW | review issue blocks automatic readiness | No |
+| BLOCKED | prerequisite failed | No |
+| FAILED | processing failed | No |
+| ARCHIVED | intentionally inactive | No |
 
-The textbook-level workspace retains the cover image. Each lesson may retain its lesson PDF, printed-page images under `pages/`, optional AI explanation images under `ai_pages/`, and editable physical resources under `resource/`.
+State is derived from backend gates, never a React-only boolean.
 
-A lesson workspace may contain:
+## 5. Readiness gates
 
-```text
-lesson/
-  lesson_manifest.json
-  grounding_manifest.json
-  lesson_full_text.txt
-  pages/
-    page_<printed>.png
-  text/
-    page_<printed>.txt
-  ai_pages/
-    page_<printed>.png
-  resource/
-    questions/
-    concepts/
-    misconceptions/
-    flashcards/
-    audio/
-    video/
-  analysis/
-    <provider>/
-```
+READY_FOR_IMPORT requires:
 
-The printed page number is the stable page identity. AI explanation pages pair with original pages by printed page identity, not random filenames.
+    identity valid
+    AND supported package schema
+    AND textbook manifest valid
+    AND unit/lesson hierarchy valid
+    AND printed↔PDF mapping valid where required
+    AND required files/assets exist
+    AND checksums validate
+    AND no blocking errors
 
-## 5. Asset contract
+READY additionally requires successful canonical reconciliation and learner-delivery prerequisites.
 
-Binary files stay in storage.
+## 6. Duplicate/prepared-upload behavior
 
-JSON contains metadata, relative references, checksums and provenance.
+Canonical workspace:
 
-Database stores asset metadata/storage key/checksum/relationships.
+    workspace/T01/G04/SCI/ED2026/
 
-Never expose internal filesystem paths.
+Canonical textbook key:
 
-Assets should support streaming, cache metadata, MIME correctness and checksum validation.
+    EDU-SCI-G04-T1-ED2026
 
-## 6. AI provider boundary
+Identity derives from subject + grade + term + printed edition.
 
-AI is behind an application port and infrastructure adapter.
+For every upload:
 
-Provider SDKs must not appear in domain, routes or React.
+1. compute SHA-256;
+2. read/derive printed edition;
+3. derive canonical textbook key;
+4. compare with existing canonical textbook;
+5. compare source/package fingerprint where available;
+6. compare manifest/schema and structural fingerprint;
+7. classify as SAME_PREPARED_INPUT, SAME_TEXTBOOK_NEW_ASSETS, SAME_TEXTBOOK_CORRECTION, NEW_PRINTED_EDITION, IDENTITY_CONFLICT or INVALID_PACKAGE;
+8. reuse, reconcile, create sibling identity or stop for review.
 
-AI output is never canonical merely because it passed JSON schema validation.
+Never silently overwrite a canonical textbook.
 
-Evidence validation proves source grounding exists; it does not prove pedagogical correctness.
+## 7. Workspace contract
 
-## 7. AI safety
+    ED2026/
+    ├── cover/cover.png
+    ├── unit_01_<slug>/
+    │   └── lesson_01_<slug>/
+    │       ├── L_01_<slug>.pdf
+    │       ├── lesson_manifest.json
+    │       ├── grounding_manifest.json
+    │       ├── lesson_full_text.txt
+    │       ├── text/page_001.txt
+    │       ├── pages/page_001.png
+    │       ├── ai_pages/page_001.png
+    │       └── resource/
+    │           ├── flashcards/
+    │           ├── questions/
+    │           ├── concepts/
+    │           ├── misconceptions/
+    │           ├── audio/
+    │           └── video/
 
-AI must not autonomously:
+Printed page number is educational identity; PDF index is physical location.
 
-- approve content;
-- publish content;
-- change mastery;
-- create learner evidence;
-- change assignments;
-- alter authorization;
-- silently overwrite existing canonical questions/content.
+## 8. Persistence policy
 
-AI failure must not corrupt valid data.
+Retain the textbook cover, lesson page images, optional AI explanation images and editable physical resources.
 
-Use bounded retry, timeout, explicit refusal, and compensation/rollback where a workflow has already written state.
+Do not permanently retain the full source book PDF merely because it was uploaded, duplicate unit PDFs, or permanent page images outside canonical lesson pages.
 
-## 8. Import contract
+Temporary source input may be deleted after successful verification/reconciliation.
 
-Recommended import flow:
+## 9. Required data contract
 
-```text
-input package
-  ↓
-schema validation
-  ↓
-relationship validation
-  ↓
-duplicate/conflict detection
-  ↓
-dry-run
-  ↓
-canonical application service
-  ↓
-transaction
-  ↓
-idempotent persistence
-```
+### Textbook
 
-No direct DB writes from import adapters.
+    textbookKey
+    subjectKey
+    gradeKey
+    termKey
+    printedEdition
+    title
+    issuer when applicable
+    publicationYear when applicable
+    sourceChecksum
+    packageSchemaVersion
 
-Missing input rows never imply deletion.
+### Unit
 
-## 9. Question updates
+    unitKey
+    textbookKey
+    slug
+    title
+    orderIndex
 
-Question ingestion must support:
+### Lesson
 
-- adding multiple files;
-- merging new questions into an existing batch/file;
-- semantic/identity deduplication;
-- conflict reporting;
-- preserving existing historical questions;
-- explicit replacement/correction workflows.
+    lessonKey
+    textbookKey
+    unitKey
+    slug
+    title
+    orderIndex
+    printedPageStart
+    printedPageEnd
+    pdfPageStart
+    pdfPageEnd
 
-Advanced types currently include ORDERING and should allow future educational formats such as word ordering and ascending/descending ordering through a canonical question-type contract rather than UI-only special cases.
+### Page
 
-## 10. Local/free model strategy
+    lessonKey
+    printedPageNumber
+    pdfPageNumber
+    textPath
+    imagePath
+    textChecksum
+    imageChecksum
 
-The content-preparation engine may support local models and remote providers behind one provider-neutral contract.
+### Asset
 
-Provider choice must not alter the canonical import contract.
+    assetKey
+    lessonKey/textbookKey
+    assetType
+    relativePath
+    mimeType
+    sizeBytes
+    sha256
+    pageStart/pageEnd
+    originalName
 
-## 11. Implementation staging
+### Grounding
 
-The production architecture may be implemented incrementally through foundation gates such as workspace/assets/provider transport, deterministic TOC and PDF-reader fallback, grounding manifests/checksums, draft-only lesson AI analysis, preview/deduplication/human Apply, canonical page/chunk persistence, and page/resource authoring. These are implementation stages, not separate architectural owners or alternative pipelines.
+    lessonKey
+    chunkKey
+    pageStart/pageEnd
+    textChecksum
+    sourceChecksum
 
-## 12. External library integration
+### AI proposal
 
-Google Drive or another library is an adapter/source, not a platform primitive.
+    operationKey
+    lessonKey
+    task
+    providerId
+    modelId
+    promptVersion
+    groundingRefs
+    sourceChecksums
+    status
+    createdAt
 
-Folder taxonomy may help humans organize source material, but the canonical identity remains the Edu7 content contract.
+## 10. Reconciliation
 
-Never make the database depend on a provider's folder naming convention.
+Each incoming entity is classified CREATE, UPDATE, UNCHANGED, CONFLICT, INVALID or SKIP.
+
+Same identity + same canonical content → UNCHANGED.  
+Compatible metadata/assets → UPDATE.  
+Conflicting educational meaning → CONFLICT.  
+Missing incoming rows never mean delete.  
+Writes go through canonical application services.  
+Retries are idempotent.
+
+## 11. AI and page analysis
+
+AI may analyze page text, page image, lesson grounding or a selected page range/chunk.
+
+AI output remains a proposal.
+
+For page explanations, original page assets are never overwritten. AI explanations are separate ai_pages assets paired by printed page number.
+
+Long lessons must use explicit page-range/chunk processing rather than silently truncating evidence.
+
+## 12. Question updates
+
+Question ingestion supports multiple files, merge into an existing batch/file, deduplication, conflict reporting, append-only historical safety and explicit correction/replacement.
+
+Canonical origin is distinct from ingestion method. A textbook question imported from a file remains TEXTBOOK; an AI-generated question remains AI.
+
+Canonical QuestionType must support future educational forms including word ordering, ascending/descending ordering and greater/less fill-in-the-blank.
+
+## 13. Python boundary
+
+Python may read, prepare, segment, render, ground and produce proposal artifacts.
+
+Python must never import Prisma, connect to PostgreSQL, publish content, write learner evidence/mastery/XP, enforce authorization or become a second canonical authoring service.
+
+## 14. Canonical import boundary
+
+    Python workspace
+     ↓
+    Node package reader
+     ↓
+    schema + relationship validation
+     ↓
+    identity reconciliation
+     ↓
+    duplicate/conflict detection
+     ↓
+    dry-run
+     ↓
+    human Apply where required
+     ↓
+    canonical services
+     ↓
+    transaction + audit
+
+## 15. Failure/recovery
+
+Every workflow exposes operationKey, source/package checksum, current status, blocking error code, resumable checkpoint where applicable and reconciliation counts.
+
+Retrying the same input must not duplicate textbook, lesson, page, asset, question or resource records.
+
+## 16. Reference patterns
+
+Open edX Content Libraries separate centralized authoring/reuse from course consumption and support published content with controlled synchronization. Edu7 should use this separation without copying Open edX's schema. citeturn0search0turn0search3
+
+Canvas uses explicit requirements/prerequisites and conditional Mastery Paths. This is a useful reference for explicit progression gates. citeturn1search24turn1search14
+
+Moodle connects completion with competencies and evidence, a useful reference for future content-to-concept progression. citeturn1search9turn1search10
+
+## 17. Non-goals
+
+Do not create a second textbook database for prepared workspaces, direct Python→PostgreSQL writes, direct AI→canonical DB writes, UI-owned readiness, filename-based identity, silent same-key overwrite or permanent source-PDF retention for convenience.
