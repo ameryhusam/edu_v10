@@ -422,6 +422,22 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
     contentAudit,
   );
 
+  const workspaceImporter = new WorkspaceImporterService(
+    workspaceManager,
+    new ContentImportService(contentAuthoring, itemBank),
+    contentAsset,
+    contentEngine,
+    env.CONTENT_ENGINE_TIMEOUT_MS,
+  );
+  const workspaceArchive = new WorkspaceArchiveService(
+    workspaceManager,
+    workspaceImporter,
+    env.CONTENT_ENGINE_PYTHON,
+    env.CONTENT_ENGINE_ROOT,
+    env.CONTENT_UPLOAD_MAX_BYTES,
+    env.CONTENT_ENGINE_TIMEOUT_MS,
+  );
+
   return {
     db,
     clock,
@@ -501,27 +517,8 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
       // duplicate instances would be more objects to keep in step.
       contentImport: new ContentImportService(contentAuthoring, itemBank),
       contentAsset,
-      workspaceImporter: new WorkspaceImporterService(
-        workspaceManager,
-        new ContentImportService(contentAuthoring, itemBank),
-        contentAsset,
-        contentEngine,
-        env.CONTENT_ENGINE_TIMEOUT_MS,
-      ),
-      workspaceArchive: new WorkspaceArchiveService(
-        workspaceManager,
-        new WorkspaceImporterService(
-          workspaceManager,
-          new ContentImportService(contentAuthoring, itemBank),
-          contentAsset,
-          contentEngine,
-          env.CONTENT_ENGINE_TIMEOUT_MS,
-        ),
-        env.CONTENT_ENGINE_PYTHON,
-        env.CONTENT_ENGINE_ROOT,
-        env.CONTENT_UPLOAD_MAX_BYTES,
-        env.CONTENT_ENGINE_TIMEOUT_MS,
-      ),
+      workspaceImporter,
+      workspaceArchive,
       contentUploadMaxBytes: env.CONTENT_UPLOAD_MAX_BYTES,
       publishing: new PublishingService(
         contentRepository,
