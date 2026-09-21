@@ -1,6 +1,6 @@
 # Content Authoring, Readiness, Delivery and Learning Path
 
-**Status:** ADOPTED; some target behavior is pending implementation.
+**Status:** ADOPTED; target production contract. Implementation status is tracked only in `Docs_v10/11-current-state.md`.
 
 ## 1. Content hierarchy
 
@@ -87,7 +87,7 @@ The product requires a backend-owned control to distinguish:
 Preferred contract:
 
 ```text
-isPublished / readiness → availability
+publication/readiness → availability
 includeInLearningPath → progression eligibility
 ```
 
