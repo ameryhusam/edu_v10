@@ -189,6 +189,8 @@ class LessonSegmenter:
                 pages_dir.mkdir(exist_ok=True)
                 ai_pages_dir.mkdir(exist_ok=True)
                 resource_dir.mkdir(exist_ok=True)
+                for resource_kind in ("flashcards", "questions", "concepts", "misconceptions", "audio", "video"):
+                    (resource_dir / resource_kind).mkdir(exist_ok=True)
 
                 start_p = les.get("startPage", unit_start_page)
                 end_p = les.get("endPage", start_p)
