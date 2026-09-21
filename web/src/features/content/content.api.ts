@@ -299,6 +299,23 @@ export interface UpdateResourceInput {
   readonly estimatedMins?: number | null;
 }
 
+export interface ContentAssetRecord {
+  readonly key: string;
+  readonly assetType: string;
+  readonly originalName: string;
+  readonly relativePath: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+  readonly sha256: string;
+  readonly scope: string;
+  readonly pageStart: number | null;
+  readonly pageEnd: number | null;
+  readonly title: string | null;
+  readonly altText: string | null;
+  readonly caption: string | null;
+  readonly lessonKey: string | null;
+}
+
 export interface ResourceRecord {
   readonly key: string;
   readonly kind: string;
@@ -419,6 +436,10 @@ export const textbookAdministrationApi = {
   /** One lesson's materials — the educational and remedial reading list. */
   lessonMaterials: (lessonKey: string) =>
     api.get<readonly LessonMaterial[]>(`content/lessons/${encodeURIComponent(lessonKey)}/materials`),
+
+  /** Physical lesson pages, AI page explanations and attached media. */
+  lessonAssets: (lessonKey: string) =>
+    api.get<readonly ContentAssetRecord[]>(`content/lessons/${encodeURIComponent(lessonKey)}/assets`),
 
   /** The book-wide shelf — resources attached to the textbook itself. */
   textbookResources: (textbookKey: string) =>
