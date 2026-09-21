@@ -291,6 +291,12 @@ def _cmd_prepare(args):
         if args.workspace
         else book_workspace(subject_key, grade_number, term_number, edition)
     )
+    # When the Node bridge supplies the shared subject root, create the edition
+    # as the final identity segment instead of creating a duplicate textbook key.
+    if args.workspace:
+        expected_edition_dir = "ED" + re.sub(r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-"))
+        if ws_path.name.upper() != expected_edition_dir:
+            ws_path = ws_path / expected_edition_dir
     print(f"[+] Edition: {edition}")
     print(f"[+] Book key: {book_key}")
 
