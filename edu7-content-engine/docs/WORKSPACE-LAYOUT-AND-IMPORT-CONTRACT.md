@@ -1,138 +1,214 @@
-# Edu7 Content Workspace Contract
+# Edu7 Content Workspace — Canonical Storage Contract v2
 
-## Purpose
+## 1. Single source of persisted PDF content
 
-The Python content engine is a processor, not the content store.
+The workspace is a **lesson-PDF store**, not a book-PDF or unit-PDF store.
 
-- Engine code: `edu7-content-engine/`
-- Source PDFs: repository-root `books_input/`
-- Generated workspaces: repository-root `workspace/`
-- Database writing: Node `ContentImportService` only
-- AI output: draft/proposed artifacts only; never direct canonical DB writes
+- The uploaded source book is temporary input.
+- The full source book PDF is never copied into `workspace/`.
+- Unit PDFs are never persisted.
+- The reconstructed full-book PDF is never persisted.
+- Page images are not persisted as part of normal preparation.
+- The only canonical PDF artifact persisted by preparation is **one PDF per lesson**.
+- Unit/book PDFs are deterministic derived artifacts rebuilt on demand from ordered lesson PDFs.
+- AI-generated explanatory images and teacher-added images are separate learning resources; they are not copies of textbook page images.
 
-The engine may be launched from inside `edu7-content-engine/`, but all default
-input/output paths resolve from the Edu7 repository root.
+This prevents the same pages from being stored three times as book + unit + lesson PDFs.
 
-## Canonical layout
+## 2. Canonical layout
 
-```
+```text
 edu_v10/
-├── books_input/
-│   ├── <source-book>.pdf
-│   └── ...
-├── workspace/
-│   ├── T01/
-│   │   ├── G04/
-│   │   │   └── MATH/
-│   │   │       └── EDU-MATH-G04-T1-ED2026/
-│   │   │           ├── book-manifest.json
-│   │   │           ├── index.json
-│   │   │           ├── edu7-content-package.json
-│   │   │           ├── source/
-│   │   │           │   ├── EDU-MATH-G04-T1-ED2026.pdf
-│   │   │           │   └── book-source-manifest.json
-│   │   │           ├── unit_01_<stable-name>/
-│   │   │           │   ├── unit_manifest.json
-│   │   │           │   ├── U_01_<stable-name>.pdf
-│   │   │           │   └── lesson_01_<stable-name>/
-│   │   │           │       ├── lesson_manifest.json
-│   │   │           │       ├── L_01_<stable-name>.pdf
-│   │   │           │       ├── lesson_full_text.txt
-│   │   │           │       ├── grounding_manifest.json
-│   │   │           │       ├── pages/
-│   │   │           │       ├── text/
-│   │   │           │       ├── analysis/
-│   │   │           │       └── resources/
-│   │   │           └── ...
-│   │   └── G07/
-│   │       └── SCI/
-│   │           └── EDU-SCI-G07-T1-ED2026/
-│   └── T02/
-└── edu7-content-engine/
-    └── src/
+├── books_input/                         # temporary source inputs
+│   └── <uploaded-book>.pdf
+├── workspace/                           # persisted preparation state
+│   └── T01/
+│       └── G04/
+│           └── SCI/                     # exact Prisma Subject.key
+│               └── EDU-SCI-G04-T1-ED2026/
+│                   ├── book-manifest.json
+│                   ├── book-source-manifest.json
+│                   ├── index.json
+│                   ├── edu7-content-package.json
+│                   ├── unit_01_<stable-slug>/
+│                   │   ├── unit_manifest.json
+│                   │   ├── lesson_01_<stable-slug>/
+│                   │   │   ├── lesson_manifest.json
+│                   │   │   ├── L_01_<stable-slug>.pdf
+│                   │   │   ├── lesson_full_text.txt
+│                   │   │   ├── text/
+│                   │   │   │   └── page_001.txt
+│                   │   │   ├── grounding_manifest.json
+│                   │   │   ├── analysis/
+│                   │   │   └── resources/
+│                   │   └── ...
+│                   └── ...
+└── edu7-content-engine/                # code only
 ```
 
-### Identity rules
+## 3. Upload/import lifecycle
 
-The folder hierarchy is organizational and import-friendly:
+### A. Book upload
 
-1. `T01/T02` is the filesystem term coordinate.
-2. `G04/G07` is the filesystem grade coordinate.
-3. `MATH/SCI/ARAB/... ` is exactly the canonical `Subject.key`.
-4. The textbook directory is exactly the canonical `Textbook.key`.
-5. The textbook key is derived from subject + grade + term + printed edition,
-   matching `src/shared/kernel/identifiers.ts`:
-   `EDU-MATH-G04-T1-ED2026`.
-6. The PDF filename is not the identity. It is source input only.
-7. Unit and lesson identities are derived from stable names/slugs, never their
-   order index.
+1. User uploads a textbook PDF.
+2. The upload is held in temporary input storage.
+3. Python `edu7-content` opens the PDF.
+4. The engine detects the PDF backend and determines whether rendering/OCR is required.
+5. The engine extracts or detects the TOC.
+6. Printed-page ↔ physical-PDF-page mapping is calculated.
+7. Lesson ranges are finalized.
+8. The engine slices each lesson into exactly one persisted lesson PDF.
+9. The temporary source book can be removed after successful preparation/verification.
 
-## JSON contract
+The workspace therefore contains the preparation result, not a duplicate copy of the uploaded book.
 
-Every book uses the same manifest filenames and schema family:
+### B. Lesson AI analysis
 
-- `book-manifest.json`: filesystem/package entry point and DB import coordinates.
-- `index.json`: complete generated hierarchy and asset inventory.
-- `edu7-content-package.json`: canonical import package.
-- `unit_manifest.json`: one unit and its lessons.
-- `lesson_manifest.json`: one lesson, printed/physical page mapping, assets,
-  and grounding references.
-- `grounding_manifest.json`: deterministic evidence pages/chunks.
-- `analysis/*`: AI draft output, validation, provenance and review state.
+For an AI request, the engine loads the **existing lesson PDF**.
 
-The files are structurally identical across books. Identity is carried by fields
-such as `textbookKey`, `subjectKey`, `gradeKey`, `termKey`, and asset
-references rather than by inventing a different JSON schema per book.
+- Text PDFs: extract text/grounding as needed.
+- Scanned PDFs: render lesson pages temporarily in memory or temporary files.
+- Do not persist textbook page images merely to support AI.
+- Send the lesson PDF or the temporary rendered page set to the selected AI task.
+- Save only AI draft/provenance outputs under `analysis/`.
 
-## Resources
+The AI never writes directly to the canonical database.
 
-A lesson is not only a PDF. Its package can contain:
+## 4. Identity
 
-- source lesson PDF
-- rendered page images
-- extracted page text
-- deterministic grounding pages/chunks
-- AI analysis drafts
-- concepts/objectives/misconceptions
-- flashcards
-- question candidates
-- learning resources
-- supporting images/audio/video/files
-- provenance and asset checksums
+Filesystem coordinates:
 
-The Python engine prepares these artifacts. The Node import path decides what is
-canonical and writes the database.
+1. `T01` = term coordinate.
+2. `G04` = grade coordinate.
+3. `SCI` = exact Prisma `Subject.key`.
+4. `EDU-SCI-G04-T1-ED2026` = exact `Textbook.key`.
+5. Lesson identity is carried by stable manifest fields and stable lesson slug/key, not by the source filename.
 
-## Source/input isolation
+The source filename is never canonical identity.
 
-Do not put source books or generated workspaces under
-`edu7-content-engine/`.
+## 5. Manifests
 
-The engine package must remain portable and reproducible. Root directories are
-data boundaries:
+### `book-manifest.json`
 
-- `books_input/`: immutable source inputs for a preparation run.
-- `workspace/`: generated, refreshable preparation state.
-- `edu7-content-engine/`: executable processing code and tests.
+Entry point for the workspace and reconstruction/import policy.
 
-Generated workspace data is ignored by Git; large PDFs must not become part of
-normal source-code commits.
+### `book-source-manifest.json`
 
-## CLI examples
+Stores source provenance such as original filename, source checksum, page count and mapping metadata. It explicitly records that the source PDF is **not persisted**.
 
-From anywhere inside the repository:
+### `index.json`
+
+Complete deterministic hierarchy and lesson ordering.
+
+### `unit_manifest.json`
+
+Logical unit metadata plus the ordered lesson references. It contains no unit PDF.
+
+### `lesson_manifest.json`
+
+Printed/physical page mapping, lesson PDF path, checksum, grounding references and lesson identity.
+
+### `grounding_manifest.json`
+
+Deterministic page/chunk evidence coordinates. It is not an AI-generated content store.
+
+### `analysis/`
+
+AI draft output, validation, provenance and review state.
+
+## 6. Reconstruction
+
+A unit or book is a **view/derived artifact**, not another canonical asset.
+
+Examples:
 
 ```bash
-cd edu7-content-engine
-source .venv/bin/activate
+# one lesson
+PYTHONPATH=src python -m edu7_content.cli.main rebuild \
+  workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026 \
+  --scope lesson --ref lesson-01-name --out /tmp/lesson.pdf
 
-PYTHONPATH=src python -m edu7_content.cli.main prepare   books_input/science_part1_4th.pdf   --subject SCI   --grade G04   --term T01   --edition 2026   --model gemini-3.6-flash   --no-ollama
+# complete unit
+PYTHONPATH=src python -m edu7_content.cli.main rebuild \
+  workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026 \
+  --scope unit --ref unit-01-name --out /tmp/unit.pdf
+
+# complete prepared content book
+PYTHONPATH=src python -m edu7_content.cli.main rebuild \
+  workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026 \
+  --scope book --out /tmp/book-reconstructed.pdf
 ```
 
-Expected destination:
+The reconstructed book represents the ordered lesson content. It is **not guaranteed to be byte-for-byte identical to the original upload**, because covers, front matter, unassigned pages and other non-lesson pages are intentionally not stored.
 
-```
-../workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026/
+## 7. Resources
+
+Persisted resources are semantic/pedagogical assets, not duplicated textbook pages:
+
+- AI-generated explanation images
+- teacher-added images
+- audio/video/supporting files
+- question/flashcard/concept drafts
+- provenance and checksums
+
+Textbook page images are temporary processing artifacts unless explicitly promoted to a pedagogical resource.
+
+## 8. Import boundary
+
+Python prepares and validates the package.
+
+Node `ContentImportService` is the only canonical database writer.
+
+```text
+temporary uploaded book
+        ↓
+edu7-content Python preparation
+        ↓
+lesson-only workspace
+        ↓
+AI draft / validation / human approval
+        ↓
+Node ContentImportService
+        ↓
+Edu7 database
 ```
 
-No database connection is required by the Python preparation command.
+## 9. Gemini failover contract
+
+The Gemini transport uses one unified failover layer.
+
+Recommended configuration:
+
+```env
+GEMINI_MODELS=gemini-3.8-flash,gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash
+GEMINI_MODEL=gemini-3.8-flash
+GEMINI_MAX_RETRIES=3
+GEMINI_TIMEOUT_SECONDS=120
+```
+
+The transport:
+
+- detects HTTP 429 and classifies rate pressure versus quota exhaustion where the response identifies it;
+- performs bounded exponential backoff for short-lived rate pressure;
+- advances to the next configured API key/model when the current combination is exhausted or unavailable;
+- retries transient 408/5xx/network failures before failover;
+- rotates credentials for authentication/access failures;
+- never prints API keys.
+
+Important: Gemini rate limits are project-level, not key-level. Multiple keys in the same project do **not** multiply the project's quota. Keys from separate projects can provide separate project quota, subject to Google's current account/project limits. Model-specific limits can also differ. Therefore failover is a resilience mechanism, not a promise that daily quota can always be bypassed. 
+
+Current Google model IDs include Gemini 3.8 Flash, 3.7 Flash, 3.6 Flash and 3.5 Flash. Availability, limits and pricing must be treated as provider configuration rather than hard-coded assumptions.
+
+## 10. Storage invariant
+
+For every lesson page range:
+
+```text
+1 source lesson PDF
+0 unit PDF copies
+0 book PDF copies
+0 permanent textbook page-image copies
+N optional pedagogical resource files
+```
+
+This is the invariant the workspace/import implementation must preserve.
