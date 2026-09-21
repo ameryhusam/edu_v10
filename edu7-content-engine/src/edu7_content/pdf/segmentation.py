@@ -126,7 +126,7 @@ class LessonSegmenter:
             cover_path = cover_dir / "cover.png"
             cover_path.write_bytes(cover_data)
             assets_registry.append({
-                "scope": "TEXTBOOK_COVER",
+                "scope": "TEXTBOOK",
                 "assetType": "PAGE_IMAGE",
                 "originalName": "cover.png",
                 "relativePath": "cover/cover.png",
