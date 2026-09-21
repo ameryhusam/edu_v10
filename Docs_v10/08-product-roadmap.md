@@ -1,149 +1,238 @@
 # Product and Engineering Roadmap
 
-**Status:** ADOPTED target roadmap. Repository implementation status is tracked in `Docs_v10/11-current-state.md`, not here.
+**Status:** ADOPTED target roadmap.  
+**Purpose:** define the production capability graph, workflow order, dependencies, algorithms and completion gates.  
+**Repository implementation status:** tracked only in Docs_v10/11-current-state.md.
 
 ## 1. Production target
 
-Edu7 is intended to converge on one production architecture in which bounded contexts own their business decisions, canonical application services own writes, Prisma is the persistence source of truth, Python prepares content but never writes the database, AI proposes grounded drafts but never becomes a canonical writer, Web and Android consume the same authorized API contracts, and learner state remains historical, reproducible and server-owned.
+Edu7 converges on one educational platform where Content owns educational facts/readiness; Assessment owns attempts/grading; Evidence is historical; Mastery owns learner state; Learning owns progression; Instruction owns commitments; Engagement owns XP/streak/badges; Identity owns authorization; Python prepares source material but never writes PostgreSQL; AI proposes grounded content but never becomes a canonical writer; Web and Android consume the same authorized API.
 
-This roadmap describes the target capability graph and dependency order, not a claim that every capability already exists.
+## 2. Capability graph
 
+    Institutional setup / Identity
+            ↓
+    Textbook catalogue + Content preparation
+            ↓
+    Content authoring + readiness
+            ↓
+    Content delivery
+            ↓
+    Assessment
+            ↓
+    Evidence
+            ↓
+    Mastery
+            ↓
+    Learning decisions
+            ↓
+    Instruction / learner obligations
+            ↓
+    Analytics / engagement
 
-## 2. Target content platform
+Cross-cutting: Security + Audit + Observability + AI governance + Data quality.
 
-The content platform is converging on:
+## 3. Workstream A — book intake and readiness
 
-```text
-Textbook
- → Units
- → Lessons
- → Concepts
- → Resources / Questions / Flashcards / Misconceptions
- → Pages / Chunks / Assets
-```
+A1 raw PDF:
 
-The content engine remains an external producer/evidence boundary.
+    upload → fingerprint → identity → prepare → ground → validate → READY_FOR_IMPORT
 
-## 3. Target content work packages
+A2 prepared package:
 
-1. Canonical mapping of grounding manifests into TextbookPage/ContentChunk.
-2. AI provenance/source fingerprint persistence.
-3. Preview → deduplicate → human Apply.
-4. Question batch update/merge with deduplication.
-5. Advanced question-type contracts.
-6. Explicit learning-path inclusion control.
-7. Entitlement-aware learner page endpoint.
-8. Asset replacement/version semantics and E2E coverage.
+    package → fingerprint → manifest validation → completeness → identity comparison → REUSE / RECONCILE / CONFLICT / NEW
 
-## 4. Product gaps
+A3 readiness catalogue:
 
-Depending on the current capability ledger and repository state:
+    RECEIVED → IDENTIFYING → PREPARING → PREPARED → READY_FOR_IMPORT → IMPORTING → READY
 
-- full question authoring/review;
-- learning resources CRUD;
-- exams authoring/scheduling;
-- remediation lifecycle;
-- assignments/instruction;
-- analytics/read models;
-- engagement ledger behavior;
-- richer seed data;
-- import/export tooling.
+with terminal review/failure states NEEDS_REVIEW, BLOCKED, FAILED and ARCHIVED.
 
-Do not implement these by copying the old project's structure.
+Definition of done: duplicate upload is safe, readiness reason is visible, checksums are available, retry is idempotent and false READY states are prevented.
 
-## 5. Dependency order
+## 4. Workstream B — workspace and grounding
 
-```text
-Identity/access hardening
-       ↓
-Content authoring + delivery correctness
-       ↓
-Assessment/evidence/mastery integration
-       ↓
-Learning-path controls
-       ↓
-Instruction/assignments
-       ↓
-Analytics/engagement
-       ↓
-Import and external library adapters
-```
+Deliver deterministic printed↔PDF mapping, hierarchy, page text/images, grounding chunks, checksums, manifests, cover and resource folders.
 
-This is a dependency order, not a product ranking.
+Gate: every learner-visible source claim is traceable to page/chunk/asset evidence.
 
-## 6. Target content update model
+## 5. Workstream C — canonical reconciliation/import
 
-Content is continuously editable after publication.
+    read package
+     → validate
+     → identify
+     → reconcile
+     → dry-run
+     → human Apply
+     → canonical services
+     → transaction
+     → audit
 
-For every update:
+Deliver textbook/unit/lesson reconciliation, TextbookPage/ContentChunk persistence, asset registration, resources/questions import, import result report and idempotency.
 
-```text
-request
- ↓
-authorization
- ↓
-canonical authoring use case
- ↓
-identity/relationship validation
- ↓
-content validation
- ↓
-historical compatibility check
- ↓
-transaction
- ↓
-audit
- ↓
-read-model/cache invalidation where required
-```
+## 6. Workstream D — AI enrichment
 
-## 7. Learning-path model
+    grounded input
+     → provider-neutral AI
+     → structured proposal
+     → evidence validation
+     → normalization
+     → deduplication
+     → human review
+     → canonical Apply
 
-The guided path should select only content satisfying:
+Deliver concepts, explanations, questions, flashcards, misconceptions and full provenance: source fingerprint, page/chunk, provider/model and prompt version.
 
-```text
-PUBLISHED
-AND entitled
-AND authorized
-AND learning-path eligible
-AND prerequisite/learning rules
-```
+## 7. Workstream E — question bank evolution
 
-Direct content browsing can use a broader published set, subject to entitlement/authorization.
+Required: multi-file import, merge into existing batch/file, exact/normalized/identity dedup, conflict review, origin/provenance, advanced question types, safe corrections and historical safety.
 
-## 8. Content import model
+## 8. Workstream F — authoring and readiness
 
-```text
-source
- ↓
-workspace / package
- ↓
-schema validation
- ↓
-relationship validation
- ↓
-dedup/conflict
- ↓
-dry run
- ↓
-canonical apply
- ↓
-audit
-```
+Deliver DRAFT → IN_REVIEW → PUBLISHED → ARCHIVED, editable published content through canonical authoring, readiness validation, audit, learner delivery predicates and independent learning-path eligibility.
 
-No direct DB writes from Python or import scripts.
+## 9. Workstream G — learner delivery
 
-## 9. Definition of done for a capability
+    request
+     → auth
+     → authorization
+     → entitlement
+     → publication/readiness
+     → content query
+     → asset authorization
+     → response
 
-A capability is done only when:
+Guided path adds learning-path eligibility, prerequisites, mastery and progression policy.
 
-- owner is explicit;
-- write path is unique;
-- public contract is defined;
-- persistence is safe;
-- authorization is enforced;
-- architecture checks pass;
-- regression behavior is tested;
-- user-visible flow works where applicable;
-- documentation reflects the actual state.
+## 10. Workstream H — assessment/evidence
 
+    Question → Attempt → AttemptItem → evaluator → MasteryEvidence → Mastery
+
+Every result records evaluatorVersion and observedAt. Historical evidence is never silently rewritten.
+
+## 11. Workstream I — mastery/adaptive learning
+
+Mastery:
+
+    ordered evidence → canonical mastery calculation → ConceptMastery
+
+Learning:
+
+    content structure + mastery + prerequisites + policy
+      → next activity
+      → LearningDecisionLog
+
+Assignment due dates do not become implicit adaptive signals.
+
+## 12. Workstream J — instruction
+
+    InstructionalPlan
+     → publish
+     → obligation materialization
+     → completion policy
+     → LearnerObligation
+
+Instruction records commitment, not grading/mastery/next-step.
+
+## 13. Workstream K — analytics/engagement
+
+Analytics consumes read models and historical facts.
+
+Engagement consumes explicit eligible events and writes append-only ledger entries.
+
+Neither mutates assessment/mastery/learning facts.
+
+## 14. Workstream L — security/operations
+
+Every capability requires backend authorization, resource-level access, audit, request correlation, stable errors, idempotency, metrics/logging and safe retries.
+
+## 15. Dependency roadmap
+
+### Phase 1 — Content foundation
+
+identity → raw/prepared intake → workspace → grounding → assets → readiness
+
+### Phase 2 — Canonical import
+
+validation → reconciliation → dry-run → human Apply → page/chunk persistence → resources/questions
+
+### Phase 3 — Authoring and delivery
+
+authoring → review → publication/readiness → entitlement → learner delivery
+
+### Phase 4 — AI enrichment
+
+grounding → AI proposals → provenance → dedup → human review → canonical Apply
+
+### Phase 5 — Assessment and adaptive learning
+
+assessment → evidence → mastery → learning decisions → remediation
+
+### Phase 6 — Instruction and engagement
+
+learning decisions → instructional plans → obligations → completion → analytics/XP
+
+### Phase 7 — Scale/integrations
+
+reusable content → external libraries → bulk import/export → richer analytics → operational scaling
+
+## 16. Milestone gate
+
+A milestone is accepted only when:
+
+1. owner is explicit;
+2. canonical write path is unique;
+3. input/output fields are documented;
+4. authorization is server-side;
+5. retry is idempotent;
+6. historical data is safe;
+7. relevant tests exist;
+8. E2E works where user-visible;
+9. observability exists;
+10. Docs_v10 and implementation status agree.
+
+## 17. Mature LMS comparison
+
+Open edX demonstrates centralized reusable content libraries, publishing and synchronization. Edu7 should implement reusable canonical content without coupling identity to a course instance. citeturn0search0turn0search11
+
+Canvas demonstrates explicit module requirements/prerequisites and conditional Mastery Paths. Edu7 should retain explicit progression gates while keeping grading, evidence, mastery and progression as separate owners. citeturn1search24turn1search14
+
+Moodle demonstrates explicit completion criteria and competency/evidence relationships. Edu7 should use these patterns while preserving the stronger server-owned Evidence → Mastery → Learning boundary. citeturn1search9turn1search10
+
+These are comparative references, not copied requirements.
+
+## 18. Final production sequence
+
+    SOURCE
+     ↓
+    IDENTITY + FINGERPRINT
+     ↓
+    PREPARE / REUSE
+     ↓
+    READINESS
+     ↓
+    RECONCILE
+     ↓
+    DRY-RUN
+     ↓
+    HUMAN APPLY
+     ↓
+    CANONICAL CONTENT
+     ↓
+    PUBLISH/READY
+     ↓
+    ENTITLEMENT
+     ↓
+    LEARNER DELIVERY
+     ↓
+    ASSESS
+     ↓
+    EVIDENCE
+     ↓
+    MASTERY
+     ↓
+    LEARNING DECISION
+     ↓
+    INSTRUCTION / ENGAGEMENT / ANALYTICS
+
+At every transition: identity + validation + authorization + provenance + idempotency + audit.
