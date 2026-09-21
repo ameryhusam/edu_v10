@@ -2,18 +2,16 @@ import os
 import json
 import base64
 import time
-import urllib.request
 import urllib.error
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from .base import AIProvider
+from .client import GeminiClient, SUPPORTED_MODELS
 from ..content.models import (
     LessonAnalysisResult, ExtractedConcept, ExtractedQuestion,
     QuestionChoice, ExtractedObjective, ExtractedMisconception,
     ExtractedFlashcard
 )
-
-GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
 def _load_env_file():
@@ -43,20 +41,27 @@ def _load_env_file():
 
 class GeminiFreeProvider(AIProvider):
     """
-    Google Gemini Free Tier Provider.
-    Uses official Google AI Studio API Key (15 RPM free of charge).
+    Google Gemini provider for text and multimodal content analysis.
+    Authentication and quota are controlled by the configured Google API account.
     Supports:
       - Text & Multimodal Lesson Analysis (analyze_lesson)
       - Vision-based TOC extraction from page images (extract_toc_from_page_images)
       - Automatic rate-limit handling (429 backoff)
       - Auto-detection from environment variable or .env file
-    Default model: gemini-2.5-flash
+    Supported models: gemini-3.6-flash, gemini-3.5-flash
     """
 
-    def __init__(self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
         _load_env_file()
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEY", "")
-        self.model_name = model_name
+        configured = model_name or os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+        if configured not in SUPPORTED_MODELS:
+            raise ValueError(
+                f"Unsupported Gemini model: {configured}. "
+                f"Supported models: {', '.join(SUPPORTED_MODELS)}"
+            )
+        self.model_name = configured
+        self.client = GeminiClient(api_key=api_key, model_name=configured)
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEYS", os.environ.get("GEMINI_API_KEY", ""))
 
     @property
     def provider_name(self) -> str:
@@ -66,29 +71,12 @@ class GeminiFreeProvider(AIProvider):
     #  Core HTTP helper with automatic 429 retry backoff                  #
     # ------------------------------------------------------------------ #
     def _call_api(self, payload: dict, timeout: int = 120, max_retries: int = 3) -> dict:
-        """POST to Gemini generateContent endpoint with automatic rate-limit backoff."""
-        if not self.api_key:
-            raise ValueError("GEMINI_API_KEY not set.")
-        url = f"{GEMINI_API_BASE}/{self.model_name}:generateContent?key={self.api_key}"
-        data = json.dumps(payload).encode("utf-8")
-
-        delay = 4.0
-        for attempt in range(max_retries + 1):
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-            try:
-                with urllib.request.urlopen(req, timeout=timeout) as resp:
-                    return json.loads(resp.read().decode("utf-8"))
-            except urllib.error.HTTPError as e:
-                if e.code == 429 and attempt < max_retries:
-                    print(f"[*] Gemini Free Tier rate limit reached (429). Retrying in {delay:.1f}s (attempt {attempt+1}/{max_retries})...")
-                    time.sleep(delay)
-                    delay *= 2.0
-                    continue
-                raise
+        # Kept as a thin compatibility method for existing callers.
+        return self.client.generate(payload, timeout=timeout)
 
     def _extract_text(self, response: dict) -> str:
         try:
-            return response["candidates"][0]["content"]["parts"][0]["text"]
+            return GeminiClient.text(response)
         except (KeyError, IndexError) as e:
             raise ValueError(f"Unexpected Gemini response structure: {e}")
 
@@ -100,8 +88,8 @@ class GeminiFreeProvider(AIProvider):
         Send page images (base64-encoded PNG) to Gemini Vision and extract
         the TOC structure. Returns list matching TocExtractor format, or [].
         """
-        if not self.api_key:
-            print("[!] GEMINI_API_KEY not set - cannot use Vision TOC extraction.")
+        if not self.client.api_keys:
+            print("[!] GEMINI_API_KEYS (or GEMINI_API_KEY) not set - cannot use Vision TOC extraction.")
             return []
 
         prompt_text = (
@@ -130,12 +118,44 @@ class GeminiFreeProvider(AIProvider):
                 }
             })
 
+        toc_schema = {
+            "type": "object",
+            "properties": {
+                "units": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "number": {"type": "integer"},
+                            "title": {"type": "string"},
+                            "startPage": {"type": "integer"},
+                            "lessons": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "number": {"type": "integer"},
+                                        "title": {"type": "string"},
+                                        "startPage": {"type": "integer"}
+                                    },
+                                    "required": ["number", "title", "startPage"]
+                                }
+                            }
+                        },
+                        "required": ["number", "title", "startPage", "lessons"]
+                    }
+                }
+            },
+            "required": ["units"]
+        }
+
         payload = {
             "contents": [{"parts": parts}],
             "generationConfig": {
                 "responseMimeType": "application/json",
+                "responseSchema": toc_schema,
                 "temperature": 0.1,
-                "maxOutputTokens": 4096
+                "maxOutputTokens": 8192
             }
         }
 
@@ -153,6 +173,86 @@ class GeminiFreeProvider(AIProvider):
             return []
         except Exception as err:
             print(f"[!] Gemini Vision TOC extraction failed: {err}")
+            return []
+
+    def extract_toc_from_page_texts(self, page_texts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Extract the printed-page TOC from the first ten PDF pages using text only.
+
+        This is the AI path used when PyMuPDF rendering is unavailable and the
+        PdfReader has fallen back to pypdf.
+        """
+        if not self.client.api_keys:
+            return []
+
+        pages = page_texts[:10]
+        source = "\n\n".join(
+            f"--- PDF page {p.get('pdfPage', i + 1)} ---\n{p.get('text', '')}"
+            for i, p in enumerate(pages)
+            if p.get("text", "").strip()
+        )
+        if not source.strip():
+            return []
+
+        prompt_text = (
+            "أنت خبير في استخراج فهرس الكتب المدرسية العربية. حلل النص المستخرج من أول "
+            "عشر صفحات من كتاب واحد. استخرج فهرس المحتويات فقط إذا كان موجوداً. "
+            "أرقام startPage/endPage يجب أن تكون أرقام الصفحات المطبوعة داخل الكتاب، "
+            "وليس أرقام صفحات PDF. لا تخمن أرقاماً غير ظاهرة. "
+            "أرجع JSON فقط بالشكل: "
+            '{"units":[{"number":1,"title":"...","startPage":1,"lessons":' 
+            '[{"number":1,"title":"...","startPage":2}]}]}. '
+            "إذا لم يظهر فهرس موثوق أرجع {\"units\":[]}. "
+            "يمكن أن يمتد الفهرس عبر عدة صفحات من أول عشر صفحات."
+        )
+        toc_schema = {
+            "type": "object",
+            "properties": {
+                "units": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "number": {"type": "integer"},
+                            "title": {"type": "string"},
+                            "startPage": {"type": "integer"},
+                            "lessons": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "number": {"type": "integer"},
+                                        "title": {"type": "string"},
+                                        "startPage": {"type": "integer"}
+                                    },
+                                    "required": ["number", "title", "startPage"]
+                                }
+                            }
+                        },
+                        "required": ["number", "title", "startPage", "lessons"]
+                    }
+                }
+            },
+            "required": ["units"]
+        }
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt_text + "\n\n" + source}]}],
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "responseSchema": toc_schema,
+                "temperature": 0.0,
+                "maxOutputTokens": 8192,
+            },
+        }
+        try:
+            response = self._call_api(payload, timeout=120)
+            text_resp = self._extract_text(response).strip()
+            if text_resp.startswith("```"):
+                parts = text_resp.split("\n")
+                text_resp = "\n".join(parts[1:]).rsplit("```", 1)[0]
+            return self._map_toc_response(json.loads(text_resp))
+        except Exception as err:
+            print(f"[!] Gemini text TOC extraction failed: {err}")
             return []
 
     def _map_toc_response(self, data: dict) -> List[Dict[str, Any]]:
@@ -176,10 +276,18 @@ class GeminiFreeProvider(AIProvider):
                 }
                 lessons.append(entry)
                 all_lessons_flat.append(entry)
+            u_start = u_raw.get("startPage")
+            try:
+                u_start = int(u_start) if u_start is not None else (
+                    lessons[0]["startPage"] if lessons else 1
+                )
+            except (TypeError, ValueError):
+                u_start = lessons[0]["startPage"] if lessons else 1
             units.append({
                 "id": f"unit-{u_num:02d}",
                 "number": u_num,
                 "title": u_title,
+                "startPage": u_start,
                 "lessons": lessons
             })
         for idx, les in enumerate(all_lessons_flat):
@@ -204,8 +312,8 @@ class GeminiFreeProvider(AIProvider):
         If lesson_text is empty (scanned/image PDF), loads page images
         from lesson_dir/pages and analyzes them multimodally.
         """
-        if not self.api_key:
-            print("[!] GEMINI_API_KEY not set. Falling back to HeuristicExtractorProvider...")
+        if not self.client.api_keys:
+            print("[!] GEMINI_API_KEYS (or GEMINI_API_KEY) not set. Falling back to HeuristicExtractorProvider...")
             from .heuristic import HeuristicExtractorProvider
             return HeuristicExtractorProvider().analyze_lesson(lesson_manifest, lesson_text)
 
@@ -350,7 +458,7 @@ class GeminiFreeProvider(AIProvider):
                 evidence=c.get("evidence", ""),
                 confidence=0.96,
                 model_name=self.provider_name,
-                status="APPROVED"
+                status="PROPOSED"
             ))
 
         for obj in data.get("objectives", []):
@@ -384,7 +492,7 @@ class GeminiFreeProvider(AIProvider):
                 evidence=fc.get("evidence", ""),
                 confidence=0.95,
                 model_name=self.provider_name,
-                status="APPROVED"
+                status="PROPOSED"
             ))
 
         for i, q in enumerate(data.get("questions", [])):
@@ -413,7 +521,7 @@ class GeminiFreeProvider(AIProvider):
                 evidence=q.get("evidence", ""),
                 confidence=0.95,
                 model_name=self.provider_name,
-                status="APPROVED"
+                status="PROPOSED"
             ))
 
         return res

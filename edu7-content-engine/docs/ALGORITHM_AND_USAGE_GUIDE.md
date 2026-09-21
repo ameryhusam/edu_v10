@@ -48,21 +48,21 @@ python -m edu7_content.cli.main info
 
 **الاستخدام الأبسط** (يحاول كل الطبقات تلقائياً):
 ```bash
-edu7-content prepare books_input/book1.pdf
+edu7-content prepare books_input/my-book.pdf
 ```
 
 **تحديد نموذج Ollama محدد**:
 ```bash
-edu7-content prepare books_input/book1.pdf --model llava:7b
-edu7-content prepare books_input/book1.pdf --model minicpm-v:8b
-edu7-content prepare books_input/book1.pdf --model llava-llama3:8b
+edu7-content prepare books_input/my-book.pdf --model llava:7b
+edu7-content prepare books_input/my-book.pdf --model minicpm-v:8b
+edu7-content prepare books_input/my-book.pdf --model llava-llama3:8b
 ```
 
 **استخدام Gemini Vision (مع مفتاح API)**:
 ```bash
 $env:GEMINI_API_KEY = "AIza..."
-edu7-content prepare books_input/book1.pdf --model gemini
-edu7-content prepare books_input/book1.pdf --model gemini-2.5-flash
+edu7-content prepare books_input/my-book.pdf --model gemini
+edu7-content prepare books_input/my-book.pdf --model gemini-2.5-flash
 ```
 
 **خيارات متقدمة**:
@@ -88,13 +88,13 @@ edu7-content prepare book1.pdf --no-gemini
 ### 3. تحليل درس (analyze)
 ```bash
 # بالمحرك الهيوريستي (مجاني، بلا AI):
-edu7-content analyze workspaces/book1/units/01/lessons/01
+edu7-content analyze workspaces/my-book/units/01/lessons/01
 
 # بـ Gemini:
-edu7-content analyze workspaces/book1/units/01/lessons/01 --model gemini
+edu7-content analyze workspaces/my-book/units/01/lessons/01 --model gemini
 
 # بـ Ollama:
-edu7-content analyze workspaces/book1/units/01/lessons/01 --model ollama-qwen2.5:7b
+edu7-content analyze workspaces/my-book/units/01/lessons/01 --model ollama-qwen2.5:7b
 ```
 
 ---
@@ -102,10 +102,10 @@ edu7-content analyze workspaces/book1/units/01/lessons/01 --model ollama-qwen2.5
 ### 4. تصدير النتائج (export)
 ```bash
 # JSON + Excel معاً:
-edu7-content export workspaces/book1 --format all
+edu7-content export workspaces/my-book --format all
 
 # JSON فقط:
-edu7-content export workspaces/book1 --format json --out ./output
+edu7-content export workspaces/my-book --format json --out ./output
 ```
 
 ---
@@ -125,7 +125,7 @@ ollama pull qwen2.5vl:7b      # 4.5 GB VRAM — جيد للعربية
 ollama serve
 
 # 4. تجربة الأداة:
-edu7-content prepare books_input/book1.pdf
+edu7-content prepare books_input/my-book.pdf
 ```
 
 ### Tesseract OCR (للكتب النصية المشفّرة)
@@ -149,7 +149,7 @@ $env:GEMINI_API_KEY = "AIza..."   # PowerShell
 set GEMINI_API_KEY=AIza...         # CMD
 
 # 3. شغّل الأداة:
-edu7-content prepare books_input/book1.pdf --model gemini
+edu7-content prepare books_input/my-book.pdf --model gemini
 ```
 
 ---
@@ -157,7 +157,7 @@ edu7-content prepare books_input/book1.pdf --model gemini
 ## هيكل مجلد العمل (workspace)
 
 ```
-workspaces/book1/
+workspaces/my-book/
 ├── book-manifest.json          # بيانات الكتاب والوحدات والدروس
 └── units/
     ├── 01/
@@ -196,3 +196,17 @@ workspaces/book1/
 | PDF مسح ضوئي (صور بحتة) | ❌ | ✅ Tesseract | ✅ Ollama/Gemini |
 | PDF هجين (صور + watermark) | ❌ تلقائي | ✅ | ✅ |
 | عمودان في صفحة واحدة | ✅ RTL sorting | ✅ | ✅ |
+
+
+## PDF filename and textbook title
+
+The engine does **not** require a fixed filename such as `book1.pdf`. Any PDF filename is accepted when it is passed explicitly, for example `books_input/science_part1_4th.pdf`.
+
+Resolution order for the display textbook title is:
+1. `--title` when supplied.
+2. PDF metadata title when available.
+3. A normalized human-readable form of the PDF filename as a fallback.
+
+The PDF filename is not the canonical Edu7 textbook key. The workspace key is derived from the explicit academic coordinates (subject/grade/term/edition), while the source filename is retained as the physical asset identity.
+
+When more than one PDF exists in `books_input/` and no input path is supplied, the CLI now refuses to guess and asks for the exact file path. This prevents preparing the wrong book accidentally.

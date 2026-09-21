@@ -876,7 +876,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         if (!deps.workspaceImporter) {
           return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
         }
-        const res = await deps.workspaceImporter.segmentWorkspace(input.workspaceDir, input.units);
+        const res = await deps.workspaceImporter.segmentWorkspace(input.workspaceDir);
         return Ok(res);
       },
     }),

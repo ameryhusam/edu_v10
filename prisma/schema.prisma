@@ -569,6 +569,19 @@ model Enrollment {
 // Authoring lives here. Delivery only reads it.
 // ═══════════════════════════════════════════════════════════════════════════
 
+/// Physical artifacts stored outside PostgreSQL and tracked by immutable metadata.
+enum ContentAssetType {
+  TEXTBOOK_PDF
+  UNIT_PDF
+  LESSON_PDF
+  PAGE_IMAGE
+  PAGE_TEXT
+  RESOURCE_FILE
+  IMAGE_SUMMARY
+  AUDIO
+  VIDEO
+}
+
 model Textbook {
   id        String @id @default(uuid()) @db.Uuid
   /// EDU-MATH-G07-T1-ED2026 — subject + grade + term + printed edition.
@@ -602,6 +615,7 @@ model Textbook {
   units     Unit[]
   resources    LearningResource[]
   pages        TextbookPage[]
+  assets      ContentAsset[]
   adoptions    TextbookAdoption[]
   exams        Exam[]
 
@@ -663,6 +677,7 @@ model Unit {
   parent   Unit?    @relation("UnitTree", fields: [parentId], references: [id], onDelete: Cascade)
   children Unit[]   @relation("UnitTree")
   lessons  Lesson[]
+  assets   ContentAsset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -696,6 +711,7 @@ model Lesson {
   attempts  Attempt[]
   questions Question[]
   resources LearningResource[]
+  assets    ContentAsset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -749,6 +765,7 @@ model Concept {
   evidence       MasteryEvidence[]
   misconceptions Misconception[]
   resources      LearningResource[]
+  assets         ContentAsset[]
   remediation    RemediationEpisode[]
   learnerIssues  LearnerMisconception[]
   flashcards     Flashcard[]
@@ -806,6 +823,50 @@ model Misconception {
   @@unique([conceptId, slug])
   @@index([conceptId])
   @@map("misconceptions")
+}
+
+/// Physical content artifact. Binary bytes live in ContentStorage; PostgreSQL stores identity,
+/// provenance and placement only. The checksum is the content fingerprint used by workspace sync.
+model ContentAsset {
+  id           String           @id @default(uuid()) @db.Uuid
+  key          String           @unique
+  assetType    ContentAssetType
+  originalName String
+  relativePath String
+  storageKey   String
+  publicUrl    String?
+  mimeType     String
+  sizeBytes    Int
+  sha256       String
+  version      Int              @default(1)
+  scope        String
+  pageStart    Int?
+  pageEnd      Int?
+  title        String?
+  altText      String?
+  caption      String?
+  isActive     Boolean          @default(true)
+
+  textbookId String  @db.Uuid
+  unitId     String? @db.Uuid
+  lessonId   String? @db.Uuid
+  conceptId  String? @db.Uuid
+
+  textbook  Textbook  @relation(fields: [textbookId], references: [id], onDelete: Cascade)
+  unit      Unit?     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  lesson    Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  concept   Concept?  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  resources LearningResource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([textbookId, scope])
+  @@index([unitId])
+  @@index([lessonId])
+  @@index([conceptId])
+  @@index([sha256])
+  @@map("content_assets")
 }
 
 model TextbookPage {
@@ -871,10 +932,13 @@ model LearningResource {
   pageEnd    Int?
   estimatedMins Int?
   isActive   Boolean      @default(true)
+  /// Physical file/artifact backing this semantic resource, when applicable.
+  assetId    String?      @db.Uuid
 
   textbook Textbook? @relation(fields: [textbookId], references: [id], onDelete: Cascade)
   concept  Concept?  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
   lesson   Lesson?   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  asset    ContentAsset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -59,7 +59,13 @@ export class WorkspaceImporterService {
     const textbookKey = pkg.textbook.key;
     const dryRun = options.dryRun ?? false;
 
-    // 1. Check local assets if present in package
+    // Content structure is created first. ContentAsset rows have real foreign
+    // keys to Textbook/Unit/Lesson/Concept, so asset registration must never
+    // race ahead of the canonical content authoring transaction.
+    const authorCtx: AuthorContext = { actorKey: options.actorKey || 'SYSTEM_WORKSPACE_IMPORTER' };
+    const importRes = await this.contentImportService.importPackage(authorCtx, pkg, { dryRun });
+    if (!importRes.ok) throw new DomainErrorException(importRes.error);
+
     const missingAssets: string[] = [];
     let assetsVerified = 0;
     let assetsUploaded = 0;
@@ -77,7 +83,6 @@ export class WorkspaceImporterService {
           missingAssets.push(`${asset.relativePath} (checksum mismatch)`);
           continue;
         }
-
         assetsVerified++;
 
         if (!dryRun && options.syncAssets !== false) {
@@ -101,16 +106,6 @@ export class WorkspaceImporterService {
           assetsUploaded++;
         }
       }
-    }
-
-    // 2. Perform ContentImportService execution
-    const authorCtx: AuthorContext = { actorKey: options.actorKey || 'SYSTEM_WORKSPACE_IMPORTER' };
-    const importRes = await this.contentImportService.importPackage(authorCtx, pkg, {
-      dryRun,
-    });
-
-    if (!importRes.ok) {
-      throw new DomainErrorException(importRes.error);
     }
 
     return {
@@ -176,31 +171,34 @@ export class WorkspaceImporterService {
       };
     }
 
+    // Physical segmentation is performed by edu7-content-engine (Python).
+    // Never manufacture unit/lesson PDFs here. If a generated workspace already
+    // exists, reconcile it; otherwise return the source workspace and an explicit
+    // segmentation-required state.
     if (input.autoSegment !== false) {
-      const segmentRes = await this.workspaceManager.segmentWorkspace(
-        storeRes.workspaceDir,
-        input.units || [],
-      );
+      const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
+      const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
+      if (index && pkg) {
+        const segmentRes = await this.workspaceManager.segmentWorkspace(storeRes.workspaceDir);
+        return { ...storeRes, ...segmentRes, segmentationStatus: 'RECONCILED' as const };
+      }
       return {
         ...storeRes,
-        ...segmentRes,
+        indexManifest: index,
+        package: pkg,
+        segmentationStatus: 'REQUIRES_CONTENT_ENGINE' as const,
       };
     }
 
     const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
     const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
-
-    return {
-      ...storeRes,
-      indexManifest: index,
-      package: pkg,
-    };
+    return { ...storeRes, indexManifest: index, package: pkg, segmentationStatus: 'NOT_REQUESTED' as const };
   }
 
   /**
    * Segments an existing workspace
    */
-  async segmentWorkspace(workspaceDir: string, units?: Array<any>) {
-    return this.workspaceManager.segmentWorkspace(workspaceDir, units);
+  async segmentWorkspace(workspaceDir: string) {
+    return this.workspaceManager.segmentWorkspace(workspaceDir);
   }
 }

@@ -29,6 +29,8 @@ export interface CompletionRequest {
   readonly maxOutputTokens?: number;
   /** Ask the provider for strict JSON matching this named schema. */
   readonly jsonSchemaName?: string;
+  /** Provider-neutral JSON Schema passed to adapters that support structured output. */
+  readonly jsonSchema?: Readonly<Record<string, unknown>>;
   readonly language?: 'ar' | 'en';
 }
 

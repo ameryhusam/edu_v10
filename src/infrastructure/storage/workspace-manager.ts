@@ -343,335 +343,47 @@ export class WorkspaceManager {
   /**
    * Performs workspace segmentation: splits book into units and lessons with standard manifests
    */
-  async segmentWorkspace(
-    workspaceDir: string,
-    unitsConfig: Array<{
-      unitNumber: number;
-      title: string;
-      slug?: string;
-      startPage?: number;
-      endPage?: number;
-      lessons?: Array<{
-        lessonNumber: number;
-        title: string;
-        slug?: string;
-        startPage?: number;
-        endPage?: number;
-      }>;
-    }> = [],
-  ): Promise<{
+  /**
+   * Validates a workspace produced by the canonical Python content engine.
+   *
+   * This method intentionally does NOT fabricate unit/lesson PDFs. Physical
+   * PDF slicing, printed-page ↔ PDF-page mapping and page rendering belong to
+   * edu7-content-engine. Node consumes the resulting workspace as an artifact.
+   */
+  async segmentWorkspace(workspaceDir: string): Promise<{
     indexManifest: WorkspaceIndexManifest;
     package: ContentPackage;
   }> {
-    const slugify = (text: string, fallback: string) => {
-      const clean = (text || '').trim().replace(/[^\w\u0600-\u06FF]+/gu, '-').replace(/^-+|-+$/g, '');
-      return clean.toUpperCase() || fallback;
-    };
-
-    let indexManifest = await this.readIndexManifest(workspaceDir);
-    const pdfRel = indexManifest?.source?.sourcePdf?.relativePath || 'textbook/textbook.pdf';
-    const pdfFull = path.join(workspaceDir, pdfRel);
-
-    let pdfSha256 = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
-    let pdfSize = 0;
-    if (fs.existsSync(pdfFull)) {
-      const buf = await fs.promises.readFile(pdfFull);
-      pdfSha256 = crypto.createHash('sha256').update(buf).digest('hex');
-      pdfSize = buf.length;
-    }
-
-    const term = indexManifest?.term || 'T1';
-    const grade = indexManifest?.grade || 'G07';
-    const subject = indexManifest?.subject || 'MATH';
-    const edition = indexManifest?.edition || '2026';
-    const title = indexManifest?.title || `كتاب ${subject}`;
-    const textbookKey = `EDU-${subject}-${grade}-${term}-ED${edition}`;
-
-    const defaultUnits = unitsConfig.length > 0 ? unitsConfig : [
-      {
-        unitNumber: 1,
-        title: 'الوحدة الأولى: الجبر والمفاهيم الأساسية',
-        slug: 'ALGEBRA',
-        startPage: 1,
-        endPage: 25,
-        lessons: [
-          { lessonNumber: 1, title: 'الدرس الأول: المعادلات الخطية', slug: 'LINEAR_EQUATIONS', startPage: 1, endPage: 12 },
-          { lessonNumber: 2, title: 'الدرس الثاني: المتباينات الخطية', slug: 'LINEAR_INEQUALITIES', startPage: 13, endPage: 25 },
-        ],
-      },
-    ];
-
-    const assetsRegistry: any[] = [
-      {
-        scope: 'TEXTBOOK',
-        assetType: 'TEXTBOOK_PDF',
-        originalName: path.basename(pdfRel),
-        relativePath: pdfRel,
-        mimeType: 'application/pdf',
-        sizeBytes: pdfSize,
-        sha256: pdfSha256,
-        version: 1,
-      },
-    ];
-
-    const processedUnits: any[] = [];
-    const pkgUnits: any[] = [];
-    const pkgLessons: any[] = [];
-
-    for (const u of defaultUnits) {
-      const uNum = u.unitNumber;
-      const uSlug = u.slug || slugify(u.title, `UNIT_${uNum}`);
-      const uDirName = `unit_${String(uNum).padStart(2, '0')}_${uSlug.toLowerCase()}`;
-      const uDir = path.join(workspaceDir, uDirName);
-      const lessonsDir = path.join(uDir, 'lessons');
-      await fs.promises.mkdir(lessonsDir, { recursive: true });
-
-      const uPdfName = `U_${String(uNum).padStart(2, '0')}_${uSlug.toLowerCase()}.pdf`;
-      const uPdfRel = `${uDirName}/${uPdfName}`;
-
-      assetsRegistry.push({
-        scope: 'UNIT',
-        unitSlug: uSlug,
-        assetType: 'UNIT_PDF',
-        originalName: uPdfName,
-        relativePath: uPdfRel,
-        mimeType: 'application/pdf',
-        sizeBytes: pdfSize,
-        sha256: pdfSha256,
-        version: 1,
-      });
-
-      pkgUnits.push({
-        slug: uSlug,
-        name: u.title,
-        orderIndex: uNum,
-        startPage: u.startPage || null,
-        endPage: u.endPage || null,
-        isActive: true,
-      });
-
-      const processedLessons: any[] = [];
-      const lessonsList = u.lessons || [];
-
-      for (const l of lessonsList) {
-        const lNum = l.lessonNumber;
-        const lSlug = l.slug || slugify(l.title, `LESSON_${lNum}`);
-        const lDirName = `lesson_${String(lNum).padStart(2, '0')}_${lSlug.toLowerCase()}`;
-        const lDir = path.join(lessonsDir, lDirName);
-        const lPagesDir = path.join(lDir, 'pages');
-        const lResourcesDir = path.join(lDir, 'resources');
-
-        await fs.promises.mkdir(lPagesDir, { recursive: true });
-        await fs.promises.mkdir(path.join(lResourcesDir, 'readings'), { recursive: true });
-        await fs.promises.mkdir(path.join(lResourcesDir, 'images'), { recursive: true });
-        await fs.promises.mkdir(path.join(lResourcesDir, 'summaries'), { recursive: true });
-
-        const lPdfName = `L_${String(lNum).padStart(2, '0')}_${lSlug.toLowerCase()}.pdf`;
-        const lPdfRel = `${uDirName}/lessons/${lDirName}/${lPdfName}`;
-
-        assetsRegistry.push({
-          scope: 'LESSON',
-          unitSlug: uSlug,
-          lessonSlug: lSlug,
-          assetType: 'LESSON_PDF',
-          originalName: lPdfName,
-          relativePath: lPdfRel,
-          mimeType: 'application/pdf',
-          sizeBytes: pdfSize,
-          sha256: pdfSha256,
-          version: 1,
-        });
-
-        // Write lesson_01.json
-        const lessonManifest = {
-          manifestVersion: '1.0',
-          type: 'lesson',
-          unitNumber: uNum,
-          lessonNumber: lNum,
-          unitSlug: uSlug,
-          slug: lSlug,
-          name: l.title,
-          orderIndex: lNum,
-          startPage: l.startPage || null,
-          endPage: l.endPage || null,
-          relativePath: `${uDirName}/lessons/${lDirName}`,
-          pdf: {
-            relativePath: lPdfRel,
-            mimeType: 'application/pdf',
-            sha256: pdfSha256,
-            sizeBytes: pdfSize,
-          },
-          directories: {
-            pages: 'pages',
-            resources: 'resources',
-            summaries: 'resources/summaries',
-          },
-          files: {
-            concepts: 'concepts.json',
-            questions: 'questions.json',
-            flashcards: 'flashcards.json',
-            resources: 'resources.json',
-            imageSummaries: 'image_summaries.json',
-          },
-        };
-
-        await fs.promises.writeFile(
-          path.join(lDir, `lesson_${String(lNum).padStart(2, '0')}.json`),
-          JSON.stringify(lessonManifest, null, 2),
-          'utf-8',
-        );
-
-        // Write empty initial sub-json manifests for concepts, questions, flashcards, resources
-        await fs.promises.writeFile(path.join(lDir, 'concepts.json'), JSON.stringify([], null, 2), 'utf-8');
-        await fs.promises.writeFile(path.join(lDir, 'questions.json'), JSON.stringify([], null, 2), 'utf-8');
-        await fs.promises.writeFile(path.join(lDir, 'flashcards.json'), JSON.stringify([], null, 2), 'utf-8');
-        await fs.promises.writeFile(path.join(lDir, 'resources.json'), JSON.stringify({ schemaVersion: '1.0', resources: [] }, null, 2), 'utf-8');
-
-        processedLessons.push({
-          lessonNumber: lNum,
-          slug: lSlug,
-          name: l.title,
-          relativePath: `${uDirName}/lessons/${lDirName}`,
-          manifest: `${uDirName}/lessons/${lDirName}/lesson_${String(lNum).padStart(2, '0')}.json`,
-          pdf: lPdfRel,
-        });
-
-        pkgLessons.push({
-          slug: lSlug,
-          unitSlug: uSlug,
-          name: l.title,
-          orderIndex: lNum,
-          startPage: l.startPage || null,
-          endPage: l.endPage || null,
-          isActive: true,
-        });
-      }
-
-      // Write unit_01.json
-      const unitManifest = {
-        manifestVersion: '1.0',
-        type: 'unit',
-        unitNumber: uNum,
-        slug: uSlug,
-        name: u.title,
-        orderIndex: uNum,
-        startPage: u.startPage || null,
-        endPage: u.endPage || null,
-        relativePath: uDirName,
-        pdf: {
-          relativePath: uPdfRel,
-          mimeType: 'application/pdf',
-          sha256: pdfSha256,
-          sizeBytes: pdfSize,
-        },
-        lessons: processedLessons,
-      };
-
-      await fs.promises.writeFile(
-        path.join(uDir, `unit_${String(uNum).padStart(2, '0')}.json`),
-        JSON.stringify(unitManifest, null, 2),
-        'utf-8',
+    const indexManifest = await this.readIndexManifest(workspaceDir);
+    const pkg = await this.readContentPackage(workspaceDir);
+    if (!indexManifest || !pkg) {
+      throw new Error(
+        'Workspace is not segmented. Run edu7-content-engine prepare first; Node will only reconcile the generated workspace.',
       );
-
-      processedUnits.push({
-        unitNumber: uNum,
-        slug: uSlug,
-        name: u.title,
-        relativePath: uDirName,
-        manifest: `${uDirName}/unit_${String(uNum).padStart(2, '0')}.json`,
-        pdf: uPdfRel,
-        lessons: processedLessons,
-      });
     }
 
-    // Write updated master index.json
-    const updatedIndex: WorkspaceIndexManifest = {
-      manifestVersion: '1.0',
-      type: 'workspace_subject',
-      workspaceId: `${term}-${grade}-${subject}`,
-      term,
-      grade,
-      subject,
-      edition,
-      title,
-      source: {
-        engine: 'edu7-content-engine',
-        engineVersion: '1.2.0',
-        sourcePdf: {
-          relativePath: pdfRel,
-          mimeType: 'application/pdf',
-          sizeBytes: pdfSize,
-          sha256: pdfSha256,
-        },
-      },
-      counts: {
-        units: processedUnits.length,
-        lessons: pkgLessons.length,
-        concepts: 0,
-        questions: 0,
-        flashcards: 0,
-        resources: 0,
-        assets: assetsRegistry.length,
-      },
-      units: processedUnits,
-      package: {
-        relativePath: 'edu7-content-package.json',
-        profile: 'edu7.textbook-content',
-        profileVersion: '1.1',
-      },
-      contentVersion: (indexManifest?.contentVersion || 0) + 1,
-      updatedAt: new Date().toISOString(),
-      contentHash: pdfSha256,
-    };
+    const referenced = new Set<string>();
+    for (const asset of pkg.assets ?? []) {
+      referenced.add(asset.relativePath);
+      const file = await this.readAssetFile(workspaceDir, asset.relativePath);
+      if (!file) throw new Error(`Workspace asset missing: ${asset.relativePath}`);
+      const sha256 = crypto.createHash('sha256').update(file).digest('hex');
+      if (asset.sha256 && sha256.toLowerCase() !== asset.sha256.toLowerCase()) {
+        throw new Error(`Workspace asset checksum mismatch: ${asset.relativePath}`);
+      }
+    }
 
-    await fs.promises.writeFile(
-      path.join(workspaceDir, 'index.json'),
-      JSON.stringify(updatedIndex, null, 2),
-      'utf-8',
-    );
+    const source = indexManifest.source?.sourcePdf;
+    if (source) {
+      const sourceFile = await this.readAssetFile(workspaceDir, source.relativePath);
+      if (!sourceFile) throw new Error(`Workspace source PDF missing: ${source.relativePath}`);
+      const sourceHash = crypto.createHash('sha256').update(sourceFile).digest('hex');
+      if (source.sha256 && sourceHash !== source.sha256) {
+        throw new Error('Workspace source PDF checksum mismatch');
+      }
+    }
 
-    // Write canonical package
-    const canonicalPkg: ContentPackage = {
-      meta: {
-        profile: 'edu7.textbook-content',
-        profileVersion: '1.1',
-        scope: 'FULL',
-        exportedAt: new Date().toISOString(),
-      },
-      textbook: {
-        key: textbookKey,
-        subjectKey: subject,
-        gradeKey: grade,
-        termKey: term,
-        title,
-        edition,
-        description: null,
-        issuer: null,
-        isbn: null,
-        publishYear: null,
-        totalPages: null,
-        status: 'DRAFT',
-      },
-      units: pkgUnits,
-      lessons: pkgLessons,
-      concepts: [],
-      prerequisites: [],
-      misconceptions: [],
-      learningResources: [],
-      questions: [],
-      assets: assetsRegistry,
-    };
-
-    await fs.promises.writeFile(
-      path.join(workspaceDir, 'edu7-content-package.json'),
-      JSON.stringify(canonicalPkg, null, 2),
-      'utf-8',
-    );
-
-    return {
-      indexManifest: updatedIndex,
-      package: canonicalPkg,
-    };
+    return { indexManifest, package: pkg };
   }
 }
 

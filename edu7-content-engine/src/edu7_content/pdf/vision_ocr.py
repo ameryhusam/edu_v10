@@ -7,7 +7,7 @@ Extraction strategy (in priority order):
   Layer 1: PyMuPDF native text layer  (free, instant, no AI)
   Layer 2: PyMuPDF + Tesseract OCR    (free, offline, no API key)
   Layer 3: Ollama local vision model  (free, local GPU/CPU inference)
-  Layer 4: Gemini Vision API          (free tier, requires API key)
+  Layer 4: Gemini API (multimodal when renderable, text-only with pypdf)
 
 The system tries each layer in sequence and stops at first success.
 """
@@ -15,9 +15,10 @@ import base64
 from typing import List, Optional, Dict, Any
 from pathlib import Path
 
-import pymupdf
-
-from .pdf_ocr import ArabicPdfExtractor, detect_pdf_type, PdfContentType, render_page_to_b64
+try:
+    import pymupdf  # optional; PdfReader handles pypdf fallback
+except Exception:
+    pymupdf = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -25,24 +26,38 @@ from .pdf_ocr import ArabicPdfExtractor, detect_pdf_type, PdfContentType, render
 # ─────────────────────────────────────────────────────────────────────────────
 
 def is_image_based_pdf(reader, sample_pages: int = 8) -> bool:
-    """
-    Returns True if the PDF has no real selectable Arabic text.
-    Checks first `sample_pages` pages for meaningful Arabic content.
-    Includes both standard Arabic (0x0600-0x06FF) and Arabic Presentation Forms (0xFB50-0xFEFF).
-    Ignores watermarks and URL-only overlays.
+    """Detect whether sampled pages are visually image-dominant.
+
+    A scanned textbook can contain an OCR text layer, so Arabic character
+    counts alone cannot prove that the PDF is text-native. Embedded page
+    images are used as an independent signal.
     """
     limit = min(sample_pages, reader.page_count)
     arabic_chars = 0
+    pages_with_images = 0
+
     for i in range(limit):
-        page = reader.doc[i]
-        t = page.get_text("text")
-        # Count all Arabic codepoints (standard + presentation forms)
+        t = reader.extract_page_text(i)
         arabic_chars += sum(
             1 for ch in t
             if ('\u0600' <= ch <= '\u06FF') or ('\u0750' <= ch <= '\u077F') or
                ('\uFB50' <= ch <= '\uFDFF') or ('\uFE70' <= ch <= '\uFEFF')
         )
-    # < 50 Arabic chars across sample pages → treat as image PDF
+        try:
+            if reader.backend == "pymupdf":
+                if reader.doc[i].get_images(full=True):
+                    pages_with_images += 1
+            elif hasattr(reader.doc.pages[i], "images") and len(reader.doc.pages[i].images) > 0:
+                pages_with_images += 1
+        except Exception:
+            pass
+
+    if limit == 0:
+        return False
+
+    if pages_with_images / limit >= 0.75:
+        return True
+
     return arabic_chars < 50
 
 
@@ -51,30 +66,21 @@ def is_image_based_pdf(reader, sample_pages: int = 8) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def render_pages_to_b64(reader, max_pages: int = 10, dpi: int = 150) -> List[str]:
-    """
-    Render first `max_pages` PDF pages as base64-encoded PNG strings.
-    Uses PyMuPDF rendering — no external tools required.
-    reader: PdfReader instance (has .doc attribute) or fitz.Document
-    """
-    from .pdf_ocr import render_page_to_b64 as _render
-    # Handle both PdfReader (has .doc) and raw fitz.Document
-    doc = reader.doc if hasattr(reader, 'doc') else reader
-    page_count = len(doc)
+    """Render first pages through PdfReader when the active backend supports it."""
     images = []
-    for i in range(min(max_pages, page_count)):
-        b64 = _render(doc, i, dpi=dpi)
+    for i in range(min(max_pages, reader.page_count)):
+        b64 = reader.render_page_to_b64(i, dpi=dpi)
         if b64:
             images.append(b64)
             print(f"    [+] Rendered page {i+1} ({len(b64) // 1024} KB)")
     return images
 
-
 # Backwards-compatible single-page helper
 def render_page_to_b64(reader, page_idx: int, dpi: int = 150) -> Optional[str]:
     """Render a single page to base64 PNG."""
-    from .pdf_ocr import render_page_to_b64 as _r
-    doc = reader.doc if hasattr(reader, 'doc') else reader
-    return _r(doc, page_idx, dpi)
+    if hasattr(reader, "render_page_to_b64"):
+        return reader.render_page_to_b64(page_idx, dpi=dpi)
+    return None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -89,6 +95,7 @@ def extract_toc_via_vision(
     model_name: Optional[str] = None,
     use_ollama: bool = True,
     use_gemini: bool = True,
+    force_vision: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Multi-layer TOC extraction for image-based or text-layer-failed PDFs.
@@ -98,21 +105,33 @@ def extract_toc_via_vision(
     reader      : PdfReader or ArabicPdfExtractor
     max_pages   : how many pages to render/send
     dpi         : render resolution (higher = better quality, larger payload)
-    api_key     : Gemini API key (optional; read from GEMINI_API_KEY env if None)
-    model_name  : specific AI model name (e.g. "llava:7b", "gemini-2.5-flash")
+    api_key     : optional explicit Gemini key (normally leave unset so key rotation is used)
+    model_name  : specific AI model name (gemini-3.6-flash or gemini-3.5-flash)
     use_ollama  : try Ollama local models (default: True)
-    use_gemini  : try Gemini Vision API (default: True, only if api_key available)
+    use_gemini  : try Gemini API (default: True, using configured key rotation)
 
     Returns
     -------
     list of unit dicts or []
     """
-    # ── Render pages ──────────────────────────────────────────────────────
-    print(f"[*] Rendering first {max_pages} pages for vision analysis (DPI={dpi})...")
+    # ── Prepare the first pages ──────────────────────────────────────────
+    print(f"[*] Preparing first {max_pages} pages for AI TOC analysis (DPI={dpi})...")
     images_b64 = render_pages_to_b64(reader, max_pages=max_pages, dpi=dpi)
+    page_texts = [
+        {"pdfPage": i + 1, "text": reader.extract_page_text(i)}
+        for i in range(min(max_pages, reader.page_count))
+    ]
 
-    if not images_b64:
-        print("[!] Could not render any pages.")
+    # A forced visual run must never silently fall back to a text-only OCR layer.
+    if force_vision and not images_b64:
+        print("[!] Visual extraction was requested, but no page renderer is available.")
+        print("[!] Install PyMuPDF, or a system renderer such as pdftoppm/mutool.")
+        return []
+
+    # A scanned PDF with no usable text and no renderer cannot reach a vision model.
+    if not images_b64 and not any(p["text"].strip() for p in page_texts):
+        print("[!] Scanned PDF has no text layer and no available renderer.")
+        print("[!] Install PyMuPDF, or a system renderer such as pdftoppm/mutool.")
         return []
 
     # ── Layer 3: Ollama (local, free, no API key) ─────────────────────────
@@ -132,24 +151,35 @@ def extract_toc_via_vision(
         else:
             print("[!] Ollama not available (not running or not installed).")
 
-    # ── Layer 4: Gemini Vision (free tier, needs API key) ─────────────────
+    # ── Layer 4: Gemini API ───────────────────────────────────────────────
     if use_gemini:
-        import os
-        gemini_key = api_key or os.environ.get("GEMINI_API_KEY", "")
-        if gemini_key:
-            gemini_model = "gemini-2.5-flash"
-            if model_name and model_name.startswith("gemini"):
-                gemini_model = model_name.replace("gemini-", "", 1) if model_name != "gemini" else "gemini-2.5-flash"
-            print(f"[*] Trying Gemini Vision ({gemini_model})...")
-            from ..ai.gemini import GeminiFreeProvider
-            provider = GeminiFreeProvider(api_key=gemini_key, model_name=gemini_model)
-            units = provider.extract_toc_from_page_images(images_b64)
+        from ..ai.gemini import GeminiFreeProvider
+
+        # Do not inspect GEMINI_API_KEY here. GeminiFreeProvider/GeminiClient
+        # owns authentication, plural-key rotation, model validation, and 429
+        # failover. Passing api_key=None is intentional.
+        try:
+            requested_model = model_name if model_name and model_name.startswith("gemini") else None
+            provider = GeminiFreeProvider(api_key=api_key, model_name=requested_model)
+
+            if not provider.client.api_keys:
+                print("[!] Gemini skipped (GEMINI_API_KEYS/GEMINI_API_KEY not set).")
+                return []
+
+            gemini_model = provider.model_name
+            print(f"[*] Trying Gemini {gemini_model} TOC extraction...")
+            units = (
+                provider.extract_toc_from_page_images(images_b64)
+                if images_b64
+                else provider.extract_toc_from_page_texts(page_texts)
+            )
             if units:
                 total_lessons = sum(len(u.get("lessons", [])) for u in units)
-                print(f"[+] Gemini Vision TOC: {len(units)} units, {total_lessons} lessons.")
+                mode = "Vision" if images_b64 else "text/pypdf"
+                print(f"[+] Gemini {mode} TOC: {len(units)} units, {total_lessons} lessons.")
                 return units
-            print("[!] Gemini Vision returned no results.")
-        else:
-            print("[!] Gemini Vision skipped (GEMINI_API_KEY not set).")
+            print("[!] Gemini TOC analysis returned no results.")
+        except Exception as err:
+            print(f"[!] Gemini TOC provider unavailable: {err}")
 
     return []

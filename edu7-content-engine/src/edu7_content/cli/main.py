@@ -24,12 +24,13 @@ Usage examples:
 import sys
 import os
 import argparse
+import re
 from pathlib import Path
+from typing import List
 
 from ..pdf.reader import PdfReader
 from ..pdf.page_mapping import PageMappingEngine
 from ..pdf.toc import TocExtractor
-from ..pdf.pdf_ocr import ArabicPdfExtractor
 from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
@@ -62,7 +63,7 @@ def main():
                         help=(
                             "AI model for vision TOC extraction when rule-based fails.\n"
                             "Free local: llava:7b | llava:13b | minicpm-v:8b | qwen2.5vl:7b\n"
-                            "Free cloud: gemini | gemini-2.5-flash | gemini-1.5-flash\n"
+                            "Free cloud: gemini-3.6-flash | gemini-3.5-flash\n"
                             "Default: auto (tries Ollama first, then Gemini if key set)"
                         ))
     p_prep.add_argument("--vision-pages", type=int, default=10,
@@ -72,7 +73,7 @@ def main():
     p_prep.add_argument("--no-ollama", action="store_true",
                         help="Skip Ollama local vision models")
     p_prep.add_argument("--no-gemini", action="store_true",
-                        help="Skip Gemini Vision API even if GEMINI_API_KEY is set")
+                        help="Skip Gemini API even if GEMINI_API_KEYS are configured")
     p_prep.add_argument("--force-vision", action="store_true",
                         help="Force vision extraction even for text-based PDFs")
 
@@ -80,9 +81,9 @@ def main():
     p_analyze = sub.add_parser("analyze", help="Analyze lesson content with AI (single lesson dir or full workspace dir)")
     p_analyze.add_argument("target", help="Lesson directory (units/XX/lessons/YY) OR full workspace directory")
     p_analyze.add_argument("--model", default="heuristic-micro-engine",
-                           help="Model: heuristic-micro-engine | gemini | gemini-2.5-flash | ollama-qwen2.5:7b | ...")
+                           help="Model: heuristic-micro-engine | gemini | gemini-3.6-flash | gemini-3.5-flash | ollama-qwen2.5:7b | ...")
     p_analyze.add_argument("--delay", type=float, default=4.0,
-                           help="Delay in seconds between lessons for Gemini Free Tier rate-limiting (default: 4.0s)")
+                           help="Delay in seconds between lessons to pace Gemini requests (default: 4.0s)")
 
     # ── benchmark ────────────────────────────────────────────────────────────
     p_bench = sub.add_parser("benchmark", help="Multi-model comparison on a lesson")
@@ -132,10 +133,17 @@ def _cmd_info():
 
     print("\n── Edu7 Content Engine — System Info ──────────────────")
 
-    # PyMuPDF
-    import pymupdf
-    ver = pymupdf.__version__
-    print(f"  PyMuPDF      : {ver}")
+    # PDF backend
+    try:
+        import pymupdf
+        print(f"  PyMuPDF      : {pymupdf.__version__} (preferred)")
+    except Exception:
+        print("  PyMuPDF      : ✗ unavailable; using pypdf fallback")
+        try:
+            import pypdf
+            print(f"  pypdf        : {pypdf.__version__}")
+        except Exception:
+            print("  pypdf        : ✗ unavailable")
 
     # Tesseract
     tess = shutil.which("tesseract")
@@ -161,13 +169,24 @@ def _cmd_info():
         print("  Ollama       : ✗ not running")
         print("    → Install: https://ollama.ai | Then: ollama pull llava:7b")
 
-    # Gemini
-    api_key = os.environ.get("GEMINI_API_KEY", "")
-    if api_key:
-        print(f"  Gemini       : ✓ GEMINI_API_KEY set ({api_key[:8]}...)")
+    # Gemini — report configuration without exposing keys.
+    api_keys = [
+        k.strip()
+        for k in os.environ.get("GEMINI_API_KEYS", "").replace(";", ",").split(",")
+        if k.strip()
+    ]
+    if not api_keys and os.environ.get("GEMINI_API_KEY", "").strip():
+        api_keys = [os.environ["GEMINI_API_KEY"].strip()]
+    if api_keys:
+        models = [
+            m.strip()
+            for m in os.environ.get("GEMINI_MODELS", os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")).replace(";", ",").split(",")
+            if m.strip()
+        ]
+        print(f"  Gemini       : ✓ configured ({len(api_keys)} API key(s); models: {', '.join(models)})")
     else:
-        print("  Gemini       : ✗ GEMINI_API_KEY not set (optional)")
-        print("    → Free tier: https://aistudio.google.com/apikey")
+        print("  Gemini       : ✗ API keys not set (optional)")
+        print("    → Configure GEMINI_API_KEYS in .env")
 
     print("──────────────────────────────────────────────────────\n")
 
@@ -193,47 +212,77 @@ def _cmd_prepare(args):
     mapper.detect_mapping()
     print(f"[+] Page offset: {mapper.detected_offset}  (PDF page = Printed page + {mapper.detected_offset})")
 
-    # ── TOC Extraction ───────────────────────────────────────────────────────
+    # ── TOC Extraction: AI-assisted first, deterministic fallback ─────────────
+    # The first ten PDF pages are always the AI inspection window. The AI output
+    # is the segmentation source when it is valid; printed page numbers remain
+    # canonical and PageMappingEngine converts them to physical PDF pages.
     units = []
-    print("\n[*] Extracting Table of Contents...")
+    print("\n[*] Extracting Table of Contents from the first ten pages...")
 
-    force_vision = getattr(args, "force_vision", False)
+    model_arg = getattr(args, "model", None)
+    use_ollama = not getattr(args, "no_ollama", False)
+    use_gemini = not getattr(args, "no_gemini", False)
+    vision_pages = min(getattr(args, "vision_pages", 10), 10)
+    dpi = getattr(args, "dpi", 150)
 
-    # Step 1: Rule-based TocExtractor (works only on text-based PDFs)
-    if not pdf_is_image and not force_vision:
+    if model_arg and str(model_arg).startswith("gemini"):
+        use_ollama = False
+    elif model_arg and not str(model_arg).startswith("gemini"):
+        use_gemini = False
+
+    # AI-assisted TOC extraction is attempted first, even for text PDFs.
+    ai_units = extract_toc_via_vision(
+        reader,
+        max_pages=vision_pages,
+        dpi=dpi,
+        api_key=None,
+        model_name=model_arg,
+        use_ollama=use_ollama,
+        use_gemini=use_gemini,
+        force_vision=getattr(args, "force_vision", False),
+    )
+
+    if ai_units:
+        units = ai_units
+        print("[+] Segmentation source: AI-extracted TOC from first ten pages.")
+
+        # For scanned books, verify the first lesson's physical PDF page
+        # using the reference algorithm's evidence-backed visual calibration.
+        if pdf_is_image and use_gemini:
+            try:
+                from ..pdf.visual_calibration import calibrate_first_lesson
+                calibrated = calibrate_first_lesson(
+                    reader, units, mapper, model_arg, dpi=dpi, radius=6
+                )
+                if calibrated:
+                    first_lesson = next(
+                        lesson for unit in units for lesson in unit.get("lessons", [])
+                        if lesson.get("startPage") is not None and lesson.get("title")
+                    )
+                    offset = mapper.calibrate_from_pdf_page(
+                        int(first_lesson["startPage"]), calibrated
+                    )
+                    print(
+                        f"[+] Visual page calibration: printed {first_lesson['startPage']} -> "
+                        f"PDF {calibrated} (offset {offset})."
+                    )
+                else:
+                    print("[!] Visual page calibration did not produce a high-confidence mapping; using detected offset.")
+            except Exception as err:
+                print(f"[!] Visual page calibration skipped: {err}")
+    else:
+        # Deterministic fallback for installations without an available AI
+        # provider or when AI cannot establish a reliable TOC.
         toc = TocExtractor(reader)
-        toc_pages = toc.find_toc_pages()
-        print(f"[+] TOC pages detected: {[p+1 for p in toc_pages]}")
+        toc_pages = toc.find_toc_pages(max_search=10)
+        print(f"[+] Rule-based TOC pages: {[p + 1 for p in toc_pages]}")
         if toc_pages:
             units = toc.extract_hierarchy(toc_pages)
-            print(f"[+] Rule-based TOC: {len(units)} units, {sum(len(u['lessons']) for u in units)} lessons.")
-
-    # Step 2+: Vision AI fallback (for image PDFs or when rule-based finds nothing)
-    if not units:
-        model_arg = getattr(args, "model", None)
-        use_ollama = not getattr(args, "no_ollama", False)
-        use_gemini = not getattr(args, "no_gemini", False)
-        vision_pages = getattr(args, "vision_pages", 10)
-        dpi = getattr(args, "dpi", 150)
-
-        # Force Gemini-only if model starts with "gemini"
-        if model_arg and str(model_arg).startswith("gemini"):
-            use_ollama = False
-
-        # Force Ollama-only if model doesn't start with "gemini"
-        if model_arg and not str(model_arg).startswith("gemini"):
-            use_gemini = False
-
-        print("\n[*] Starting Vision AI extraction pipeline...")
-        units = extract_toc_via_vision(
-            reader,
-            max_pages=vision_pages,
-            dpi=dpi,
-            api_key=os.environ.get("GEMINI_API_KEY"),
-            model_name=model_arg,
-            use_ollama=use_ollama,
-            use_gemini=use_gemini,
-        )
+            print(
+                f"[+] Rule-based TOC: {len(units)} units, "
+                f"{sum(len(u['lessons']) for u in units)} lessons."
+            )
+    _finalize_toc_page_bounds(units, mapper, reader.page_count)
 
     # Summary
     total_lessons = sum(len(u.get("lessons", [])) for u in units)
@@ -248,16 +297,51 @@ def _cmd_prepare(args):
     # Segment
     print(f"\n[*] Segmenting into packages: {ws_path}")
     segmenter = LessonSegmenter(reader, mapper)
+    metadata_title = reader.get_metadata().get("title", "")
+    book_title = args.title or metadata_title or _derive_book_title(target_pdf.stem)
+    print(f"[+] Book title: {book_title}")
+
     coordinates = {
         "subject": args.subject,
         "grade": args.grade,
         "term": args.term,
         "edition": args.edition,
-        "title": args.title,
+        "title": book_title,
     }
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
     print(f"[SUCCESS] Book prepared at: {ws_path}\n")
 
+
+def _finalize_toc_page_bounds(units, mapper, pdf_page_count):
+    """Turn TOC start pages into deterministic printed-page ranges.
+
+    The TOC is authoritative for starts. End pages are derived only from the
+    next lesson/unit boundary; the final lesson ends at the last physical PDF
+    page converted back to the printed-page numbering.
+    """
+    flat = [
+        lesson
+        for unit in units
+        for lesson in unit.get("lessons", [])
+    ]
+    for idx, lesson in enumerate(flat):
+        start = int(lesson.get("startPage", 1))
+        if idx + 1 < len(flat):
+            next_start = int(flat[idx + 1].get("startPage", start))
+            lesson["endPage"] = max(start, next_start - 1)
+        else:
+            final_printed = mapper.get_printed_page(pdf_page_count)
+            lesson["endPage"] = max(start, final_printed)
+
+    for unit in units:
+        lessons = unit.get("lessons", [])
+        if lessons:
+            unit["startPage"] = min(int(l["startPage"]) for l in lessons)
+            unit["endPage"] = max(int(l["endPage"]) for l in lessons)
+        else:
+            start = int(unit.get("startPage", 1))
+            unit["startPage"] = start
+            unit["endPage"] = start
 
 def _find_lesson_dirs(target_path: Path) -> List[Path]:
     """Find all lesson directories in workspace supporting both new and legacy layouts."""
@@ -308,17 +392,36 @@ def _cmd_analyze(args):
             res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
             report = validator.validate(res, text)
             print(f"    [+] Concepts: {len(res.concepts)} | Questions: {len(res.questions)} | Flashcards: {len(res.flashcards)}")
+            print(f"    [*] Evidence verified: concepts={report['verifiedEvidenceConcepts']} questions={report['verifiedEvidenceQuestions']}")
+            print("    [!] AI output remains PROPOSED/NEEDS_REVIEW; human approval is required before import.")
 
             out_dir = l_dir / "analysis" / provider.provider_name
             out_dir.mkdir(parents=True, exist_ok=True)
             out_file = out_dir / "normalized.json"
             out_file.write_text(json.dumps(asdict(res), ensure_ascii=False, indent=2), encoding="utf-8")
-            print(f"    [✓] Saved analysis to: {out_file}")
+            report_file = out_dir / "validation-report.json"
+            report_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            analysis_manifest = {
+                "schemaVersion": "1.0",
+                "mode": "ANALYZE",
+                "status": "DRAFT",
+                "provider": provider.provider_name,
+                "lessonManifest": str(l_dir / "lesson_manifest.json"),
+                "groundingManifest": str(l_dir / "grounding_manifest.json"),
+                "normalizedOutput": str(out_file),
+                "validationReport": str(report_file),
+                "databaseWrite": False,
+                "humanApprovalRequired": True,
+            }
+            (out_dir / "analysis-manifest.json").write_text(
+                json.dumps(analysis_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            print(f"    [✓] Saved draft analysis to: {out_file}")
 
-            # Polite pacing for Gemini Free Tier (15 RPM limit)
+            # Polite pacing between Gemini lesson requests
             if "gemini" in provider.provider_name.lower() and idx < len(lesson_dirs):
                 delay = getattr(args, "delay", 4.0)
-                print(f"    [*] Pacing delay: {delay}s for Gemini Free Tier...")
+                print(f"    [*] Pacing delay: {delay}s between Gemini requests...")
                 time.sleep(delay)
 
         print(f"\n[SUCCESS] Completed analysis for all {len(lesson_dirs)} lesson(s) in {target_path}")
@@ -337,13 +440,32 @@ def _cmd_analyze(args):
 
         print("[*] Validating Evidence-First compliance...")
         report = validator.validate(res, text)
-        print(f"[+] Concepts: {len(res.concepts)} approved | Questions: {len(res.questions)} approved | Flashcards: {len(res.flashcards)}")
+        print(f"[+] Concepts: {len(res.concepts)} proposed | Questions: {len(res.questions)} proposed | Flashcards: {len(res.flashcards)}")
+        print(f"[*] Evidence verified: concepts={report['verifiedEvidenceConcepts']} questions={report['verifiedEvidenceQuestions']}")
+        print("[!] AI output remains PROPOSED/NEEDS_REVIEW; human approval is required before import.")
 
         out_dir = l_dir / "analysis" / provider.provider_name
         out_dir.mkdir(parents=True, exist_ok=True)
         out_file = out_dir / "normalized.json"
         out_file.write_text(json.dumps(asdict(res), ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"[SUCCESS] Analysis saved to: {out_file}")
+        report_file = out_dir / "validation-report.json"
+        report_file.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+        (out_dir / "analysis-manifest.json").write_text(
+            json.dumps({
+                "schemaVersion": "1.0",
+                "mode": "ANALYZE",
+                "status": "DRAFT",
+                "provider": provider.provider_name,
+                "lessonManifest": str(l_dir / "lesson_manifest.json"),
+                "groundingManifest": str(l_dir / "grounding_manifest.json"),
+                "normalizedOutput": str(out_file),
+                "validationReport": str(report_file),
+                "databaseWrite": False,
+                "humanApprovalRequired": True,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"[SUCCESS] Draft analysis saved to: {out_file}")
 
     else:
         print(f"Error: '{target_path}' is neither a workspace nor a valid lesson directory.")
@@ -443,24 +565,43 @@ def _dict_to_analysis_result(d: dict):
 #  Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _derive_book_title(stem: str) -> str:
+    """Create a human-readable fallback title from a PDF filename.
+
+    The filename is never treated as the canonical Edu7 textbook identity.
+    It is only a fallback display title when PDF metadata and --title are absent.
+    """
+    value = re.sub(r"[_-]+", " ", stem).strip()
+    value = re.sub(r"\\s+", " ", value)
+    return value or "Untitled textbook"
+
+
 def _resolve_pdf(args) -> Path:
     if getattr(args, "pdf_path", None):
-        p = Path(args.pdf_path)
-        if p.exists():
-            return p
-        candidate = Path("books_input") / args.pdf_path
-        if candidate.exists():
-            return candidate
+        p = Path(args.pdf_path).expanduser()
+        if p.exists() and p.is_file():
+            return p.resolve()
+        candidate = (Path("books_input") / args.pdf_path).expanduser()
+        if candidate.exists() and candidate.is_file():
+            return candidate.resolve()
         print(f"Error: PDF not found: {args.pdf_path}")
         sys.exit(1)
+
     in_dir = Path("books_input")
     in_dir.mkdir(exist_ok=True)
-    pdfs = sorted(in_dir.glob("*.pdf"))
+    pdfs = sorted(p for p in in_dir.glob("*.pdf") if p.is_file())
     if not pdfs:
         print(f"Error: No PDFs in {in_dir.resolve()}")
         print("Put your book in books_input/ or: edu7-content prepare path/to/book.pdf")
         sys.exit(1)
-    p = pdfs[0]
+    if len(pdfs) > 1:
+        print("Error: Multiple PDFs found in books_input; refusing to guess the book.")
+        for p in pdfs:
+            print(f"  - {p.name}")
+        print("Run: edu7-content prepare books_input/<exact-file-name>.pdf")
+        sys.exit(2)
+
+    p = pdfs[0].resolve()
     print(f"[*] Auto-selected: {p.name}")
     return p
 
@@ -476,9 +617,9 @@ def _print_help_tips():
          ollama pull llava-llama3:8b   (5 GB, best quality)
     3. Run: edu7-content prepare books_input/book1.pdf
 
-  Option B — Gemini Vision (free tier, 15 RPM, needs internet):
+  Option B — Gemini Vision (configured free tier, needs internet):
     1. Get free API key: https://aistudio.google.com/apikey
-    2. Set: $env:GEMINI_API_KEY = "AIza..."
+    2. Set GEMINI_API_KEYS in edu7-content-engine/.env (comma-separated keys).
     3. Run: edu7-content prepare books_input/book1.pdf
 
   Option C — Tesseract OCR (free, offline, for text-extractable PDFs):

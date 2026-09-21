@@ -3,7 +3,6 @@ import json
 import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-import pymupdf
 
 from .page_mapping import PageMappingEngine
 from .reader import PdfReader
@@ -17,6 +16,27 @@ def slugify(text: str, fallback: str = "item") -> str:
     clean = re.sub(r"[^\w\u0600-\u06FF]+", "-", clean, flags=re.UNICODE)
     clean = clean.strip("-_")
     return clean or fallback
+
+
+def _text_sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _build_grounding_chunks(text: str, max_chars: int = 1800) -> List[str]:
+    """Build deterministic, evidence-preserving chunks without an AI writer."""
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
+    chunks: List[str] = []
+    current = ""
+    for paragraph in paragraphs:
+        candidate = f"{current}\n\n{paragraph}" if current else paragraph
+        if current and len(candidate) > max_chars:
+            chunks.append(current)
+            current = paragraph
+        else:
+            current = candidate
+    if current:
+        chunks.append(current)
+    return chunks
 
 
 def compute_sha256(file_path: Path) -> str:
@@ -98,6 +118,11 @@ class LessonSegmenter:
             "title": title,
             "totalPages": self.reader.page_count,
             "detectedOffset": self.mapper.detected_offset,
+            "pageNumbering": {
+                "printedPageIsCanonical": True,
+                "pdfPageIsPhysical": True,
+                "formula": "pdfPage = printedPage + detectedOffset",
+            },
             "sha256": tb_sha256,
         }
         (textbook_dir / "textbook_manifest.json").write_text(
@@ -121,20 +146,12 @@ class LessonSegmenter:
             unit_start_page = min([les.get("startPage", 1) for les in lessons]) if lessons else 1
             unit_end_page = max([les.get("endPage", unit_start_page) for les in lessons]) if lessons else unit_start_page
 
-            # Slice Unit PDF
-            unit_doc = pymupdf.open()
+            # Slice Unit PDF using the active reader backend.
             unit_printed_pages = list(range(unit_start_page, unit_end_page + 1))
             unit_pdf_pages = [self.mapper.get_pdf_page(p) for p in unit_printed_pages]
-
-            for p_pdf in unit_pdf_pages:
-                pdf_idx = p_pdf - 1
-                if 0 <= pdf_idx < self.reader.page_count:
-                    unit_doc.insert_pdf(self.reader.doc, from_page=pdf_idx, to_page=pdf_idx)
-
             unit_pdf_name = f"U_{u_num:02d}_{u_slug}.pdf"
             unit_pdf_path = u_dir / unit_pdf_name
-            unit_doc.save(str(unit_pdf_path))
-            unit_doc.close()
+            self.reader.copy_pages_to_pdf([p - 1 for p in unit_pdf_pages], unit_pdf_path)
 
             u_sha = compute_sha256(unit_pdf_path)
             u_size = unit_pdf_path.stat().st_size
@@ -158,6 +175,10 @@ class LessonSegmenter:
                 "orderIndex": u_num,
                 "startPage": unit_start_page,
                 "endPage": unit_end_page,
+                "printedPageStart": unit_start_page,
+                "printedPageEnd": unit_end_page,
+                "pdfPageStart": unit_pdf_pages[0] if unit_pdf_pages else None,
+                "pdfPageEnd": unit_pdf_pages[-1] if unit_pdf_pages else None,
                 "isActive": True,
             })
 
@@ -184,25 +205,43 @@ class LessonSegmenter:
                 les["printedPages"] = printed_pages
                 les["pdfPages"] = pdf_pages
 
-                # Slice Lesson PDF
-                lesson_doc = pymupdf.open()
+                # Slice Lesson PDF using the active reader backend.
+                lesson_pdf_name = f"L_{l_num:02d}_{l_slug}.pdf"
+                lesson_pdf_path = l_dir / lesson_pdf_name
+                self.reader.copy_pages_to_pdf([p - 1 for p in pdf_pages], lesson_pdf_path)
                 aggregated_text = []
                 page_image_files = []
+                grounding_pages = []
+                grounding_chunks = []
 
                 for p_print, p_pdf in zip(printed_pages, pdf_pages):
                     pdf_idx = p_pdf - 1
                     if 0 <= pdf_idx < self.reader.page_count:
-                        lesson_doc.insert_pdf(self.reader.doc, from_page=pdf_idx, to_page=pdf_idx)
                         p_text = self.reader.extract_page_text(pdf_idx)
+                        grounding_pages.append({
+                            "printedPage": p_print,
+                            "pdfPage": p_pdf,
+                            "textSha256": _text_sha256(p_text),
+                            "textChars": len(p_text),
+                        })
+                        for chunk_text in _build_grounding_chunks(p_text):
+                            grounding_chunks.append({
+                                "ordinal": len(grounding_chunks),
+                                "printedPage": p_print,
+                                "pdfPage": p_pdf,
+                                "text": chunk_text,
+                                "textSha256": _text_sha256(chunk_text),
+                            })
                         (text_dir / f"page_{p_print:03d}.txt").write_text(p_text, encoding="utf-8")
                         aggregated_text.append(f"--- [صفحة {p_print}] ---\n{p_text}")
 
                         # Render High-Res PNG (150 DPI)
                         try:
-                            page_obj = self.reader.doc[pdf_idx]
-                            pix = page_obj.get_pixmap(dpi=150)
+                            png_data = self.reader.render_page_to_png(pdf_idx, dpi=150)
+                            if not png_data:
+                                raise RuntimeError("Page rendering unavailable with pypdf backend")
                             img_file = pages_dir / f"page_{p_print:03d}.png"
-                            pix.save(str(img_file))
+                            img_file.write_bytes(png_data)
                             rel_img_path = f"{u_dir_name}/{l_dir_name}/pages/page_{p_print:03d}.png"
                             page_image_files.append(rel_img_path)
 
@@ -223,11 +262,6 @@ class LessonSegmenter:
                         except Exception:
                             pass
 
-                lesson_pdf_name = f"L_{l_num:02d}_{l_slug}.pdf"
-                lesson_pdf_path = l_dir / lesson_pdf_name
-                lesson_doc.save(str(lesson_pdf_path))
-                lesson_doc.close()
-
                 l_sha = compute_sha256(lesson_pdf_path)
                 l_size = lesson_pdf_path.stat().st_size
                 l_rel_path = f"{u_dir_name}/{l_dir_name}/{lesson_pdf_name}"
@@ -246,6 +280,22 @@ class LessonSegmenter:
                 })
 
                 (l_dir / "lesson_full_text.txt").write_text("\n\n".join(aggregated_text), encoding="utf-8")
+                grounding_manifest = {
+                    "schemaVersion": "1.0",
+                    "textbookKey": textbook_key,
+                    "unitSlug": u_slug,
+                    "lessonSlug": l_slug,
+                    "pageNumbering": {
+                        "printedPageIsCanonical": True,
+                        "pdfPageIsPhysical": True,
+                        "formula": "pdfPage = printedPage + detectedOffset",
+                    },
+                    "pages": grounding_pages,
+                    "chunks": grounding_chunks,
+                }
+                (l_dir / "grounding_manifest.json").write_text(
+                    json.dumps(grounding_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
 
                 lesson_manifest = {
                     "schemaVersion": "1.1",
@@ -259,7 +309,16 @@ class LessonSegmenter:
                     "pdfPages": pdf_pages,
                     "startPage": start_p,
                     "endPage": end_p,
+                    "printedPageStart": start_p,
+                    "printedPageEnd": end_p,
+                    "pdfPageStart": pdf_pages[0] if pdf_pages else None,
+                    "pdfPageEnd": pdf_pages[-1] if pdf_pages else None,
                     "pageImages": page_image_files,
+                    "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
+                    "grounding": {
+                        "pageCount": len(grounding_pages),
+                        "chunkCount": len(grounding_chunks),
+                    },
                     "pdfFile": l_rel_path,
                     "sha256": l_sha,
                 }
@@ -309,6 +368,11 @@ class LessonSegmenter:
                 "totalPages": self.reader.page_count,
             },
             "detectedOffset": self.mapper.detected_offset,
+            "pageNumbering": {
+                "printedPageIsCanonical": True,
+                "pdfPageIsPhysical": True,
+                "formula": "pdfPage = printedPage + detectedOffset",
+            },
             "units": processed_units,
             "assetsCount": len(assets_registry),
         }
