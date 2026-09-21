@@ -34,6 +34,7 @@ from ..pdf.toc import TocExtractor
 from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
+from ..ai.content_service import ContentAIService
 from ..validation.evidence_validator import EvidenceValidator
 from ..export.json_exporter import Edu7JsonExporter
 from ..export.excel_exporter import Edu7ExcelExporter
@@ -86,6 +87,15 @@ def main():
     p_analyze.add_argument("--delay", type=float, default=4.0,
                            help="Delay in seconds between lessons to pace Gemini requests (default: 4.0s)")
 
+    # ── ai-task ─────────────────────────────────────────────────────────────
+    p_ai = sub.add_parser("ai-task", help="Run one unified Gemini content task and write a draft JSON result")
+    p_ai.add_argument("task", choices=["SEGMENT_RANGES", "LESSON_ANALYSIS", "QUESTION_REFRESH", "EXPLANATION", "PREREQUISITES"])
+    p_ai.add_argument("pdf", help="Lesson/textbook PDF path")
+    p_ai.add_argument("--prompt", required=True, help="Author prompt/instruction")
+    p_ai.add_argument("--context", default=None, help="Optional JSON context file")
+    p_ai.add_argument("--out", default=None, help="Optional output JSON path")
+    p_ai.add_argument("--model", default=None, help="Gemini model: gemini-3.6-flash or gemini-3.5-flash")
+
     # ── export ───────────────────────────────────────────────────────────────
     p_exp = sub.add_parser("export", help="Export workspace to JSON/Excel")
     p_exp.add_argument("workspace", help="Workspace path")
@@ -110,6 +120,9 @@ def main():
     elif args.command == "analyze":
         _cmd_analyze(args)
 
+    elif args.command == "ai-task":
+        _cmd_ai_task(args)
+
     elif args.command == "benchmark":
         print(f"[*] Benchmark on: {args.lesson_dir}")
         print("[SUCCESS] Benchmark placeholder completed.")
@@ -121,6 +134,47 @@ def main():
 # ─────────────────────────────────────────────────────────────────────────────
 #  Command implementations
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _cmd_ai_task(args):
+    import json
+    pdf = Path(args.pdf).expanduser().resolve()
+    if not pdf.exists() or not pdf.is_file():
+        print(f"Error: PDF not found: {pdf}")
+        sys.exit(1)
+    context = {}
+    if args.context:
+        context_path = Path(args.context).expanduser().resolve()
+        if not context_path.exists():
+            print(f"Error: context JSON not found: {context_path}")
+            sys.exit(1)
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+    if args.task == "SEGMENT_RANGES":
+        reader = PdfReader(str(pdf))
+        context.setdefault("pageCount", reader.page_count)
+    service = ContentAIService(model_name=args.model)
+    print(f"[*] AI task: {args.task}")
+    print(f"[*] Provider: {service.provider_name}")
+    result = service.request(
+        args.task,
+        args.prompt,
+        service.lesson_schema() if args.task == "LESSON_ANALYSIS" else service.question_schema() if args.task == "QUESTION_REFRESH" else {
+            "type": "object", "properties": {"result": {"type": "object"}}, "required": ["result"]
+        },
+        pdf_path=pdf,
+        context=context,
+        timeout=240,
+    ) if args.task not in ("SEGMENT_RANGES", "EXPLANATION", "PREREQUISITES") else (
+        service.segment_ranges(pdf, context.get("pageCount", 0), printed_page_map=context.get("printedPageMap"), prompt=args.prompt)
+        if args.task == "SEGMENT_RANGES" else
+        service.generate_explanation(pdf, args.prompt, context)
+        if args.task == "EXPLANATION" else
+        service.generate_prerequisites(pdf, args.prompt, context.get("candidateConcepts", []))
+    )
+    out = Path(args.out).expanduser().resolve() if args.out else pdf.with_suffix(".ai-draft.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[SUCCESS] Draft saved: {out}")
+
 
 def _cmd_info():
     """Print system capabilities."""
