@@ -9,7 +9,7 @@ Edu7 is intended to converge on one production architecture in which bounded con
 This roadmap describes the target capability graph and dependency order, not a claim that every capability already exists.
 
 
-## 2. Content direction
+## 2. Target content platform
 
 The content platform is converging on:
 
