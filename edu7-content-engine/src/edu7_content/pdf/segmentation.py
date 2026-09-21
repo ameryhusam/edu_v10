@@ -74,7 +74,9 @@ class LessonSegmenter:
         subject = coords.get("subject", raw_meta.get("subject", "GENERAL"))
         grade = coords.get("grade", "G07")
         term = coords.get("term", "T1")
-        edition = str(coords.get("edition", "2026"))
+        edition = str(coords.get("edition", "")).strip()
+        if not edition:
+            raise ValueError("Printed edition is required; it must be supplied or extracted before segmentation.")
         title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
 
         textbook_key = f"EDU-{subject}-G{int(str(grade).replace('G', '')):02d}-T{int(str(term).replace('T', ''))}-ED{edition}"
