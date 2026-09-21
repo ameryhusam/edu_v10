@@ -64,7 +64,7 @@ def main():
     p_prep.add_argument("--model", default=None,
                         help=(
                             "AI model for vision TOC extraction when rule-based fails.\n"
-                            "Gemini: gemini-3.6-flash | gemini-3.5-flash\n"
+                            "Gemini: gemini-3.8-flash | gemini-3.7-flash | gemini-3.6-flash | gemini-3.5-flash\n"
                             "Ollama: optional future/local adapter; requires --ollama and EDU7_ENABLE_OLLAMA=true\n"
                             "Default: Gemini when configured; Ollama is never used implicitly"
                         ))
