@@ -12,7 +12,7 @@ separate from the Python engine.
 
 Example:
 
-`workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026/`
+`workspace/T01/G04/SCI/ED2026/`
 
 The four coordinates have different roles:
 
@@ -135,7 +135,7 @@ PYTHONPATH=src python -m edu7_content.cli.main prepare \
 Expected root:
 
 ```
-workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026/
+workspace/T01/G04/SCI/ED2026/
 ```
 
 Validation gates:
