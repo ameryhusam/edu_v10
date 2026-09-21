@@ -381,8 +381,12 @@ class GeminiFreeProvider(AIProvider):
             l_path = Path(lesson_dir)
             pages_dir = l_path / "pages"
             if pages_dir.exists():
-                png_files = sorted(pages_dir.glob("*.png"))
-                for img_path in png_files[:8]:  # max 8 pages per lesson
+                png_files = sorted(
+                    p for p in pages_dir.iterdir()
+                    if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+                )
+                max_images = max(1, int(os.environ.get("GEMINI_MAX_LESSON_IMAGES", "30")))
+                for img_path in png_files[:max_images]:
                     try:
                         b64_data = base64.b64encode(img_path.read_bytes()).decode("ascii")
                         parts.append({
