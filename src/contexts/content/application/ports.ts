@@ -422,6 +422,7 @@ export interface TextbookSummary {
   readonly unitCount: number;
   readonly questionCount: number;
   readonly updatedAt: Date;
+  readonly coverUrl: string | null;
 }
 
 export interface TextbookListQuery {
