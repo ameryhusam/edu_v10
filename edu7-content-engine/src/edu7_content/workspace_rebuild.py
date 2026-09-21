@@ -25,7 +25,7 @@ def _lesson_paths(book_dir: Path, lesson_dirs: Iterable[Path]) -> list[Path]:
         rel = manifest.get("pdfFile")
         if not rel:
             continue
-        pdf = book_dir / Path(rel).relative_to(book_dir)
+        pdf = book_dir / rel
         if not pdf.exists():
             raise FileNotFoundError(f"Lesson PDF missing: {pdf}")
         result.append(pdf)
