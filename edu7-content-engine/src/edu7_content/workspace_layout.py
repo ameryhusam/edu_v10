@@ -136,7 +136,7 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
     if package_path.exists():
         package = json.loads(package_path.read_text(encoding="utf-8"))
         package.setdefault("meta", {})["profileVersion"] = "2.0"
-        package["meta"]["storagePolicy"] = "LESSON_PDFS_ONLY"
+        package["meta"]["storagePolicy"] = "LESSON_PDFS_AND_PAGE_IMAGES"
         package["textbook"]["key"] = book_key
         package["textbook"]["subjectKey"] = subject_key
         package["textbook"]["workspacePath"] = str(book_dir.relative_to(project))
