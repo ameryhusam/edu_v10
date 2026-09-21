@@ -153,8 +153,11 @@ function normalizeEdition(raw: string): Result<string> {
 }
 
 function validateCoordinates(c: TextbookCoordinates): Result<TextbookCoordinates> {
-  if (!Number.isInteger(c.term) || c.term < 1 || c.term > 4) {
-    return Err(Errors.validation('identity.bad_term', 'Term must be an integer between 1 and 4.'));
+  if (!['PART_1', 'PART_2', 'BOTH'].includes(c.part)) {
+    return Err(Errors.validation(
+      'identity.bad_part',
+      'Textbook part must be PART_1, PART_2, or BOTH.',
+    ));
   }
   if (!Number.isInteger(c.grade) || c.grade < 1 || c.grade > 12) {
     return Err(Errors.validation('identity.bad_grade', 'Grade must be an integer between 1 and 12.'));
@@ -177,8 +180,9 @@ export function textbookKey(coords: TextbookCoordinates): Result<TextbookKey> {
   if (!v.ok) return v;
   const edition = normalizeEdition(v.value.edition);
   if (!edition.ok) return edition;
-  const { subject, grade, term } = v.value;
-  return Ok(`EDU-${subject}-G${pad(grade)}-T${term}-${edition.value}` as TextbookKey);
+  const { subject, grade, part, edition } = v.value;
+  const partCode = part === 'PART_1' ? 'P1' : part === 'PART_2' ? 'P2' : 'PB';
+  return Ok(`EDU-${subject}-G${pad(grade)}-${partCode}-${edition.value}` as TextbookKey);
 }
 
 /** Build a `<parent>-<marker><slug>` child key. */
@@ -300,14 +304,14 @@ export function flashcardKey(parent: ConceptKey, stableIdentity: string): Result
 
 /** Parse a canonical textbook key back into its coordinates. */
 export function parseTextbookKey(key: string): Result<TextbookCoordinates> {
-  const m = /^EDU-([A-Z0-9]+)-G(\d{2})-T(\d)-ED(.+)$/.exec(key);
+  const m = /^EDU-([A-Z0-9]+)-G(\d{2})-(P1|P2|PB)-ED(.+)$/.exec(key);
   if (!m) {
     return Err(Errors.validation('identity.unparseable_key', 'Not a canonical textbook key.', { key }));
   }
   return Ok({
     subject: m[1]!,
     grade: Number(m[2]),
-    term: Number(m[3]),
+    part: m[3] === 'P1' ? 'PART_1' : m[3] === 'P2' ? 'PART_2' : 'BOTH',
     edition: m[4]!,
   });
 }
