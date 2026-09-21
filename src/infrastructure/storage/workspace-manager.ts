@@ -37,6 +37,7 @@ export interface WorkspaceCoordinates {
   readonly term: string;
   readonly grade: string;
   readonly subject: string;
+  readonly edition?: string | undefined;
 }
 
 export interface WorkspaceIndexManifest {
@@ -115,7 +116,11 @@ export class WorkspaceManager {
     const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    return path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);
+    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);
+    if (!coords.edition) return base;
+    const editionNorm = coords.edition.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/^ED(?=\d)/, '');
+    if (!editionNorm) throw new Error('Printed edition is required for a textbook workspace.');
+    return path.join(base, `ED${editionNorm}`);
   }
 
   /**
@@ -133,7 +138,7 @@ export class WorkspaceManager {
     sizeBytes: number;
     sha256: string;
   }> {
-    const wsDir = this.getWorkspaceDir(coords);
+    const wsDir = this.getWorkspaceDir({ ...coords, edition });
     const textbookDir = path.join(wsDir, 'textbook');
     const pagesDir = path.join(textbookDir, 'pages');
 
