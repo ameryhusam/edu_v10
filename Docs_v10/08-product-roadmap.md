@@ -105,7 +105,7 @@ The guided path should select only content satisfying:
 PUBLISHED
 AND entitled
 AND authorized
-AND includedInLearningPath
+AND learning-path eligible
 AND prerequisite/learning rules
 ```
 
