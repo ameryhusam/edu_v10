@@ -282,8 +282,10 @@ class LessonSegmenter:
                 "startPage": unit_start_page,
                 "endPage": unit_end_page,
                 "lessonCount": len(lessons),
-                "pdfFile": u_rel_path,
-                "sha256": u_sha,
+                "reconstruct": {
+                    "method": "ordered_lesson_pdfs",
+                    "lessonPdfOrder": [lesson["pdfFile"] for lesson in processed_lessons],
+                },
                 "lessons": processed_lessons,
             }
             (u_dir / "unit_manifest.json").write_text(
@@ -331,6 +333,7 @@ class LessonSegmenter:
                 "profileVersion": "1.1",
                 "scope": "FULL",
                 "exportedAt": "2026-09-20T00:00:00.000Z",
+                "storagePolicy": "LESSON_PDFS_ONLY",
             },
             "textbook": {
                 "key": textbook_key,
@@ -341,6 +344,7 @@ class LessonSegmenter:
                 "edition": edition,
                 "status": "DRAFT",
                 "totalPages": self.reader.page_count,
+                "sourcePdfPersisted": False,
             },
             "units": flat_units_pkg,
             "lessons": flat_lessons_pkg,
