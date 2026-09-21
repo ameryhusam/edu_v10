@@ -12,7 +12,7 @@ export interface ContentEnginePrepareInput {
   readonly subject: string;
   readonly grade: string;
   readonly term: string;
-  readonly edition: string;
+  readonly edition?: string;
   readonly title?: string;
   readonly timeoutMs: number;
 }
@@ -50,9 +50,8 @@ export class ContentEngineService {
         input.grade,
         '--term',
         input.term,
-        '--edition',
-        input.edition,
       ];
+      if (input.edition) args.push('--edition', input.edition);
       if (input.title) args.push('--title', input.title);
 
       const result = await execFileAsync(this.pythonCommand, args, {
