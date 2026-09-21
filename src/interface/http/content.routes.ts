@@ -12,7 +12,7 @@
  * `learner-access.ts`: this surface is not learner-scoped at all.
  */
 
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { z } from 'zod';
 import { Errors } from '../../shared/kernel/errors.js';
 import { Err, Ok, type Result } from '../../shared/kernel/result.js';
@@ -45,6 +45,7 @@ export interface ContentRouteDeps {
   readonly textbookAdministration: TextbookAdministrationService;
   readonly contentAsset?: ContentAssetService;
   readonly workspaceImporter?: WorkspaceImporterService;
+  readonly contentUploadMaxBytes?: number;
 }
 
 /**
@@ -703,6 +704,53 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     title: z.string().optional(),
     pdfBase64: z.string().min(1),
   });
+
+  router.post(
+    '/workspace/prepare-upload',
+    express.raw({
+      type: ['application/pdf', 'application/octet-stream'],
+      limit: deps.contentUploadMaxBytes ?? 250 * 1024 * 1024,
+    }),
+    handle({
+      input: z.instanceof(Buffer),
+      rawBody: true,
+      requireAuth: true,
+      successStatus: 201,
+      execute: async ({ input, actor, req }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.workspaceImporter) {
+          return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
+        }
+        const query = z.object({
+          term: z.string().min(1),
+          grade: z.string().min(1),
+          subject: z.string().min(1),
+          edition: z.string().optional(),
+          title: z.string().optional(),
+          autoSegment: z.coerce.boolean().optional(),
+        }).safeParse(req.query);
+        if (!query.success) {
+          return Err(Errors.validation('request.invalid_input', 'Book coordinates are invalid.', {
+            issues: query.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+          }));
+        }
+        if (input.length === 0) {
+          return Err(Errors.validation('content.empty_pdf', 'The uploaded PDF is empty.'));
+        }
+        const result = await deps.workspaceImporter.prepareWorkspace({
+          term: query.data.term,
+          grade: query.data.grade,
+          subject: query.data.subject,
+          edition: query.data.edition,
+          title: query.data.title,
+          pdfBuffer: input,
+          autoSegment: query.data.autoSegment,
+        });
+        return Ok(result);
+      },
+    }),
+  );
 
   router.post(
     '/textbooks/upload-source',
