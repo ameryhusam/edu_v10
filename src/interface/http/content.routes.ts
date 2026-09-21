@@ -951,6 +951,25 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     }),
   );
 
+  router.get(
+    '/lessons/:lessonKey/assets',
+    handle({
+      input: z.object({
+        lessonKey: z.string().min(1),
+        assetType: z.enum(CONTENT_ASSET_TYPES).optional(),
+      }),
+      requireAuth: true,
+      execute: async ({ input, actor }) => {
+        const reader = requireStaffReader(actor);
+        if (!reader.ok) return reader;
+        if (!deps.contentAsset) {
+          return Err(Errors.internal('asset.service_unavailable', 'Content asset service is not enabled.'));
+        }
+        return Ok(await deps.contentAsset.listLessonAssets(input.lessonKey, { assetType: input.assetType }));
+      },
+    }),
+  );
+
   router.get('/assets/:assetKey/stream', async (req, res, next) => {
     try {
       if (!deps.contentAsset) {
