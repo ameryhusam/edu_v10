@@ -96,7 +96,7 @@ def main():
     p_ai.add_argument("--prompt", required=True, help="Author prompt/instruction")
     p_ai.add_argument("--context", default=None, help="Optional JSON context file")
     p_ai.add_argument("--out", default=None, help="Optional output JSON path")
-    p_ai.add_argument("--model", default=None, help="Gemini model: gemini-3.6-flash or gemini-3.5-flash")
+    p_ai.add_argument("--model", default=None, help="Gemini model: gemini-3.8-flash, gemini-3.7-flash, gemini-3.6-flash, or gemini-3.5-flash")
 
     # ── export ───────────────────────────────────────────────────────────────
     p_exp = sub.add_parser("export", help="Export workspace to JSON/Excel")
