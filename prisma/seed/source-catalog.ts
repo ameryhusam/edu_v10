@@ -75,11 +75,18 @@ export async function seedYemenSourceCatalog(
       continue;
     }
 
+    const part =
+      source.termOrdinal === 1
+        ? 'PART_1'
+        : source.termOrdinal === 2
+          ? 'PART_2'
+          : 'BOTH';
+
     const key = unwrap(
       textbookKey({
         subject: source.subjectKey,
         grade: grade.ordinal,
-        term: source.termOrdinal,
+        part,
         edition: catalog.edition,
       }),
     );
@@ -88,7 +95,7 @@ export async function seedYemenSourceCatalog(
       where: { key },
       create: {
         key,
-        termId: term.id,
+        part,
         gradeId: grade.id,
         subjectId: subject.id,
         title: source.title,
