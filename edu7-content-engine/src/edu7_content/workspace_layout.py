@@ -100,61 +100,58 @@ def _rewrite_json(path: Path, replacements: Dict[str, str]) -> None:
 
 
 def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> None:
-    """Convert segmenter's internal textbook artifact into the public layout.
+    """Finalize the canonical lesson-only workspace.
 
-    The segmenter remains the single PDF slicing implementation. This finalizer
-    only moves/renames its book-level artifact and creates the stable import
-    manifest; it never changes lesson/unit semantics.
+    The source book is temporary input and is never persisted in workspace.
+    Unit/book PDFs are derived artifacts and are rebuilt on demand from the
+    ordered lesson PDFs.
     """
-    internal = book_dir / "textbook"
-    source = book_dir / "source"
-    if internal.exists():
-        source.mkdir(parents=True, exist_ok=True)
-        pdf = internal / "textbook.pdf"
-        if pdf.exists():
-            pdf.rename(source / f"{book_key}.pdf")
-        manifest = internal / "textbook_manifest.json"
-        if manifest.exists():
-            manifest.rename(source / "book-source-manifest.json")
-        try:
-            internal.rmdir()
-        except OSError:
-            pass
-
-    replacements = {
-        "textbook/textbook.pdf": f"source/{book_key}.pdf",
-        "textbook_manifest.json": "source/book-source-manifest.json",
-    }
-    for name in ("index.json", "edu7-content-package.json"):
-        _rewrite_json(book_dir / name, replacements)
-
+    project = project_root()
+    source_manifest = book_dir / "book-source-manifest.json"
     index_path = book_dir / "index.json"
     package_path = book_dir / "edu7-content-package.json"
+
     if index_path.exists():
         index = json.loads(index_path.read_text(encoding="utf-8"))
         index["schemaVersion"] = "2.0"
         index["textbookKey"] = book_key
         index.setdefault("metadata", {})["subjectKey"] = subject_key
-        index["workspacePath"] = str(book_dir.relative_to(project_root()))
+        index["workspacePath"] = str(book_dir.relative_to(project))
+        index["sourceManifest"] = "book-source-manifest.json"
+        index.setdefault("storagePolicy", {}).update({
+            "bookPdfPersisted": False,
+            "unitPdfPersisted": False,
+            "pageImagesPersisted": False,
+            "lessonPdfPersisted": True,
+            "reconstruction": "ordered lesson PDFs",
+        })
         index_path.write_text(json.dumps(index, ensure_ascii=False, indent=2), encoding="utf-8")
 
     if package_path.exists():
         package = json.loads(package_path.read_text(encoding="utf-8"))
-        package["meta"]["profileVersion"] = "1.2"
+        package.setdefault("meta", {})["profileVersion"] = "2.0"
+        package["meta"]["storagePolicy"] = "LESSON_PDFS_ONLY"
         package["textbook"]["key"] = book_key
         package["textbook"]["subjectKey"] = subject_key
-        package["textbook"]["workspacePath"] = str(book_dir.relative_to(project_root()))
+        package["textbook"]["workspacePath"] = str(book_dir.relative_to(project))
+        package["textbook"]["sourcePdfPersisted"] = False
         package_path.write_text(json.dumps(package, ensure_ascii=False, indent=2), encoding="utf-8")
 
     book_manifest = {
         "schemaVersion": "2.0",
         "textbookKey": book_key,
         "subjectKey": subject_key,
-        "workspacePath": str(book_dir.relative_to(project_root())),
+        "workspacePath": str(book_dir.relative_to(project)),
         "indexFile": "index.json",
         "contentPackageFile": "edu7-content-package.json",
-        "sourcePdf": f"source/{book_key}.pdf",
-        "unitsPath": ".",
+        "sourceManifest": "book-source-manifest.json",
+        "storagePolicy": {
+            "sourceBookPdf": "TEMPORARY_INPUT_ONLY",
+            "unitPdf": "DERIVED_ON_DEMAND",
+            "bookPdf": "DERIVED_ON_DEMAND",
+            "lessonPdf": "PERSISTED_CANONICAL",
+            "pageImages": "NOT_PERSISTED",
+        },
         "databaseImport": {
             "identity": "Textbook.key",
             "subjectKey": subject_key,
@@ -162,7 +159,13 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
             "writePath": "Node ContentImportService",
             "pythonDatabaseWrite": False,
         },
+        "reconstruction": {
+            "lessonOrderSource": "index.json",
+            "unitMethod": "ordered lesson PDFs",
+            "bookMethod": "ordered lesson PDFs across all units",
+        },
     }
     (book_dir / "book-manifest.json").write_text(
         json.dumps(book_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+
