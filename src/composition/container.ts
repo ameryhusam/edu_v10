@@ -98,6 +98,7 @@ import { ContentExportService } from '../contexts/content/application/content-ex
 import { ContentImportService } from '../contexts/content/application/content-import.service.js';
 import { ContentAssetService } from '../contexts/content/application/content-asset.service.js';
 import { WorkspaceImporterService } from '../contexts/content/application/workspace-importer.service.js';
+import { WorkspaceArchiveService } from '../contexts/content/application/workspace-archive.service.js';
 import { PublishingService } from '../contexts/content/application/publishing.service.js';
 import { TextbookAdministrationService } from '../contexts/content/application/textbook-administration.service.js';
 import { LocalContentStorage } from '../infrastructure/storage/local-content-storage.js';
@@ -182,6 +183,8 @@ export interface Container {
     readonly contentImport: ContentImportService;
     readonly contentAsset: ContentAssetService;
     readonly workspaceImporter: WorkspaceImporterService;
+  /** Safe ZIP import/export over the canonical workspace. */
+  readonly workspaceArchive: WorkspaceArchiveService;
     readonly contentUploadMaxBytes: number;
     readonly publishing: PublishingService;
     /** The admin surface over the textbook catalogue and its deployment. */
@@ -503,6 +506,20 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
         new ContentImportService(contentAuthoring, itemBank),
         contentAsset,
         contentEngine,
+        env.CONTENT_ENGINE_TIMEOUT_MS,
+      ),
+      workspaceArchive: new WorkspaceArchiveService(
+        workspaceManager,
+        new WorkspaceImporterService(
+          workspaceManager,
+          new ContentImportService(contentAuthoring, itemBank),
+          contentAsset,
+          contentEngine,
+          env.CONTENT_ENGINE_TIMEOUT_MS,
+        ),
+        env.CONTENT_ENGINE_PYTHON,
+        env.CONTENT_ENGINE_ROOT,
+        env.CONTENT_UPLOAD_MAX_BYTES,
         env.CONTENT_ENGINE_TIMEOUT_MS,
       ),
       contentUploadMaxBytes: env.CONTENT_UPLOAD_MAX_BYTES,
