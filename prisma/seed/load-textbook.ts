@@ -74,7 +74,7 @@ type UnitSpec = {
 export interface TextbookSpec {
   subjectKey: string;
   gradeKey: string;
-  term: number;
+  part: 'PART_1' | 'PART_2' | 'BOTH';
   edition: string;
   title: string;
   issuer?: string;
@@ -120,9 +120,22 @@ export async function seedTextbookFromSpec(
   ctx: TextbookSeedContext,
   spec: TextbookSpec,
 ): Promise<TextbookSeedReport> {
-  if (!ctx.termKey.endsWith(`-T0${spec.term}`)) {
+  const termMatch = ctx.termKey.match(/-T0([12])$/);
+  if (!termMatch) {
     throw new Error(
-      `textbook spec term ${spec.term} does not match seeding term ${ctx.termKey}`,
+      `seeding term ${ctx.termKey} is not a supported academic term for textbook part selection`,
+    );
+  }
+
+  const academicTermOrdinal = Number(termMatch[1]);
+  const allowedParts =
+    academicTermOrdinal === 1
+      ? ['PART_1', 'BOTH']
+      : ['PART_2', 'BOTH'];
+
+  if (!allowedParts.includes(spec.part)) {
+    throw new Error(
+      `textbook part ${spec.part} is not compatible with academic term ${ctx.termKey}`,
     );
   }
 
@@ -132,7 +145,7 @@ export async function seedTextbookFromSpec(
     textbookKey({
       subject: spec.subjectKey,
       grade: Number(spec.gradeKey.replace('G0', '').replace('G', '')),
-      term: spec.term,
+      part: spec.part,
       edition: spec.edition,
     }),
   );
@@ -141,7 +154,7 @@ export async function seedTextbookFromSpec(
     where: { key: tbKey },
     create: {
       key: tbKey,
-      termId: ctx.termId,
+      part: spec.part,
       gradeId: grade.id,
       subjectId: subject.id,
       edition: spec.edition,

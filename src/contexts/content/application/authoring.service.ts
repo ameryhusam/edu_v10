@@ -193,10 +193,17 @@ export class ContentAuthoringService {
 
     // The key is derived, never supplied. Edition is part of identity: a new
     // printing is a new textbook, not a revision of this one.
+    const part =
+      term.ordinal === 1
+        ? 'PART_1'
+        : term.ordinal === 2
+          ? 'PART_2'
+          : 'BOTH';
+
     const key = buildTextbookKey({
       subject: subject.key,
       grade: grade.ordinal,
-      term: term.ordinal,
+      part,
       edition: input.edition,
     });
     if (!key.ok) return key;
@@ -205,7 +212,7 @@ export class ContentAuthoringService {
       return Err(
         Errors.conflict(
           'content.textbook_exists',
-          'A textbook already exists for this subject, grade, term and edition.',
+          'A textbook already exists for this subject, grade, physical part and edition.',
           { textbookKey: key.value },
         ),
       );
@@ -215,7 +222,7 @@ export class ContentAuthoringService {
       key: key.value,
       subjectId: subject.id,
       gradeId: grade.id,
-      termId: term.id,
+      part,
       title,
       edition: input.edition,
       description: input.description ?? null,
