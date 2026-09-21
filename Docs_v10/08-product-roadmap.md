@@ -1,6 +1,6 @@
 # Product and Engineering Roadmap
 
-**Status:** CURRENT snapshot + ADOPTED target order.
+**Status:** ADOPTED target roadmap. Repository implementation status is tracked in `Docs_v10/11-current-state.md`, not here.
 
 ## 1. Current implemented foundation
 
