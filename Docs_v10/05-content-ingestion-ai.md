@@ -83,6 +83,10 @@ Missing source, invalid mapping, or checksum mismatch is a blocking error for gr
 
 The workspace is an evidence/preparation boundary, not a database.
 
+Production identity is organized as `workspace/T01/G04/SCI/ED2026/` (term/grade/subject/printed edition). Multiple printed editions are sibling directories. The canonical textbook key is derived from subject + grade + term + printed edition, for example `EDU-SCI-G04-T1-ED2026`.
+
+The textbook-level workspace retains the cover image. Each lesson may retain its lesson PDF, printed-page images under `pages/`, optional AI explanation images under `ai_pages/`, and editable physical resources under `resource/`.
+
 A lesson workspace may contain:
 
 ```text
