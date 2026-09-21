@@ -9,6 +9,8 @@
  */
 
 import * as crypto from 'node:crypto';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import type { ContentImportService, ImportResult } from './content-import.service.js';
 import type { ContentAssetService } from './content-asset.service.js';
 import type { WorkspaceManager } from '../../../infrastructure/storage/workspace-manager.js';
@@ -111,6 +113,19 @@ export class WorkspaceImporterService {
       }
     }
 
+    // Reconcile physical page/AI-page/resource files that may have been added
+    // after preparation. The workspace is intentionally an editable content
+    // source; package manifests are not the only source of physical assets.
+    const packagedPaths = new Set((pkg.assets ?? []).map((asset) => asset.relativePath));
+    const discovered = await this.discoverEditableAssets(workspaceDir, textbookKey, packagedPaths);
+    for (const asset of discovered) {
+      if (!dryRun && options.syncAssets !== false) {
+        await this.assetService.uploadAsset(asset);
+        assetsUploaded++;
+      }
+      assetsVerified++;
+    }
+
     return {
       workspaceDir,
       textbookKey,
@@ -120,6 +135,111 @@ export class WorkspaceImporterService {
       assetsUploaded,
       missingAssets,
     };
+  }
+
+  private async discoverEditableAssets(
+    workspaceDir: string,
+    textbookKey: string,
+    packagedPaths: Set<string>,
+  ): Promise<Array<{
+    textbookKey: string;
+    relativePath: string;
+    buffer: Buffer;
+    assetType: any;
+    scope: 'TEXTBOOK' | 'LESSON';
+    lessonKey?: string | null;
+    unitKey?: string | null;
+    mimeType?: string;
+    originalName?: string;
+    pageStart?: number | null;
+    pageEnd?: number | null;
+    title?: string | null;
+  }>> {
+    const discovered: Array<any> = [];
+    const add = async (
+      relativePath: string,
+      assetType: string,
+      scope: 'TEXTBOOK' | 'LESSON',
+      unitSlug?: string,
+      lessonSlug?: string,
+    ) => {
+      if (packagedPaths.has(relativePath)) return;
+      const full = path.join(workspaceDir, relativePath);
+      const buffer = await fs.readFile(full);
+      const parts = relativePath.split('/');
+      const file = parts[parts.length - 1];
+      const mimeType =
+        file.endsWith('.png') ? 'image/png' :
+        file.endsWith('.jpg') || file.endsWith('.jpeg') ? 'image/jpeg' :
+        file.endsWith('.webp') ? 'image/webp' :
+        file.endsWith('.mp3') ? 'audio/mpeg' :
+        file.endsWith('.wav') ? 'audio/wav' :
+        file.endsWith('.mp4') ? 'video/mp4' :
+        file.endsWith('.webm') ? 'video/webm' :
+        'application/octet-stream';
+      const pageMatch = file.match(/page_(\d+)/i);
+      discovered.push({
+        textbookKey,
+        relativePath,
+        buffer,
+        assetType,
+        scope,
+        ...(unitSlug && lessonSlug ? {
+          unitKey: `${textbookKey}-U-${unitSlug}`,
+          lessonKey: `${textbookKey}-U-${unitSlug}-L-${lessonSlug}`,
+        } : {}),
+        mimeType,
+        originalName: file,
+        pageStart: pageMatch ? Number(pageMatch[1]) : null,
+        pageEnd: pageMatch ? Number(pageMatch[1]) : null,
+      });
+    };
+
+    const cover = path.join(workspaceDir, 'cover', 'cover.png');
+    try { await fs.access(cover); await add('cover/cover.png', 'PAGE_IMAGE', 'TEXTBOOK'); } catch {}
+
+    const unitEntries = await fs.readdir(workspaceDir, { withFileTypes: true });
+    for (const unitEntry of unitEntries) {
+      if (!unitEntry.isDirectory() || !unitEntry.name.startsWith('unit_')) continue;
+      const unitDir = path.join(workspaceDir, unitEntry.name);
+      const lessonEntries = await fs.readdir(unitDir, { withFileTypes: true });
+      for (const lessonEntry of lessonEntries) {
+        if (!lessonEntry.isDirectory() || !lessonEntry.name.startsWith('lesson_')) continue;
+        const lessonDir = path.join(unitDir, lessonEntry.name);
+        const manifestPath = path.join(lessonDir, 'lesson_manifest.json');
+        let manifest: any;
+        try { manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8')); } catch { continue; }
+        const unitSlug = String(manifest.unitSlug ?? '').trim();
+        const lessonSlug = String(manifest.lessonSlug ?? '').trim();
+        if (!unitSlug || !lessonSlug) continue;
+
+        for (const [dirName, type] of [['pages', 'PAGE_IMAGE'], ['ai_pages', 'IMAGE_SUMMARY']] as const) {
+          const dir = path.join(lessonDir, dirName);
+          try {
+            const files = await fs.readdir(dir);
+            for (const file of files.filter((f) => /\.(png|jpe?g|webp)$/i.test(f)).sort()) {
+              await add(`${unitEntry.name}/${lessonEntry.name}/${dirName}/${file}`, type, 'LESSON', unitSlug, lessonSlug);
+            }
+          } catch {}
+        }
+
+        const resourceDir = path.join(lessonDir, 'resource');
+        try {
+          const files = await fs.readdir(resourceDir, { recursive: true } as any);
+          for (const file of files as string[]) {
+            const rel = `${unitEntry.name}/${lessonEntry.name}/resource/${file}`;
+            const full = path.join(workspaceDir, rel);
+            const stat = await fs.stat(full);
+            if (!stat.isFile()) continue;
+            const ext = path.extname(file).toLowerCase();
+            const type = ['.mp3','.wav','.m4a','.ogg'].includes(ext) ? 'AUDIO'
+              : ['.mp4','.webm','.mov'].includes(ext) ? 'VIDEO' : 'RESOURCE_FILE';
+            await add(rel, type, 'LESSON', unitSlug, lessonSlug);
+          }
+        } catch {}
+      }
+    }
+    return discovered;
   }
 
   /**
