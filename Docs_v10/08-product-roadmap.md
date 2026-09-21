@@ -24,7 +24,7 @@ Textbook
 
 The content engine remains an external producer/evidence boundary.
 
-## 3. Immediate content gaps
+## 3. Target content work packages
 
 1. Canonical mapping of grounding manifests into TextbookPage/ContentChunk.
 2. AI provenance/source fingerprint persistence.
