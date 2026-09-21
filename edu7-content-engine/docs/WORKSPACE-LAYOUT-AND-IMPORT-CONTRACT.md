@@ -125,17 +125,17 @@ Examples:
 ```bash
 # one lesson
 PYTHONPATH=src python -m edu7_content.cli.main rebuild \
-  workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026 \
+  workspace/T01/G04/SCI/ED2026 \
   --scope lesson --ref lesson-01-name --out /tmp/lesson.pdf
 
 # complete unit
 PYTHONPATH=src python -m edu7_content.cli.main rebuild \
-  workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026 \
+  workspace/T01/G04/SCI/ED2026 \
   --scope unit --ref unit-01-name --out /tmp/unit.pdf
 
 # complete prepared content book
 PYTHONPATH=src python -m edu7_content.cli.main rebuild \
-  workspace/T01/G04/SCI/EDU-SCI-G04-T1-ED2026 \
+  workspace/T01/G04/SCI/ED2026 \
   --scope book --out /tmp/book-reconstructed.pdf
 ```
 
