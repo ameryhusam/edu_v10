@@ -65,7 +65,7 @@ Recommended target contract:
 
 ```text
 published = learner may receive/read the content
-includedInLearningPath = adaptive/progression engine may place it in the guided path
+learning-path eligible = adaptive/progression engine may place it in the guided path
 ```
 
 A lesson can therefore be:
