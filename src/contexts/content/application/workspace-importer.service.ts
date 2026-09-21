@@ -176,8 +176,9 @@ export class WorkspaceImporterService {
         timeoutMs: this.engineTimeoutMs,
       });
 
-      const index = await this.workspaceManager.readIndexManifest(wsDir);
-      const pkg = await this.workspaceManager.readContentPackage(wsDir);
+      const preparedWorkspaceDir = engineResult.workspaceDir;
+      const index = await this.workspaceManager.readIndexManifest(preparedWorkspaceDir);
+      const pkg = await this.workspaceManager.readContentPackage(preparedWorkspaceDir);
       if (!index || !pkg) {
         throw new DomainErrorException(
           Errors.internal(
@@ -188,7 +189,7 @@ export class WorkspaceImporterService {
         );
       }
       return {
-        workspaceDir: wsDir,
+        workspaceDir: preparedWorkspaceDir,
         sourcePdfPersisted: false,
         indexManifest: index,
         package: pkg,
