@@ -212,3 +212,78 @@ N optional pedagogical resource files
 ```
 
 This is the invariant the workspace/import implementation must preserve.
+
+
+## 11. Page classification manifest
+
+When automatic rules are insufficient, a lesson may contain page_classification.json at the lesson root. A unit-level classification manifest may provide defaults; lesson values override them.
+
+Example:
+
+    {
+      "schemaVersion": "1",
+      "lessonKey": "EDU-AR-G04-T1-ED2026-U01-L03",
+      "pages": [
+        {
+          "pageNumber": 41,
+          "contentType": "READING",
+          "branch": "READING",
+          "lessonType": "READING",
+          "addToResources": true,
+          "addToQuestionBank": false
+        },
+        {
+          "pageNumber": 42,
+          "contentType": "QUESTIONS",
+          "branch": "GRAMMAR",
+          "lessonType": "GRAMMAR",
+          "questionRole": "EXERCISE",
+          "addToQuestionBank": true
+        }
+      ]
+    }
+
+Null or missing values mean no addition/override. Empty strings are invalid. Classification is metadata only; page images remain named page_{number}.
+
+## 12. Subject-aware classification
+
+Generic detection of the word “lesson” is not authoritative. Arabic, Islamic Studies and Quran use branch-aware subject profiles. Arabic may require manual classification for reading, grammar, spelling, morphology and expression because one unit may contain several repeated lesson headings.
+
+Classification precedence:
+
+    explicit manifest
+      > deterministic mapping
+      > TOC evidence
+      > subject profile
+      > AI proposal
+      > review
+
+AI output is a proposal and must include confidence/evidence. It never directly writes the canonical database.
+
+## 13. Identifier normalization
+
+Before creating directories or resolving database identity, normalize:
+
+    T1/T01 → T01 filesystem term coordinate
+    G4/G04 → G04 canonical grade coordinate
+
+The business textbook key continues to use T1, for example EDU-SCI-G04-T1-ED2026. Alias normalization must occur before uniqueness checks so G4 cannot create a second Grade row and T01 cannot create a second textbook identity.
+
+## 14. Storage and synchronization boundary
+
+Workspace is the preparation/exchange snapshot. PostgreSQL is the canonical semantic store. Binary files are held by ContentStorage/object storage.
+
+The engine must not connect to PostgreSQL. Node ContentImportService owns canonical persistence.
+
+The synchronization contract is:
+
+    Workspace/package
+      → validate
+      → normalize
+      → reconcile
+      → dry-run
+      → canonical import
+      → DB + ContentStorage
+      → Workspace commit
+
+This is controlled synchronization, not an unrestricted filesystem watcher or live two-way mirror.
