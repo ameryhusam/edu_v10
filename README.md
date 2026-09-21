@@ -6,8 +6,8 @@ tutoring, built as layered bounded contexts over PostgreSQL.
 > Rebuilt from first principles. The repository at the parent directory is kept
 > only as a **behavioural reference** — its capabilities and curriculum data
 > informed this design, its structure was not carried over. See
-> [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the reasoning behind every
-> boundary, and [`docs/MIGRATION-FROM-LEGACY.md`](docs/MIGRATION-FROM-LEGACY.md)
+> [`Docs_v10/ARCHITECTURE.md`](Docs_v10/ARCHITECTURE.md) for the reasoning behind every
+> boundary, and [`Docs_v10/MIGRATION-FROM-LEGACY.md`](Docs_v10/MIGRATION-FROM-LEGACY.md)
 > for what was kept, changed, or dropped.
 
 ---
@@ -68,11 +68,11 @@ ports for these exist; the implementations do not.
 
 Read these in order before changing anything:
 
-1. [`docs/ARCHITECTURAL-GATE.md`](docs/ARCHITECTURAL-GATE.md) — the governing
+1. [`Docs_v10/ARCHITECTURAL-GATE.md`](Docs_v10/ARCHITECTURAL-GATE.md) — the governing
    decisions (A–G), **Revision 1** (two real authorisation bugs found by
    re-reading the plan against the schema) and **Revision 2** (one learner
    access boundary; READ vs ACT).
-2. [`docs/PUBLISHING-LIFECYCLE-GATE.md`](docs/PUBLISHING-LIFECYCLE-GATE.md) —
+2. [`Docs_v10/PUBLISHING-LIFECYCLE-GATE.md`](Docs_v10/PUBLISHING-LIFECYCLE-GATE.md) —
    **closed, then corrected**. **Read §10 first:** Edu7 does *not* publish or
    approve textbooks — a textbook enters as an externally approved source, and
    the lifecycle governs only whether Edu7's own ingested copy is ready to
@@ -80,30 +80,30 @@ Read these in order before changing anything:
    inside Edu7". The rest: the one-axis state machine replacing legacy's
    `status` + `isPublished`, why a corrected edition is a new row rather than a
    version entity, and the authoring write path. Background in
-   [`docs/CONTENT-LIFECYCLE-GATE.md`](docs/CONTENT-LIFECYCLE-GATE.md).
-3. [`docs/ASSIGNMENT-GATE.md`](docs/ASSIGNMENT-GATE.md) — what an Assignment
+   [`Docs_v10/CONTENT-LIFECYCLE-GATE.md`](Docs_v10/CONTENT-LIFECYCLE-GATE.md).
+3. [`Docs_v10/ASSIGNMENT-GATE.md`](Docs_v10/ASSIGNMENT-GATE.md) — what an Assignment
    owns and delegates, decided **before** any schema exists, plus
-   [`docs/CLASS-ROSTER-INVESTIGATION.md`](docs/CLASS-ROSTER-INVESTIGATION.md)
+   [`Docs_v10/CLASS-ROSTER-INVESTIGATION.md`](Docs_v10/CLASS-ROSTER-INVESTIGATION.md)
    — why a class is a query, not a table.
-4. [`docs/REMEDIATION-GATE.md`](docs/REMEDIATION-GATE.md) — **closed**: why a
+4. [`Docs_v10/REMEDIATION-GATE.md`](Docs_v10/REMEDIATION-GATE.md) — **closed**: why a
    remediation episode is a *claim about a learner*, opened and closed by
    evidence, rather than a task. §8 records the outcome against each acceptance
    criterion, and the one decision that changed during implementation.
-5. [`docs/CAPABILITY-LEDGER.md`](docs/CAPABILITY-LEDGER.md) — what the legacy
+5. [`Docs_v10/CAPABILITY-LEDGER.md`](Docs_v10/CAPABILITY-LEDGER.md) — what the legacy
    system did, item by item, and whether it survived. **Updated every round**;
    §8 is the changelog. Currently 17 of 20 capabilities fully built.
-6. [`docs/NEXT-WAVE-REVIEW.md`](docs/NEXT-WAVE-REVIEW.md) — the product and
+6. [`Docs_v10/NEXT-WAVE-REVIEW.md`](Docs_v10/NEXT-WAVE-REVIEW.md) — the product and
    architecture review of the remaining scope (exams, misconceptions,
    recommendations, dashboards), with a recommended sequence and its gates.
    Read §0 first: it documents a table that two shipped capabilities read and
    nothing writes — then §7, the 2026-09-12 current-state verification that
    corrects it and reconciles the ledger.
-7. [`docs/FRONTEND-ARCHITECTURE.md`](docs/FRONTEND-ARCHITECTURE.md) —
+7. [`Docs_v10/FRONTEND-ARCHITECTURE.md`](Docs_v10/FRONTEND-ARCHITECTURE.md) —
    **specification only, no UI built yet.** The design-system, responsive and
    Web/Android-readiness contract the frontend must satisfy. §0 is a mandatory
    audit of the project root that must be completed and reported before any component is
    written; §14 lists the product decisions still open.
-8. [`docs/RECONCILIATION.md`](docs/RECONCILIATION.md) — the audited gap list.
+8. [`Docs_v10/RECONCILIATION.md`](Docs_v10/RECONCILIATION.md) — the audited gap list.
 
 ---
 
