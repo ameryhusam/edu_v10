@@ -256,3 +256,75 @@ Required outcomes:
 - semantic QuestionBank/Flashcard updates still pass through their canonical services rather than being inferred from arbitrary physical files.
 
 The production gate remains incomplete until per-textbook operation locking/idempotency and dedicated semantic import adapters are implemented.
+
+## 19. Detailed content-algorithm build roadmap
+
+### Phase A — storage boundary
+
+1. Keep binary files in ContentStorage/object storage, not PostgreSQL.
+2. Persist semantic page text/chunks and ContentAsset metadata in PostgreSQL.
+3. Ensure every asset has storageKey + checksum + relativePath + provenance.
+4. Expose assets through authorized API delivery, never raw Workspace paths.
+
+### Phase B — canonical identifier normalization
+
+1. Normalize G4/G04 to G04 before lookup.
+2. Normalize T1/T01 to the canonical filesystem term coordinate T01.
+3. Keep T1 as the textbook-key term token, avoiding a global rename.
+4. Resolve normalized identifiers against existing rows before creating anything.
+
+### Phase C — page classification
+
+1. Define configurable page/content labels.
+2. Add manual page_classification.json support at lesson root.
+3. Support unit defaults with lesson-level override.
+4. Keep page_{number} filenames unchanged.
+5. Add TOC/deterministic classification.
+6. Add Arabic/Islamic/Quran branch-aware profiles.
+7. Add configurable AI classification fallback and confidence thresholds.
+8. Persist classification evidence/provenance.
+
+### Phase D — semantic extraction
+
+1. Segment MIXED pages into question/content blocks.
+2. Import resources through LearningResource canonical services.
+3. Import questions through Question canonical services.
+4. Support multi-file APPEND_DEDUP question packages.
+5. Support ministerial PDF → QuestionOrigin=MINISTERIAL.
+6. Preserve source page/provenance and semantic fingerprints.
+
+### Phase E — synchronization and recovery
+
+1. Add durable per-textbook operation lock/idempotency.
+2. Add package revision/base-revision metadata where required.
+3. Complete atomic/retryable Workspace + DB reconciliation.
+4. Add full/partial ZIP round-trip tests.
+5. Add duplicate, changed-file, alias, malformed ZIP and rollback tests.
+
+### Phase F — release gate
+
+A phase is complete only when the relevant executable contract, tests, audit/provenance, retry behavior and Docs_v10 state agree. Target documentation must remain labelled TARGET/NOT YET IMPLEMENTED until verified in source.
+
+## 20. Algorithm configuration set
+
+The content engine should maintain a dedicated configuration set for:
+
+    config/
+      default.yaml
+      toc-detection.yaml
+      lesson-segmentation.yaml
+      page-classification.yaml
+      question-detection.yaml
+      question-import.yaml
+      subjects/
+        arabic.yaml
+        islamic.yaml
+        quran.yaml
+        mathematics.yaml
+        science.yaml
+
+Each configuration carries configVersion and the processing operation records algorithmVersion. Configuration contains rules and thresholds; Python code contains algorithm implementation.
+
+## 21. Developer guide gate
+
+Docs_v10/14-developer-content-ingestion-guide.md is the operational checklist for developers preparing or importing content. It defines required identity, Workspace structure, classification, question/resource handling, ministerial imports, alias normalization, storage boundaries and failure decisions.
