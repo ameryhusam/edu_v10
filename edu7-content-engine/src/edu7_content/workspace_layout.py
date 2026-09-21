@@ -79,14 +79,14 @@ def textbook_key(subject: str, grade: int, term: int, edition: str) -> str:
         edition_key = "ED" + re.sub(r"[^A-Z0-9-]", "", edition.upper().replace("_", "-"))
     if not edition_key or edition_key == "ED":
         raise ValueError("Printed edition is required.")
-    return f"EDU-{subject}-G{grade:02d}-T{term}-{edition_key}"
+    return f"EDU-{subject}-G{grade:02d}-T{int(term)}-{edition_key}"
 
 
 def book_workspace(subject: str, grade: int, term: int, edition: str) -> Path:
     _, grade_key = normalize_grade(grade)
     term_number, term_key = normalize_term(term)
     key = textbook_key(subject, int(grade), term_number, edition)
-    return workspace_root() / term_key / grade_key / normalize_subject(subject) / key
+    return workspace_root() / term_key / grade_key / normalize_subject(subject) / ("ED" + re.sub(r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")))
 
 
 def _rewrite_json(path: Path, replacements: Dict[str, str]) -> None:
