@@ -485,6 +485,26 @@ export const textbookAdministrationApi = {
     api.get<unknown>(`content/textbooks/${encodeURIComponent(textbookKey)}/export`),
 
   /** Workspace operations */
+  workspacePrepareUpload: (input: {
+    file: File;
+    term: string;
+    grade: string;
+    subject: string;
+    edition?: string;
+    title?: string;
+    autoSegment?: boolean;
+  }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
+    query: {
+      term: input.term,
+      grade: input.grade,
+      subject: input.subject,
+      edition: input.edition,
+      title: input.title,
+      autoSegment: input.autoSegment,
+    },
+    rawContentType: 'application/pdf',
+  }),
+
   workspacePrepare: (input: {
     term: string;
     grade: string;
