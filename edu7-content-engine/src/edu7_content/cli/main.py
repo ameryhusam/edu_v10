@@ -3,23 +3,23 @@ cli/main.py — Edu7 Content Engine CLI
 ======================================
 Usage examples:
 
-  # Auto-detect PDF in books_input/ and prepare (rule-based only):
+  # Prepare a book with Gemini-assisted TOC/range detection:
   python -m edu7_content.cli.main prepare
 
-  # Prepare specific PDF (auto-fallback to Ollama if image-based):
-  python -m edu7_content.cli.main prepare books_input/book1.pdf
+  # Prepare a specific PDF:
+  python -m edu7_content.cli.main prepare books_input/<book>.pdf
 
-  # Force Ollama vision extraction with specific model:
-  python -m edu7_content.cli.main prepare books_input/book1.pdf --model llava:7b
+  # Optional future/local Ollama support (explicit opt-in):
+  python -m edu7_content.cli.main prepare books_input/book1.pdf --ollama --model llava:7b
 
-  # Use Gemini Vision (free tier):
+  # Use Gemini Vision:
   python -m edu7_content.cli.main prepare books_input/book1.pdf --model gemini
 
   # Analyze a lesson with Gemini:
-  python -m edu7_content.cli.main analyze workspaces/book1/units/01/lessons/01 --model gemini
+  python -m edu7_content.cli.main analyze workspace/T01/G07/MATH/<textbookKey>/unit_01_<slug>/lesson_01_<slug> --model gemini
 
   # Export workspace:
-  python -m edu7_content.cli.main export workspaces/book1 --format all
+  python -m edu7_content.cli.main export workspace/T01/G07/MATH/<textbookKey> --format all
 """
 import sys
 import os
@@ -34,10 +34,13 @@ from ..pdf.toc import TocExtractor
 from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
+from ..ai.content_service import ContentAIService
 from ..validation.evidence_validator import EvidenceValidator
 from ..export.json_exporter import Edu7JsonExporter
 from ..export.excel_exporter import Edu7ExcelExporter
 from ..ai.gemini import _load_env_file
+from ..workspace_layout import books_input_root, book_workspace, normalize_grade, normalize_subject, normalize_term, project_root, textbook_key, workspace_root, finalize_book_workspace
+from ..workspace_rebuild import rebuild_lesson, rebuild_unit, rebuild_book
 
 
 def main():
@@ -51,27 +54,29 @@ def main():
     # ── prepare ──────────────────────────────────────────────────────────────
     p_prep = sub.add_parser("prepare", help="Ingest PDF: detect TOC, map pages, segment lessons")
     p_prep.add_argument("pdf_path", nargs="?", default=None,
-                        help="Path to PDF (default: first PDF in books_input/)")
+                        help="Path to PDF; relative paths resolve from repository-root books_input/")
     p_prep.add_argument("--workspace", default=None,
-                        help="Output workspace dir (default: workspaces/<TERM>/<GRADE>/<SUBJECT> or workspaces/<pdf_stem>)")
-    p_prep.add_argument("--subject", default="MATH", help="Subject code (e.g. MATH, SCI, ARB)")
-    p_prep.add_argument("--grade", default="G07", help="Grade code (e.g. G07, G08)")
-    p_prep.add_argument("--term", default="T1", help="Term code (e.g. T1, T2)")
-    p_prep.add_argument("--edition", default="2026", help="Edition year (e.g. 2026)")
+                        help="Output workspace dir (default: workspace/T01/G04/MATH/<textbookKey>)")
+    p_prep.add_argument("--subject", required=True, help="Database Subject.key (e.g. MATH, SCI, ARAB)")
+    p_prep.add_argument("--grade", required=True, help="Grade code/number (e.g. G04, 07)")
+    p_prep.add_argument("--term", default="T1", help="Term folder code (T01, T02, ...)")
+    p_prep.add_argument("--edition", default="2026", help="Printed textbook edition (e.g. 2026)")
     p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
                             "AI model for vision TOC extraction when rule-based fails.\n"
-                            "Free local: llava:7b | llava:13b | minicpm-v:8b | qwen2.5vl:7b\n"
-                            "Free cloud: gemini-3.6-flash | gemini-3.5-flash\n"
-                            "Default: auto (tries Ollama first, then Gemini if key set)"
+                            "Gemini: gemini-3.8-flash | gemini-3.7-flash | gemini-3.6-flash | gemini-3.5-flash\n"
+                            "Ollama: optional future/local adapter; requires --ollama and EDU7_ENABLE_OLLAMA=true\n"
+                            "Default: Gemini when configured; Ollama is never used implicitly"
                         ))
     p_prep.add_argument("--vision-pages", type=int, default=10,
                         help="Pages to render for vision analysis (default: 10)")
     p_prep.add_argument("--dpi", type=int, default=150,
                         help="Render DPI for vision analysis (default: 150, higher=better quality)")
+    p_prep.add_argument("--ollama", action="store_true",
+                        help="Explicitly enable optional Ollama vision support (disabled by default)")
     p_prep.add_argument("--no-ollama", action="store_true",
-                        help="Skip Ollama local vision models")
+                        help="Deprecated compatibility flag; Ollama is already disabled by default")
     p_prep.add_argument("--no-gemini", action="store_true",
                         help="Skip Gemini API even if GEMINI_API_KEYS are configured")
     p_prep.add_argument("--force-vision", action="store_true",
@@ -85,11 +90,21 @@ def main():
     p_analyze.add_argument("--delay", type=float, default=4.0,
                            help="Delay in seconds between lessons to pace Gemini requests (default: 4.0s)")
 
-    # ── benchmark ────────────────────────────────────────────────────────────
-    p_bench = sub.add_parser("benchmark", help="Multi-model comparison on a lesson")
-    p_bench.add_argument("lesson_dir")
-    p_bench.add_argument("--models", default="heuristic-micro-engine",
-                         help="Comma-separated model names")
+    # ── ai-task ─────────────────────────────────────────────────────────────
+    p_ai = sub.add_parser("ai-task", help="Run one unified Gemini content task and write a draft JSON result")
+    p_ai.add_argument("task", choices=["SEGMENT_RANGES", "LESSON_ANALYSIS", "QUESTION_REFRESH", "EXPLANATION", "PREREQUISITES"])
+    p_ai.add_argument("pdf", help="Lesson/textbook PDF path")
+    p_ai.add_argument("--prompt", required=True, help="Author prompt/instruction")
+    p_ai.add_argument("--context", default=None, help="Optional JSON context file")
+    p_ai.add_argument("--out", default=None, help="Optional output JSON path")
+    p_ai.add_argument("--model", default=None, help="Gemini model: gemini-3.8-flash, gemini-3.7-flash, gemini-3.6-flash, or gemini-3.5-flash")
+
+    # ── rebuild ─────────────────────────────────────────────────────────────
+    p_rebuild = sub.add_parser("rebuild", help="Rebuild a lesson, unit, or book PDF from lesson PDFs")
+    p_rebuild.add_argument("workspace", help="Book workspace directory")
+    p_rebuild.add_argument("--scope", choices=["lesson", "unit", "book"], required=True)
+    p_rebuild.add_argument("--ref", default=None, help="Lesson/unit slug or ID; not required for book")
+    p_rebuild.add_argument("--out", required=True, help="Output PDF path")
 
     # ── export ───────────────────────────────────────────────────────────────
     p_exp = sub.add_parser("export", help="Export workspace to JSON/Excel")
@@ -98,7 +113,7 @@ def main():
     p_exp.add_argument("--out", default="./out")
 
     # ── info ─────────────────────────────────────────────────────────────────
-    p_info = sub.add_parser("info", help="Show system capabilities (Tesseract, Ollama, Gemini)")
+    p_info = sub.add_parser("info", help="Show system capabilities (Tesseract, optional Ollama, Gemini)")
 
     args = parser.parse_args()
     if not args.command:
@@ -115,9 +130,15 @@ def main():
     elif args.command == "analyze":
         _cmd_analyze(args)
 
+    elif args.command == "ai-task":
+        _cmd_ai_task(args)
+
     elif args.command == "benchmark":
         print(f"[*] Benchmark on: {args.lesson_dir}")
         print("[SUCCESS] Benchmark placeholder completed.")
+
+    elif args.command == "rebuild":
+        _cmd_rebuild(args)
 
     elif args.command == "export":
         _cmd_export(args)
@@ -126,6 +147,47 @@ def main():
 # ─────────────────────────────────────────────────────────────────────────────
 #  Command implementations
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _cmd_ai_task(args):
+    import json
+    pdf = Path(args.pdf).expanduser().resolve()
+    if not pdf.exists() or not pdf.is_file():
+        print(f"Error: PDF not found: {pdf}")
+        sys.exit(1)
+    context = {}
+    if args.context:
+        context_path = Path(args.context).expanduser().resolve()
+        if not context_path.exists():
+            print(f"Error: context JSON not found: {context_path}")
+            sys.exit(1)
+        context = json.loads(context_path.read_text(encoding="utf-8"))
+    if args.task == "SEGMENT_RANGES":
+        reader = PdfReader(str(pdf))
+        context.setdefault("pageCount", reader.page_count)
+    service = ContentAIService(model_name=args.model)
+    print(f"[*] AI task: {args.task}")
+    print(f"[*] Provider: {service.provider_name}")
+    result = service.request(
+        args.task,
+        args.prompt,
+        service.lesson_schema() if args.task == "LESSON_ANALYSIS" else service.question_schema() if args.task == "QUESTION_REFRESH" else {
+            "type": "object", "properties": {"result": {"type": "object"}}, "required": ["result"]
+        },
+        pdf_path=pdf,
+        context=context,
+        timeout=240,
+    ) if args.task not in ("SEGMENT_RANGES", "EXPLANATION", "PREREQUISITES") else (
+        service.segment_ranges(pdf, context.get("pageCount", 0), printed_page_map=context.get("printedPageMap"), prompt=args.prompt)
+        if args.task == "SEGMENT_RANGES" else
+        service.generate_explanation(pdf, args.prompt, context)
+        if args.task == "EXPLANATION" else
+        service.generate_prerequisites(pdf, args.prompt, context.get("candidateConcepts", []))
+    )
+    out = Path(args.out).expanduser().resolve() if args.out else pdf.with_suffix(".ai-draft.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[SUCCESS] Draft saved: {out}")
+
 
 def _cmd_info():
     """Print system capabilities."""
@@ -160,14 +222,17 @@ def _cmd_info():
         print("  Tesseract    : ✗ not installed")
         print("    → Install: https://github.com/UB-Mannheim/tesseract/wiki")
 
-    # Ollama
-    from ..ai.ollama_vision import _ollama_available, _list_ollama_models
-    if _ollama_available():
-        models = _list_ollama_models()
-        print(f"  Ollama       : ✓ running | models: {models}")
-    else:
-        print("  Ollama       : ✗ not running")
-        print("    → Install: https://ollama.ai | Then: ollama pull llava:7b")
+    # Ollama is retained but never enabled implicitly.
+    try:
+        from ..ai.ollama_vision import _ollama_available, _list_ollama_models
+        ollama_enabled = os.environ.get("EDU7_ENABLE_OLLAMA", "").strip().lower() in {"1", "true", "yes", "on"}
+        if _ollama_available():
+            models = _list_ollama_models()
+            print(f"  Ollama       : ✓ reachable | enabled={ollama_enabled} | models: {models}")
+        else:
+            print(f"  Ollama       : ✗ not reachable | enabled={ollama_enabled}")
+    except Exception as err:
+        print(f"  Ollama       : optional adapter unavailable ({err})")
 
     # Gemini — report configuration without exposing keys.
     api_keys = [
@@ -193,7 +258,24 @@ def _cmd_info():
 
 def _cmd_prepare(args):
     target_pdf = _resolve_pdf(args)
-    ws_path = Path(args.workspace) if args.workspace else Path("workspaces") / target_pdf.stem
+    try:
+        grade_number, grade_key = normalize_grade(args.grade)
+        term_number, term_key = normalize_term(args.term)
+        subject_key = normalize_subject(args.subject)
+        book_key = textbook_key(subject_key, grade_number, term_number, args.edition)
+    except (TypeError, ValueError) as err:
+        print(f"[invalid workspace coordinates] {err}")
+        sys.exit(2)
+
+    ws_path = (
+        Path(args.workspace).expanduser().resolve()
+        if args.workspace
+        else book_workspace(subject_key, grade_number, term_number, args.edition)
+    )
+
+    print(f"[+] Workspace root: {workspace_root()}")
+    print(f"[+] Book key: {book_key}")
+    print(f"[+] Coordinates: {term_key}/{grade_key}/{subject_key}")
 
     print(f"\n[*] Reading PDF: {target_pdf}")
     reader = PdfReader(str(target_pdf))
@@ -220,14 +302,15 @@ def _cmd_prepare(args):
     print("\n[*] Extracting Table of Contents from the first ten pages...")
 
     model_arg = getattr(args, "model", None)
-    use_ollama = not getattr(args, "no_ollama", False)
+    use_ollama = bool(getattr(args, "ollama", False)) and not getattr(args, "no_ollama", False)
     use_gemini = not getattr(args, "no_gemini", False)
     vision_pages = min(getattr(args, "vision_pages", 10), 10)
     dpi = getattr(args, "dpi", 150)
 
     if model_arg and str(model_arg).startswith("gemini"):
         use_ollama = False
-    elif model_arg and not str(model_arg).startswith("gemini"):
+    elif model_arg and (str(model_arg).startswith("ollama-") or str(model_arg) in {"ollama", "llava:7b", "llava:13b", "minicpm-v:8b", "qwen2.5vl:7b"}):
+        use_ollama = True
         use_gemini = False
 
     # AI-assisted TOC extraction is attempted first, even for text PDFs.
@@ -302,13 +385,14 @@ def _cmd_prepare(args):
     print(f"[+] Book title: {book_title}")
 
     coordinates = {
-        "subject": args.subject,
-        "grade": args.grade,
-        "term": args.term,
+        "subject": subject_key,
+        "grade": grade_number,
+        "term": term_number,
         "edition": args.edition,
         "title": book_title,
     }
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
+    finalize_book_workspace(ws_path, book_key, subject_key)
     print(f"[SUCCESS] Book prepared at: {ws_path}\n")
 
 
@@ -472,6 +556,31 @@ def _cmd_analyze(args):
         sys.exit(1)
 
 
+def _cmd_rebuild(args):
+    target = Path(args.workspace).expanduser().resolve()
+    output = Path(args.out).expanduser().resolve()
+    if not (target / "index.json").exists():
+        print(f"Error: book workspace index.json not found: {target}")
+        sys.exit(1)
+
+    try:
+        if args.scope == "lesson":
+            if not args.ref:
+                raise ValueError("--ref is required for --scope lesson")
+            result = rebuild_lesson(target, args.ref, output)
+        elif args.scope == "unit":
+            if not args.ref:
+                raise ValueError("--ref is required for --scope unit")
+            result = rebuild_unit(target, args.ref, output)
+        else:
+            result = rebuild_book(target, output)
+    except (KeyError, FileNotFoundError, ValueError, RuntimeError) as err:
+        print(f"Error: {err}")
+        sys.exit(1)
+
+    print(f"[SUCCESS] Rebuilt {args.scope} PDF: {result}")
+
+
 def _cmd_export(args):
     import json
     ws = Path(args.workspace)
@@ -577,25 +686,28 @@ def _derive_book_title(stem: str) -> str:
 
 
 def _resolve_pdf(args) -> Path:
+    input_root = books_input_root()
+    input_root.mkdir(parents=True, exist_ok=True)
+
     if getattr(args, "pdf_path", None):
         p = Path(args.pdf_path).expanduser()
-        if p.exists() and p.is_file():
-            return p.resolve()
-        candidate = (Path("books_input") / args.pdf_path).expanduser()
-        if candidate.exists() and candidate.is_file():
-            return candidate.resolve()
+        candidates = [p]
+        if not p.is_absolute():
+            candidates.extend([project_root() / p, input_root / p])
+        for candidate in candidates:
+            if candidate.exists() and candidate.is_file():
+                return candidate.resolve()
         print(f"Error: PDF not found: {args.pdf_path}")
+        print(f"Expected repository input directory: {input_root}")
         sys.exit(1)
 
-    in_dir = Path("books_input")
-    in_dir.mkdir(exist_ok=True)
-    pdfs = sorted(p for p in in_dir.glob("*.pdf") if p.is_file())
+    pdfs = sorted(p for p in input_root.glob("*.pdf") if p.is_file())
     if not pdfs:
-        print(f"Error: No PDFs in {in_dir.resolve()}")
-        print("Put your book in books_input/ or: edu7-content prepare path/to/book.pdf")
+        print(f"Error: No PDFs in {input_root}")
+        print("Put the source PDF in repository-root books_input/ or provide an exact path.")
         sys.exit(1)
     if len(pdfs) > 1:
-        print("Error: Multiple PDFs found in books_input; refusing to guess the book.")
+        print("Error: Multiple PDFs found in repository-root books_input; refusing to guess.")
         for p in pdfs:
             print(f"  - {p.name}")
         print("Run: edu7-content prepare books_input/<exact-file-name>.pdf")

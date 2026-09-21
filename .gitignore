@@ -27,3 +27,14 @@ content-packages/
 legacy/node_modules/
 legacy/dist/
 legacy/.env
+
+# Edu7 content-preparation data boundaries.
+# Source books and generated workspaces stay outside the Python engine.
+books_input/*
+!books_input/README.md
+workspace/*
+!workspace/README.md
+
+# Generated local content-engine artifacts
+edu7-content-engine/workspaces/
+edu7-content-engine/.tmp/

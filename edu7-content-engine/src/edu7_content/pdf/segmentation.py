@@ -51,9 +51,8 @@ def compute_sha256(file_path: Path) -> str:
 class LessonSegmenter:
     """
     Segments a full book PDF into standard Workspace packages:
-    - textbook/ (textbook.pdf, textbook_manifest.json)
-    - unit_01_<slug>/ (U_01_<slug>.pdf, unit_manifest.json)
-      - lesson_01_<slug>/ (L_01_<slug>.pdf, lesson_manifest.json, pages/, text/, lesson_full_text.txt)
+    - unit_01_<slug>/ (unit_manifest.json)
+      - lesson_01_<slug>/ (L_01_<slug>.pdf, lesson_manifest.json, text/, lesson_full_text.txt)
     - index.json (master workspace index)
     - edu7-content-package.json (canonical package manifest)
     """
@@ -80,36 +79,15 @@ class LessonSegmenter:
 
         textbook_key = f"EDU-{subject}-{grade}-{term}-ED{edition}"
 
-        # 1. Prepare textbook/ folder
-        textbook_dir = workspace_dir / "textbook"
-        textbook_dir.mkdir(parents=True, exist_ok=True)
-        dest_pdf = textbook_dir / "textbook.pdf"
-
-        # Copy/save source PDF
-        if hasattr(self.reader, "pdf_path") and self.reader.pdf_path.exists():
-            import shutil
-            shutil.copy2(str(self.reader.pdf_path), str(dest_pdf))
-        else:
-            self.reader.doc.save(str(dest_pdf))
-
-        tb_sha256 = compute_sha256(dest_pdf)
-        tb_size = dest_pdf.stat().st_size
-
-        assets_registry: List[Dict[str, Any]] = [
-            {
-                "scope": "TEXTBOOK",
-                "assetType": "TEXTBOOK_PDF",
-                "originalName": dest_pdf.name,
-                "relativePath": "textbook/textbook.pdf",
-                "mimeType": "application/pdf",
-                "sizeBytes": tb_size,
-                "sha256": tb_sha256,
-                "version": 1,
-            }
-        ]
+        # 1. Record source provenance only. The original book PDF is temporary
+        # input and is never copied into workspace. Lesson PDFs are the only
+        # canonical PDF artifacts persisted by the preparation workspace.
+        source_path = getattr(self.reader, "pdf_path", None)
+        source_sha256 = compute_sha256(source_path) if source_path and source_path.exists() else None
+        source_size = source_path.stat().st_size if source_path and source_path.exists() else None
 
         textbook_manifest = {
-            "schemaVersion": "1.1",
+            "schemaVersion": "2.0",
             "textbookKey": textbook_key,
             "subject": subject,
             "grade": grade,
@@ -123,9 +101,13 @@ class LessonSegmenter:
                 "pdfPageIsPhysical": True,
                 "formula": "pdfPage = printedPage + detectedOffset",
             },
-            "sha256": tb_sha256,
+            "sourceInput": {
+                "persistedInWorkspace": False,
+                "sha256": source_sha256,
+                "sizeBytes": source_size,
+            },
         }
-        (textbook_dir / "textbook_manifest.json").write_text(
+        (workspace_dir / "book-source-manifest.json").write_text(
             json.dumps(textbook_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
         )
 
@@ -146,28 +128,12 @@ class LessonSegmenter:
             unit_start_page = min([les.get("startPage", 1) for les in lessons]) if lessons else 1
             unit_end_page = max([les.get("endPage", unit_start_page) for les in lessons]) if lessons else unit_start_page
 
-            # Slice Unit PDF using the active reader backend.
-            unit_printed_pages = list(range(unit_start_page, unit_end_page + 1))
-            unit_pdf_pages = [self.mapper.get_pdf_page(p) for p in unit_printed_pages]
-            unit_pdf_name = f"U_{u_num:02d}_{u_slug}.pdf"
-            unit_pdf_path = u_dir / unit_pdf_name
-            self.reader.copy_pages_to_pdf([p - 1 for p in unit_pdf_pages], unit_pdf_path)
-
-            u_sha = compute_sha256(unit_pdf_path)
-            u_size = unit_pdf_path.stat().st_size
-            u_rel_path = f"{u_dir_name}/{unit_pdf_name}"
-
-            assets_registry.append({
-                "scope": "UNIT",
-                "unitSlug": u_slug,
-                "assetType": "UNIT_PDF",
-                "originalName": unit_pdf_name,
-                "relativePath": u_rel_path,
-                "mimeType": "application/pdf",
-                "sizeBytes": u_size,
-                "sha256": u_sha,
-                "version": 1,
-            })
+            # Units are logical groups only. No unit PDF is persisted.
+            # Reconstruction concatenates ordered lesson PDFs on demand.
+            unit_pdf_pages = [
+                self.mapper.get_pdf_page(p)
+                for p in range(unit_start_page, unit_end_page + 1)
+            ]
 
             flat_units_pkg.append({
                 "slug": u_slug,
@@ -192,9 +158,7 @@ class LessonSegmenter:
                 l_dir = u_dir / l_dir_name
                 l_dir.mkdir(parents=True, exist_ok=True)
 
-                pages_dir = l_dir / "pages"
                 text_dir = l_dir / "text"
-                pages_dir.mkdir(exist_ok=True)
                 text_dir.mkdir(exist_ok=True)
 
                 start_p = les.get("startPage", unit_start_page)
@@ -210,7 +174,6 @@ class LessonSegmenter:
                 lesson_pdf_path = l_dir / lesson_pdf_name
                 self.reader.copy_pages_to_pdf([p - 1 for p in pdf_pages], lesson_pdf_path)
                 aggregated_text = []
-                page_image_files = []
                 grounding_pages = []
                 grounding_chunks = []
 
@@ -234,33 +197,6 @@ class LessonSegmenter:
                             })
                         (text_dir / f"page_{p_print:03d}.txt").write_text(p_text, encoding="utf-8")
                         aggregated_text.append(f"--- [صفحة {p_print}] ---\n{p_text}")
-
-                        # Render High-Res PNG (150 DPI)
-                        try:
-                            png_data = self.reader.render_page_to_png(pdf_idx, dpi=150)
-                            if not png_data:
-                                raise RuntimeError("Page rendering unavailable with pypdf backend")
-                            img_file = pages_dir / f"page_{p_print:03d}.png"
-                            img_file.write_bytes(png_data)
-                            rel_img_path = f"{u_dir_name}/{l_dir_name}/pages/page_{p_print:03d}.png"
-                            page_image_files.append(rel_img_path)
-
-                            assets_registry.append({
-                                "scope": "LESSON",
-                                "unitSlug": u_slug,
-                                "lessonSlug": l_slug,
-                                "assetType": "PAGE_IMAGE",
-                                "originalName": f"page_{p_print:03d}.png",
-                                "relativePath": rel_img_path,
-                                "mimeType": "image/png",
-                                "sizeBytes": img_file.stat().st_size,
-                                "sha256": compute_sha256(img_file),
-                                "pageStart": p_print,
-                                "pageEnd": p_print,
-                                "version": 1,
-                            })
-                        except Exception:
-                            pass
 
                 l_sha = compute_sha256(lesson_pdf_path)
                 l_size = lesson_pdf_path.stat().st_size
@@ -313,7 +249,7 @@ class LessonSegmenter:
                     "printedPageEnd": end_p,
                     "pdfPageStart": pdf_pages[0] if pdf_pages else None,
                     "pdfPageEnd": pdf_pages[-1] if pdf_pages else None,
-                    "pageImages": page_image_files,
+                    "pageImages": [],
                     "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
                     "grounding": {
                         "pageCount": len(grounding_pages),
@@ -346,8 +282,10 @@ class LessonSegmenter:
                 "startPage": unit_start_page,
                 "endPage": unit_end_page,
                 "lessonCount": len(lessons),
-                "pdfFile": u_rel_path,
-                "sha256": u_sha,
+                "reconstruct": {
+                    "method": "ordered_lesson_pdfs",
+                    "lessonPdfOrder": [lesson["pdfFile"] for lesson in processed_lessons],
+                },
                 "lessons": processed_lessons,
             }
             (u_dir / "unit_manifest.json").write_text(
@@ -375,6 +313,14 @@ class LessonSegmenter:
             },
             "units": processed_units,
             "assetsCount": len(assets_registry),
+            "storagePolicy": {
+                "bookPdfPersisted": False,
+                "unitPdfPersisted": False,
+                "pageImagesPersisted": False,
+                "lessonPdfPersisted": True,
+                "reconstruction": "lesson PDFs in manifest order",
+            },
+            "sourceManifest": "book-source-manifest.json",
         }
         (workspace_dir / "index.json").write_text(
             json.dumps(index_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -387,6 +333,7 @@ class LessonSegmenter:
                 "profileVersion": "1.1",
                 "scope": "FULL",
                 "exportedAt": "2026-09-20T00:00:00.000Z",
+                "storagePolicy": "LESSON_PDFS_ONLY",
             },
             "textbook": {
                 "key": textbook_key,
@@ -397,6 +344,7 @@ class LessonSegmenter:
                 "edition": edition,
                 "status": "DRAFT",
                 "totalPages": self.reader.page_count,
+                "sourcePdfPersisted": False,
             },
             "units": flat_units_pkg,
             "lessons": flat_lessons_pkg,

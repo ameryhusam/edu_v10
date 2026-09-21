@@ -48,7 +48,7 @@ class GeminiFreeProvider(AIProvider):
       - Vision-based TOC extraction from page images (extract_toc_from_page_images)
       - Automatic rate-limit handling (429 backoff)
       - Auto-detection from environment variable or .env file
-    Supported models: gemini-3.6-flash, gemini-3.5-flash
+    Supported models: gemini-3.8-flash, gemini-3.7-flash, gemini-3.6-flash, gemini-3.5-flash
     """
 
     def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
