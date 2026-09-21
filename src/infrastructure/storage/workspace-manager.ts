@@ -101,10 +101,8 @@ export interface WorkspaceIndexManifest {
 export class WorkspaceManager {
   private readonly workspaceBaseDir: string;
 
-  constructor(workspaceBaseDir?: string) {
-    this.workspaceBaseDir = path.resolve(
-      workspaceBaseDir || process.env.WORKSPACE_ROOT || path.resolve(process.cwd(), 'workspaces'),
-    );
+  constructor(workspaceBaseDir: string) {
+    this.workspaceBaseDir = path.resolve(workspaceBaseDir);
     fs.mkdirSync(this.workspaceBaseDir, { recursive: true });
   }
 
@@ -125,13 +123,19 @@ export class WorkspaceManager {
 
   /** Resolves the canonical workspace path from the derived textbook key. */
   getWorkspaceDirFromTextbookKey(textbookKey: string): string {
-    const match = /^EDU-(.+?)-G(\\d+)-T(\\d+)-ED(.+)$/i.exec(textbookKey.trim());
+    const match = /^EDU-(.+?)-G(\d+)-T(\d+)-ED(.+)$/i.exec(textbookKey.trim());
     if (!match) throw new Error(`Invalid textbook key: ${textbookKey}`);
+
+    const [, subject, grade, term, edition] = match;
+    if (!subject || !grade || !term || !edition) {
+      throw new Error(`Invalid textbook key coordinates: ${textbookKey}`);
+    }
+
     return this.getWorkspaceDir({
-      subject: match[1],
-      grade: `G${match[2]}`,
-      term: `T${match[3]}`,
-      edition: match[4],
+      subject,
+      grade: `G${grade}`,
+      term: `T${term}`,
+      edition,
     });
   }
 

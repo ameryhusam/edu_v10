@@ -103,7 +103,7 @@ Example:
 
     T01/G04/SCI/ED2026
               ↓
-    EDU-SCI-G04-T01-ED2026
+    EDU-SCI-G04-T1-ED2026
 
 Academic year of school use is not part of printed-book identity.
 

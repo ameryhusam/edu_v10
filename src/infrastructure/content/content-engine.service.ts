@@ -3,27 +3,15 @@ import { promisify } from 'node:util';
 import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import type {
+  ContentEnginePort,
+  ContentEnginePrepareInput,
+  ContentEnginePrepareResult,
+} from '../../contexts/content/application/content-engine.port.js';
 
 const execFileAsync = promisify(execFile);
 
-export interface ContentEnginePrepareInput {
-  readonly pdf: Buffer;
-  readonly workspaceDir: string;
-  readonly subject: string;
-  readonly grade: string;
-  readonly term: string;
-  readonly edition?: string;
-  readonly title?: string;
-  readonly timeoutMs: number;
-}
-
-export interface ContentEnginePrepareResult {
-  readonly workspaceDir: string;
-  readonly stdout: string;
-  readonly stderr: string;
-}
-
-export class ContentEngineService {
+export class ContentEngineService implements ContentEnginePort {
   constructor(
     private readonly pythonCommand: string,
     private readonly engineRoot: string,
@@ -75,7 +63,8 @@ export class ContentEngineService {
         if (candidates.length !== 1) {
           throw new Error('Content engine did not produce exactly one edition workspace when edition was not supplied.');
         }
-        preparedWorkspaceDir = candidates[0];
+        const firstCandidate = candidates[0];
+        if (firstCandidate) preparedWorkspaceDir = firstCandidate;
       }
       return {
         workspaceDir: preparedWorkspaceDir,

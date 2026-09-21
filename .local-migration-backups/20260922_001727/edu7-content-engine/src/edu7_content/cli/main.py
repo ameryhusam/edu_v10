@@ -33,12 +33,7 @@ from typing import List
 from ..pdf.reader import PdfReader
 from ..pdf.page_mapping import PageMappingEngine
 from ..pdf.toc import TocExtractor
-from ..pdf.vision_ocr import (
-    is_image_based_pdf,
-    extract_toc_via_vision,
-    extract_edition_from_cover,
-    extract_book_front_matter,
-)
+from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision, extract_edition_from_cover
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
 from ..ai.content_service import ContentAIService
@@ -66,10 +61,8 @@ def main():
                         help="Output workspace dir (default: workspace/T01/G04/MATH/<textbookKey>)")
     p_prep.add_argument("--subject", required=True, help="Database Subject.key (e.g. MATH, SCI, ARAB)")
     p_prep.add_argument("--grade", required=True, help="Grade code/number (e.g. G04, 07)")
-    p_prep.add_argument("--part", default=None, choices=["PART_1", "PART_2", "BOTH"],
-                        help="Physical textbook part: PART_1, PART_2, or BOTH")
-    p_prep.add_argument("--edition", default=None,
-                        help="Printed textbook edition; if omitted, extract from first ten pages")
+    p_prep.add_argument("--term", default="T1", help="Term folder code (T01, T02, ...)")
+    p_prep.add_argument("--edition", default=None, help="Printed textbook edition; if omitted, extract it from the cover")
     p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
@@ -269,9 +262,7 @@ def _cmd_prepare(args):
     target_pdf = _resolve_pdf(args)
     try:
         grade_number, grade_key = normalize_grade(args.grade)
-        supplied_part = str(args.part).strip().upper() if args.part else None
-        if supplied_part and supplied_part not in {"PART_1", "PART_2", "BOTH"}:
-            raise ValueError("part must be PART_1, PART_2 or BOTH")
+        term_number, term_key = normalize_term(args.term)
         subject_key = normalize_subject(args.subject)
         supplied_edition = str(args.edition).strip() if args.edition else None
     except (TypeError, ValueError) as err:
@@ -279,7 +270,7 @@ def _cmd_prepare(args):
         sys.exit(2)
 
     print(f"[+] Workspace root: {workspace_root()}")
-    print(f"[+] Coordinates: {grade_key}/{subject_key}")
+    print(f"[+] Coordinates: {term_key}/{grade_key}/{subject_key}")
 
     print(f"\n[*] Reading PDF: {target_pdf}")
     reader = PdfReader(str(target_pdf))

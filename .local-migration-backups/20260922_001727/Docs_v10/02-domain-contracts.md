@@ -26,47 +26,7 @@ Every business entity normally has:
 
 Identity is based on subject + grade + term + printed edition.
 
-Academic year of use belongs to `TextbookAdoption`, not the physical textbook identity.
-
-The physical textbook identity is subject + grade + part + printed edition.
-
-## Physical textbook identity and part semantics
-
-A `Textbook` represents a physical printed textbook identity.
-
-Its physical identity is:
-
-`Subject + Grade + Part + PrintedEdition`
-
-`Part` has exactly three values:
-
-- `PART_1` — the physical source represents the first part.
-- `PART_2` — the physical source represents the second part.
-- `BOTH` — one physical source contains both parts.
-
-`Term` is not a direct foreign key of `Textbook`.
-
-The academic term is a deployment/academic-context fact and is resolved later from
-the physical part and the TOC-derived logical content split.
-
-The preparation engine must never infer `edition` from academic year or filename.
-
-`edition`, `printingYear`, `publicationYear`, and academic year are different facts.
-
-A single PDF with both parts is still one physical `Textbook` with `part = BOTH`.
-The TOC must then determine the boundary between the logical first-part and
-second-part content.
-
-Therefore:
-
-`PART_1 → logical T1 content`
-
-`PART_2 → logical T2 content`
-
-`BOTH → TOC boundary → logical T1 + logical T2 content`
-
-This does not create a separate physical textbook concept for "both".
-
+Academic year of use belongs to `TextbookAdoption`, not the textbook identity.
 
 Do not introduce a version/revision entity merely to model editorial improvement. A genuinely different printed edition is a new textbook identity.
 

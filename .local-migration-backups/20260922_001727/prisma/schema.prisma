@@ -571,12 +571,6 @@ model Enrollment {
 
 /// Physical artifacts stored outside PostgreSQL and tracked by immutable metadata.
 enum ContentAssetType {
-enum TextbookPart {
-  PART_1
-  PART_2
-  BOTH
-}
-
   TEXTBOOK_PDF
   UNIT_PDF
   LESSON_PDF
@@ -590,9 +584,9 @@ enum TextbookPart {
 
 model Textbook {
   id        String @id @default(uuid()) @db.Uuid
-  /// EDU-MATH-G07-P1-ED2026 — subject + grade + physical part + printed edition.
+  /// EDU-MATH-G07-T1-ED2026 — subject + grade + term + printed edition.
   key       String @unique
-  part      TextbookPart @default(BOTH)
+  termId    String @db.Uuid
   gradeId   String @db.Uuid
   subjectId String @db.Uuid
 
@@ -615,6 +609,7 @@ model Textbook {
   // No `revision` counter. A corrected book is a new Textbook with a new
   // `edition`; see docs/PUBLISHING-LIFECYCLE-GATE.md §3.
 
+  term      Term               @relation(fields: [termId], references: [id], onDelete: Restrict)
   grade     Grade              @relation(fields: [gradeId], references: [id], onDelete: Restrict)
   subject   Subject            @relation(fields: [subjectId], references: [id], onDelete: Restrict)
   units     Unit[]
@@ -627,7 +622,7 @@ model Textbook {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([subjectId, gradeId, part, edition])
+  @@unique([subjectId, gradeId, termId, edition])
   @@index([status])
   @@map("textbooks")
 }

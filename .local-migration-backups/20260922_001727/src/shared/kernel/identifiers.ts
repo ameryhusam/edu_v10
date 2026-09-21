@@ -28,7 +28,7 @@
  *    which stated it correctly for questions and then did not apply it to the
  *    hierarchy.
  *
- * A textbook is identified by subject + grade + physical part + **printed edition** —
+ * A textbook is identified by subject + grade + term + **printed edition** —
  * the physical book being taught. Academic year is deliberately NOT part of
  * identity: the same printed edition is used across several years, so keying on
  * the year would mint a new key annually for a book that has not changed.
@@ -58,11 +58,11 @@ export interface TextbookCoordinates {
   readonly subject: string;
   /** Grade ordinal, 1-based. */
   readonly grade: number;
-  /** Physical book coverage. */
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  /** Term ordinal within the year, 1-based. */
+  readonly term: number;
   /**
-   * Printed edition of the physical book.
-   * Not the academic year of use.
+   * Printed edition of the physical book: a year (`2026`), a span
+   * (`2026-2027`), or a label (`REV2`). Not the academic year of use.
    */
   readonly edition: string;
 }

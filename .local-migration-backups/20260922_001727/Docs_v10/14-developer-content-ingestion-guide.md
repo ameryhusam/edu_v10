@@ -8,7 +8,7 @@
 Collect:
 - subjectKey, for example SCI
 - gradeKey, for example G04
-- part, one of `PART_1`, `PART_2`, `BOTH`
+- termKey, for example T01
 - printedEdition, for example ED2026
 - derived textbookKey, for example EDU-SCI-G04-T1-ED2026
 - packageMode: FULL or PARTIAL

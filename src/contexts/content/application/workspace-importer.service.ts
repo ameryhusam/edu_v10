@@ -17,7 +17,7 @@ import type { WorkspaceManager } from '../../../infrastructure/storage/workspace
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
 import type { AuthorContext } from './authoring.service.js';
-import type { ContentEngineService } from '../../../infrastructure/content/content-engine.service.js';
+import type { ContentEnginePort } from './content-engine.port.js';
 
 export interface WorkspaceImportOptions {
   readonly dryRun?: boolean;
@@ -40,7 +40,7 @@ export class WorkspaceImporterService {
     private readonly workspaceManager: WorkspaceManager,
     private readonly contentImportService: ContentImportService,
     private readonly assetService: ContentAssetService,
-    private readonly contentEngine: ContentEngineService,
+    private readonly contentEngine: ContentEnginePort,
     private readonly engineTimeoutMs: number,
   ) {}
 
@@ -167,7 +167,9 @@ export class WorkspaceImporterService {
       const full = path.join(workspaceDir, relativePath);
       const buffer = await fs.readFile(full);
       const parts = relativePath.split('/');
-      const file = parts[parts.length - 1];
+      const file = parts.at(-1);
+      if (!file) return;
+
       const mimeType =
         file.endsWith('.png') ? 'image/png' :
         file.endsWith('.jpg') || file.endsWith('.jpeg') ? 'image/jpeg' :

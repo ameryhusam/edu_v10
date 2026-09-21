@@ -320,7 +320,7 @@ The workspace exchange boundary supports two safe ZIP modes:
 Import is never direct extraction into the canonical workspace. The archive is inspected with entry/path/resource limits, extracted to staging, merged with the existing textbook workspace without deleting omitted files, dry-run reconciled, canonically imported, then committed as the new workspace snapshot.
 
 Identity rules:
-1. full package textbook identity must match subjectKey + gradeKey + part + edition;
+1. full package textbook identity must match subjectKey + gradeKey + termKey + edition;
 2. a supplied textbookKey must match the package when both are present;
 3. an identity conflict stops the operation rather than creating a guessed book;
 4. the same SHA-256 is a no-op;
