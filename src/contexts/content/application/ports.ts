@@ -662,6 +662,7 @@ export interface ContentAssetRepository {
     textbookKey: string,
     options?: { scope?: ContentAssetScope; assetType?: ContentAssetType },
   ): Promise<readonly ContentAssetRecord[]>;
+  listAssetsForLesson(lessonKey: string, options?: { assetType?: ContentAssetType }): Promise<readonly ContentAssetRecord[]>;
   listAssetsForNode(input: {
     scope: ContentAssetScope;
     nodeKey: string;
