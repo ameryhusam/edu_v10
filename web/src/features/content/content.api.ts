@@ -526,8 +526,8 @@ export const textbookAdministrationApi = {
   workspaceInspect: (workspaceDir: string) =>
     api.get<any>('content/workspace/inspect', { query: { workspaceDir } }),
 
-  workspaceSegment: (input: { workspaceDir: string; units?: Array<any> }) =>
-    api.post<any>('content/workspace/segment', input),
+  workspaceReconcile: (input: { workspaceDir: string }) =>
+    api.post<any>('content/workspace/reconcile', input),
 
   workspaceImport: (input: {
     workspaceDir: string;
