@@ -13,6 +13,8 @@
  */
 
 import express, { Router } from 'express';
+import { createReadStream } from 'node:fs';
+import { unlink } from 'node:fs/promises';
 import { z } from 'zod';
 import { Errors } from '../../shared/kernel/errors.js';
 import { Err, Ok, type Result } from '../../shared/kernel/result.js';
@@ -33,6 +35,7 @@ import type { ContentExportService } from '../../contexts/content/application/co
 import type { ContentImportService } from '../../contexts/content/application/content-import.service.js';
 import type { ContentAssetService } from '../../contexts/content/application/content-asset.service.js';
 import type { WorkspaceImporterService } from '../../contexts/content/application/workspace-importer.service.js';
+import type { WorkspaceArchiveService } from '../../contexts/content/application/workspace-archive.service.js';
 import type { TextbookAdministrationService } from '../../contexts/content/application/textbook-administration.service.js';
 import type { Actor } from './middleware/context.js';
 import { handle } from './handler.js';
@@ -45,6 +48,7 @@ export interface ContentRouteDeps {
   readonly textbookAdministration: TextbookAdministrationService;
   readonly contentAsset?: ContentAssetService;
   readonly workspaceImporter?: WorkspaceImporterService;
+  readonly workspaceArchive?: WorkspaceArchiveService;
   readonly contentUploadMaxBytes?: number;
 }
 
@@ -703,6 +707,79 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
     edition: z.string().optional(),
     title: z.string().optional(),
     pdfBase64: z.string().min(1),
+  });
+
+  router.post(
+    '/workspace/import-zip',
+    express.raw({
+      type: ['application/zip', 'application/octet-stream'],
+      limit: deps.contentUploadMaxBytes ?? 250 * 1024 * 1024,
+    }),
+    handle({
+      input: z.instanceof(Buffer),
+      rawBody: true,
+      requireAuth: true,
+      successStatus: 201,
+      execute: async ({ input, actor, req }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.workspaceArchive) {
+          return Err(Errors.internal('workspace.archive_unavailable', 'Workspace archive service is not enabled.'));
+        }
+        const query = z.object({
+          textbookKey: z.string().min(1).optional(),
+          dryRun: z.coerce.boolean().optional(),
+        }).safeParse(req.query);
+        if (!query.success) {
+          return Err(Errors.validation('request.invalid_input', 'Workspace ZIP parameters are invalid.', {
+            issues: query.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+          }));
+        }
+        return Ok(await deps.workspaceArchive.importZip(input, {
+          textbookKey: query.data.textbookKey,
+          dryRun: query.data.dryRun,
+          actorKey: author.value.actorKey,
+        }));
+      },
+    }),
+  );
+
+  router.get('/workspaces/:textbookKey/export-zip', async (req, res, next) => {
+    let filePath: string | null = null;
+    try {
+      const author = requireAuthor(req.actor);
+      if (!author.ok) {
+        res.status(403).json(author.error);
+        return;
+      }
+      if (!deps.workspaceArchive) {
+        res.status(501).json(Errors.internal('workspace.archive_unavailable', 'Workspace archive service is not enabled.'));
+        return;
+      }
+      const textbookKey = z.string().min(1).parse(req.params.textbookKey);
+      const result = await deps.workspaceArchive.exportZip(textbookKey);
+      filePath = result.filePath;
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${result.downloadName}"`);
+      res.setHeader('Content-Length', result.sizeBytes);
+      const stream = createReadStream(result.filePath);
+      const cleanup = async () => {
+        if (filePath) {
+          const current = filePath;
+          filePath = null;
+          await unlink(current).catch(() => undefined);
+        }
+      };
+      stream.once('error', async (err) => {
+        await cleanup();
+        next(err);
+      });
+      res.once('finish', cleanup);
+      stream.pipe(res);
+    } catch (err) {
+      if (filePath) await unlink(filePath).catch(() => undefined);
+      next(err);
+    }
   });
 
   router.post(
