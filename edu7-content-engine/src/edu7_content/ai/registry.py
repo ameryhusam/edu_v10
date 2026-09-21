@@ -23,7 +23,7 @@ class AIProviderRegistry:
         if name in ("gemini", "gemini-free") or name.startswith("gemini-"):
             model = name if name.startswith("gemini-") else os.environ.get("GEMINI_MODEL", SUPPORTED_MODELS[0])
             if model not in SUPPORTED_MODELS:
-                raise ValueError(f"Unsupported Gemini model: {model}. Supported models: {", ".join(SUPPORTED_MODELS)}")
+                raise ValueError("Unsupported Gemini model: " + model + ". Supported models: " + ", ".join(SUPPORTED_MODELS))
             provider = GeminiFreeProvider(model_name=model)
             self.register(provider)
             return provider
@@ -37,7 +37,7 @@ class AIProviderRegistry:
     def get_gemini(self) -> GeminiFreeProvider:
         model = os.environ.get("GEMINI_MODEL", SUPPORTED_MODELS[0])
         if model not in SUPPORTED_MODELS:
-            raise ValueError(f"Unsupported Gemini model: {model}")
+            raise ValueError("Unsupported Gemini model: " + model)
         provider_name = f"gemini-{model}"
         if provider_name not in self._providers:
             self.register(GeminiFreeProvider(model_name=model))
