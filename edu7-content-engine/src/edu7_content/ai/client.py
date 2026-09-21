@@ -31,7 +31,7 @@ class GeminiClient:
         raw_models = os.environ.get("GEMINI_MODELS", "")
         models = [m.strip() for m in raw_models.replace(";", ",").split(",") if m.strip()]
         if not models:
-            configured = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash").strip()
+            configured = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash").strip()
             models = [configured] if configured else list(SUPPORTED_MODELS)
         requested_model = model_name.strip() if model_name else None
         if requested_model:
