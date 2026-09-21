@@ -121,6 +121,7 @@ export const queryKeys = {
     examBlueprint: (examKey: string) => ['content', 'exam-blueprint', examKey] as const,
     outline: (textbookKey: string) => ['content', 'outline', textbookKey] as const,
     lessonMaterials: (lessonKey: string) => ['content', 'lesson-materials', lessonKey] as const,
+    lessonAssets: (lessonKey: string) => ['content', 'lesson-assets', lessonKey] as const,
     /** The book-wide shelf — resources attached to the textbook itself. */
     textbookMaterials: (textbookKey: string) => ['content', 'textbook-materials', textbookKey] as const,
     /** Every question filed under a lesson, for the re-linking screen. */
