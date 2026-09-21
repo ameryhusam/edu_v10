@@ -39,7 +39,7 @@ def render_page_to_b64(reader, page_idx: int, dpi: int = 150) -> Optional[str]:
 def extract_toc_via_vision(reader, max_pages=10, dpi=150, api_key=None,
                            model_name=None, use_ollama=False,
                            use_gemini=True, force_vision=False) -> List[Dict[str, Any]]:
-    """Extract the TOC with Gemini only."""
+    """Extract the TOC with Gemini by default; Ollama remains an explicit opt-in adapter."""
     print(f"[*] Preparing first {max_pages} pages for Gemini TOC analysis (DPI={dpi})...")
     images_b64 = render_pages_to_b64(reader, max_pages=max_pages, dpi=dpi)
     page_texts = [{"pdfPage": i + 1, "text": reader.extract_page_text(i)}
@@ -50,6 +50,17 @@ def extract_toc_via_vision(reader, max_pages=10, dpi=150, api_key=None,
     if not images_b64 and not any(p["text"].strip() for p in page_texts):
         print("[!] No usable text or rendered page images are available.")
         return []
+    if use_ollama:
+        try:
+            from ..ai.ollama_vision import extract_toc_via_ollama
+            result = extract_toc_via_ollama(reader, max_pages=max_pages, dpi=dpi, model_name=model_name)
+            if result:
+                return result
+        except Exception as err:
+            print(f"[!] Ollama TOC extraction unavailable: {err}")
+        if not use_gemini:
+            return []
+
     if not use_gemini:
         return []
 
