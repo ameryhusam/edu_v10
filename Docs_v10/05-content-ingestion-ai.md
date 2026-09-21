@@ -309,3 +309,22 @@ Moodle connects completion with competencies and evidence, a useful reference fo
 ## 17. Non-goals
 
 Do not create a second textbook database for prepared workspaces, direct Python→PostgreSQL writes, direct AI→canonical DB writes, UI-owned readiness, filename-based identity, silent same-key overwrite or permanent source-PDF retention for convenience.
+
+
+## Workspace ZIP exchange and re-import
+
+The workspace exchange boundary supports two safe ZIP modes:
+- full workspace package: contains edu7-content-package.json and the complete textbook workspace tree;
+- partial workspace update: contains only new/corrected physical workspace files and supplies textbookKey when the package is absent.
+
+Import is never direct extraction into the canonical workspace. The archive is inspected with entry/path/resource limits, extracted to staging, merged with the existing textbook workspace without deleting omitted files, dry-run reconciled, canonically imported, then committed as the new workspace snapshot.
+
+Identity rules:
+1. full package textbook identity must match subjectKey + gradeKey + termKey + edition;
+2. a supplied textbookKey must match the package when both are present;
+3. an identity conflict stops the operation rather than creating a guessed book;
+4. the same SHA-256 is a no-op;
+5. a changed file is staged and validated before replacement;
+6. absent files in a partial update are retained.
+
+Export creates <Textbook.key>.zip with the textbook key as archive root and includes the actual workspace tree: manifests, cover, lesson PDFs, text, page images, AI pages, grounding and resource files. Export is physical workspace exchange, not a database dump.
