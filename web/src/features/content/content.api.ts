@@ -51,6 +51,7 @@ export interface TextbookSummary {
   readonly unitCount: number;
   readonly questionCount: number;
   readonly updatedAt: string;
+  readonly coverUrl: string | null;
   readonly description?: string | null;
   readonly issuer?: string | null;
   readonly isbn?: string | null;
