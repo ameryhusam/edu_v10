@@ -5,6 +5,7 @@ from .base import AIProvider
 from .heuristic import HeuristicExtractorProvider
 from .gemini import GeminiFreeProvider, SUPPORTED_MODELS
 from .content_service import ContentAIService
+from .ollama import OllamaProvider
 
 class AIProviderRegistry:
     """Gemini is the only generative provider. Heuristic is deterministic fallback logic."""
@@ -29,6 +30,13 @@ class AIProviderRegistry:
             return provider
         if name == "heuristic-micro-engine":
             return self._providers["heuristic-micro-engine"]
+        if name.startswith("ollama-") or name == "ollama":
+            if os.environ.get("EDU7_ENABLE_OLLAMA", "").strip().lower() not in {"1", "true", "yes", "on"}:
+                raise ValueError("Ollama support is disabled by default. Set EDU7_ENABLE_OLLAMA=true to opt in.")
+            model = name.replace("ollama-", "", 1) if name != "ollama" else os.environ.get("OLLAMA_MODEL", "qwen2.5:7b")
+            provider = OllamaProvider(model_name=model, base_url=os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434"))
+            self.register(provider)
+            return provider
         raise ValueError(f"Unsupported AI provider {name!r}. Edu7 content generation uses Gemini only.")
 
     def content_service(self, model_name: str | None = None) -> ContentAIService:
