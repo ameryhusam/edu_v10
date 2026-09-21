@@ -308,7 +308,8 @@ export class WorkspaceManager {
 
     const pdfRelative = indexManifest?.source?.sourcePdf?.relativePath || 'textbook/textbook.pdf';
     const pdfFullPath = path.join(workspaceDir, pdfRelative);
-    const sourcePdfExists = fs.existsSync(pdfFullPath);
+    const sourcePersisted = indexManifest?.storagePolicy?.sourcePdfPersisted !== false;
+    const sourcePdfExists = sourcePersisted && fs.existsSync(pdfFullPath);
 
     const assets: Array<{
       relativePath: string;
@@ -374,7 +375,8 @@ export class WorkspaceManager {
     }
 
     const source = indexManifest.source?.sourcePdf;
-    if (source) {
+    const sourcePersisted = indexManifest.storagePolicy?.sourcePdfPersisted !== false;
+    if (source && sourcePersisted) {
       const sourceFile = await this.readAssetFile(workspaceDir, source.relativePath);
       if (!sourceFile) throw new Error(`Workspace source PDF missing: ${source.relativePath}`);
       const sourceHash = crypto.createHash('sha256').update(sourceFile).digest('hex');
