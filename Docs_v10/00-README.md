@@ -45,9 +45,9 @@ A documented target-state decision may intentionally describe behavior that code
 | 08-product-roadmap.md | capability state, implementation order, open gaps |
 | 09-ai-developer-instructions.md | short operational system instruction for AI coding agents |
 | 10-documentation-governance.md | how Docs_v10 is maintained and how obsolete docs are retired |
-| 11-current-state.md | verified repository snapshot and gaps at the review date |
+| 11-current-state.md | verified repository snapshot and gaps at the review date |\n| 12-end-to-end-dataflows.md | complete operational data flows, algorithms, status model, field contracts and workflow boundaries |
 
-## Core architectural flow
+## Operational workflow rule\n\nDocs_v10 defines both architecture and end-to-end data movement. For major workflows, 12-end-to-end-dataflows.md is the normative reference for entry conditions, required fields, state transitions, reconciliation, idempotency, audit/provenance and terminal outcomes.\n\n## Core architectural flow
 
 ```text
 External sources / UI / AI
