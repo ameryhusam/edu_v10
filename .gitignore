@@ -34,3 +34,7 @@ books_input/*
 !books_input/README.md
 workspace/*
 !workspace/README.md
+
+# Generated local content-engine artifacts
+edu7-content-engine/workspaces/
+edu7-content-engine/.tmp/
