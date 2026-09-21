@@ -51,7 +51,7 @@ Depending on the current capability ledger and repository state:
 
 Do not implement these by copying the old project's structure.
 
-## 5. Recommended order
+## 5. Dependency order
 
 ```text
 Identity/access hardening
