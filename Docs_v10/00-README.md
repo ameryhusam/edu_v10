@@ -2,7 +2,7 @@
 
 **Status:** Canonical documentation set  
 **Repository:** ameryhusam/edu_v10  
-**Branch:** main  
+**Branch:** 03_build_algorithm_and_new_Docs  
 **Last reviewed:** 2026-09-21
 
 ## Purpose
@@ -46,6 +46,8 @@ A documented target-state decision may intentionally describe behavior that code
 | 09-ai-developer-instructions.md | short operational system instruction for AI coding agents |
 | 10-documentation-governance.md | how Docs_v10 is maintained and how obsolete docs are retired |
 | 11-current-state.md | verified repository snapshot and gaps at the review date |\n| 12-end-to-end-dataflows.md | complete operational data flows, algorithms, status model, field contracts and workflow boundaries |
+| 13-content-storage-page-classification-and-import-algorithms.md | storage boundary, Workspace synchronization, page classification, aliases, AI classification and import algorithms |
+| 14-developer-content-ingestion-guide.md | developer-facing preparation, classification, ZIP import, question/resource and troubleshooting workflow |
 
 ## Operational workflow rule\n\nDocs_v10 defines both architecture and end-to-end data movement. For major workflows, 12-end-to-end-dataflows.md is the normative reference for entry conditions, required fields, state transitions, reconciliation, idempotency, audit/provenance and terminal outcomes.\n\n## Core architectural flow
 
