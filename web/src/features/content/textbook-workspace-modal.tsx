@@ -58,7 +58,7 @@ export function TextbookWorkspaceModal({
   const [term, setTerm] = useState(initialCoordinates?.term || 'T01');
   const [grade, setGrade] = useState(initialCoordinates?.grade || 'G07');
   const [subject, setSubject] = useState(initialCoordinates?.subject || 'MATH');
-  const [edition, setEdition] = useState(initialCoordinates?.edition || '2026');
+  const [edition, setEdition] = useState(initialCoordinates?.edition || '');
   const [title, setTitle] = useState(initialCoordinates?.title || '');
 
   // File Upload State
@@ -118,7 +118,7 @@ export function TextbookWorkspaceModal({
         term: term.trim(),
         grade: grade.trim(),
         subject: subject.trim(),
-        edition: edition.trim(),
+        edition: edition.trim() || undefined,
         title: title.trim() || `كتاب ${subject.trim()}`,
         autoSegment: true,
       };
@@ -300,7 +300,7 @@ export function TextbookWorkspaceModal({
                         setTerm(ws.manifest?.term || 'T01');
                         setGrade(ws.manifest?.grade || 'G07');
                         setSubject(ws.manifest?.subject || 'MATH');
-                        setEdition(ws.manifest?.edition || '2026');
+                        setEdition(ws.manifest?.edition || '');
                         setTitle(ws.manifest?.title || '');
                         setCurrentStep(2);
                       }}
@@ -362,11 +362,11 @@ export function TextbookWorkspaceModal({
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-muted">سنة الطبعة (Edition)</label>
+                  <label className="text-xs font-medium text-text-muted">الطبعة المطبوعة (Edition)</label>
                   <Input
                     value={edition}
                     onChange={(e) => setEdition(e.target.value)}
-                    placeholder="2026"
+                    placeholder="يُستخرج من الغلاف تلقائياً"
                     className="h-9 text-xs"
                   />
                 </div>
