@@ -5,8 +5,7 @@ from ..content.models import LessonAnalysisResult
 class AIProvider(ABC):
     """
     Abstract interface for Multi-Model AI Analysis:
-    Supports Local lightweight (Qwen3-VL-2B), High-capacity (Qwen3-VL-8B, Gemma 3),
-    Ollama, and Rule-based Heuristic Micro-Engine.
+    Generative providers are centralized through the content AI service. Ollama is retained as an optional future provider adapter, while Gemini is the active provider.
     """
     @property
     @abstractmethod
