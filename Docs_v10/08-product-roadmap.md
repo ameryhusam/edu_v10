@@ -236,3 +236,23 @@ These are comparative references, not copied requirements.
     INSTRUCTION / ENGAGEMENT / ANALYTICS
 
 At every transition: identity + validation + authorization + provenance + idempotency + audit.
+
+
+## Workspace exchange roadmap addition
+
+### ZIP import/export and synchronization gate
+
+Add to the content foundation gate:
+
+SOURCE/ZIP → SAFE INSPECTION → IDENTITY → STAGING → SHA-256 RECONCILIATION → DRY-RUN → CANONICAL IMPORT → WORKSPACE COMMIT → READINESS
+
+Required outcomes:
+- re-importing the same prepared book is idempotent;
+- a new lesson/resource is placed under its canonical workspace path;
+- changed content is detected by fingerprint and staged before replacement;
+- partial updates never delete unrelated existing files;
+- full-book exports round-trip back to the same textbook identity;
+- ZIP traversal, duplicate entries, symbolic links, and decompression-resource attacks are rejected;
+- semantic QuestionBank/Flashcard updates still pass through their canonical services rather than being inferred from arbitrary physical files.
+
+The production gate remains incomplete until per-textbook operation locking/idempotency and dedicated semantic import adapters are implemented.
