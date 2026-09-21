@@ -85,3 +85,4 @@ ContentAsset stores physical binary identity and provenance. LearningResource st
 5. Add page-level AI refresh selection in the frontend so a user can refresh one page or a contiguous range instead of re-analyzing the whole lesson.
 6. Extend the import package contract for flashcards and advanced question types so physical resource/ files and structured content remain aligned.
 7. Add end-to-end tests for cover extraction, page pairing, resource discovery, second-edition isolation, and asset checksum/idempotency.
+8. Add an entitlement-aware learner endpoint/view for the page viewer; the current asset listing is intentionally staff-scoped.
