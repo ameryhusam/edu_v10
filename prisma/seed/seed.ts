@@ -127,13 +127,20 @@ async function main(): Promise<void> {
   const school = await prisma.school.findUniqueOrThrow({ where: { key: 'sch_demo' } });
 
   // ── Content: one textbook, one unit, one lesson, three chained concepts ──
-  const tbKey = unwrap(textbookKey({ subject: SUBJECT, grade: GRADE, term: TERM, edition: EDITION }));
+  const tbKey = unwrap(
+    textbookKey({
+      subject: SUBJECT,
+      grade: GRADE,
+      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
+      edition: EDITION,
+    }),
+  );
 
   const textbook = await prisma.textbook.upsert({
     where: { key: tbKey },
     create: {
       key: tbKey,
-      termId: term.id,
+      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
       gradeId: grade.id,
       subjectId: subject.id,
       edition: EDITION,
@@ -491,14 +498,19 @@ async function main(): Promise<void> {
   // empty shelf — and the point of the براعم board is that it is real.
   const juniorGrade = await prisma.grade.findUniqueOrThrow({ where: { key: 'G03' } });
   const juniorTbKey = unwrap(
-    textbookKey({ subject: SUBJECT, grade: 3, term: TERM, edition: EDITION }),
+    textbookKey({
+      subject: SUBJECT,
+      grade: 3,
+      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
+      edition: EDITION,
+    }),
   );
 
   const juniorBook = await prisma.textbook.upsert({
     where: { key: juniorTbKey },
     create: {
       key: juniorTbKey,
-      termId: term.id,
+      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
       gradeId: juniorGrade.id,
       subjectId: subject.id,
       edition: EDITION,
