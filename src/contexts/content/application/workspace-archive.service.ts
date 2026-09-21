@@ -183,7 +183,12 @@ export class WorkspaceArchiveService {
 
     const entries = await fs.readdir(extracted, { withFileTypes: true });
     const dirs = entries.filter((e) => e.isDirectory());
-    if (dirs.length === 1 && entries.length === 1) return path.join(extracted, dirs[0].name);
+    // Only unwrap a single top-level directory when it is clearly a textbook
+    // archive root. A partial ZIP may legitimately start with unit_01_... and
+    // unwrapping that directory would shift the canonical path by one level.
+    if (dirs.length === 1 && entries.length === 1 && /^EDU-[A-Z0-9-]+$/i.test(dirs[0].name)) {
+      return path.join(extracted, dirs[0].name);
+    }
     return extracted;
   }
 
