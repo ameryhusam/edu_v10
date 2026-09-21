@@ -914,7 +914,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   );
 
   router.post(
-    '/workspace/segment',
+    '/workspace/reconcile',
     handle({
       input: workspaceSegmentInput,
       requireAuth: true,
