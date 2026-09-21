@@ -1,7 +1,7 @@
 # Current Repository State — edu_v10
 
 **Review date:** 2026-09-21  
-**HEAD:** 7f2eb50cef7a078c62143799acff29f8e850c8da
+**HEAD at review:** a085a306acbdb74ca800dad64ab9910f30310dcc
 
 ## Repository facts
 
@@ -14,7 +14,7 @@
 
 ## Recent content direction
 
-The latest commits on 2026-09-21 establish the current content/AI direction:
+The latest implementation commits on 2026-09-21 establish the current content/AI direction. This file is the only Docs_v10 document whose primary purpose is to describe the repository snapshot:
 
 - G1 content AI foundation merged to main.
 - Lesson page and AI explanation viewer added.
