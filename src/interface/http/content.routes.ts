@@ -149,7 +149,7 @@ const createTextbookInput = z.object({
   gradeKey: z.string().min(1),
   termKey: z.string().min(1),
   title: z.string().min(1).max(300),
-  edition: z.string().min(1).max(40),
+  edition: z.string().min(1).max(40).optional(),
   description: z.string().max(4000).nullish(),
   issuer: z.string().max(200).nullish(),
   isbn: z.string().max(40).nullish(),
