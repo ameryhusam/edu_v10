@@ -328,3 +328,42 @@ Identity rules:
 6. absent files in a partial update are retained.
 
 Export creates <Textbook.key>.zip with the textbook key as archive root and includes the actual workspace tree: manifests, cover, lesson PDFs, text, page images, AI pages, grounding and resource files. Export is physical workspace exchange, not a database dump.
+
+## 18. Storage and Workspace synchronization decision
+
+Binary content is external to PostgreSQL. ContentAsset stores physical identity, relativePath, storageKey, checksum and provenance. TextbookPage.text and ContentChunk.text are semantic canonical text and remain in PostgreSQL for search/grounding.
+
+Workspace is a controlled exchange snapshot, not a second database and not an unrestricted live mirror. Manual Workspace edits re-enter through the same validation/reconciliation/import path. Canonical database writes remain owned by Node/TypeScript application services.
+
+The synchronization flow is:
+
+    Workspace/package → normalize → validate → reconcile → dry-run → canonical services → DB + ContentStorage → Workspace commit
+
+A Workspace path is never exposed directly as a learner URL.
+
+## 19. Page classification contract
+
+Page images and page text retain stable page_{number} filenames. Classification is stored in page_classification.json at the lesson root when manual control is needed; filenames are never renamed to encode classification.
+
+Classification precedence is:
+
+    explicit manifest > deterministic mapping > TOC evidence > subject profile > AI proposal > review
+
+A null or missing classification field means no value is added or overridden. Empty strings are invalid. A page may be MIXED, so question extraction operates on question blocks rather than assuming one page has one semantic role.
+
+Arabic, Islamic Studies and Quran use branch-aware profiles. In Arabic, the word “الدرس” is not sufficient to identify a lesson type; reading/grammar/spelling/morphology/expression classification may be supplied manually per page or lesson.
+
+## 20. Identifier compatibility
+
+The importer normalizes aliases before any lookup:
+
+    T1 ↔ T01
+    G4 ↔ G04
+
+T01 remains the filesystem/term coordinate while T1 remains the term token inside the canonical textbook key. G4 must resolve to an existing G04 row rather than creating a new Grade identity.
+
+## 21. Algorithm configuration
+
+TOC detection, lesson segmentation, page classification, question detection and subject branch rules are configuration-driven. The Python engine implements algorithms; YAML/JSON configuration supplies thresholds, patterns and allowed labels. Configuration and algorithm versions are recorded with prepared packages/proposals for reproducibility.
+
+See Docs_v10/13-content-storage-page-classification-and-import-algorithms.md and Docs_v10/14-developer-content-ingestion-guide.md for the normative operational contract.
