@@ -15,6 +15,7 @@ import type { WorkspaceManager } from '../../../infrastructure/storage/workspace
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
 import type { AuthorContext } from './authoring.service.js';
+import type { ContentEngineService } from '../../../infrastructure/content/content-engine.service.js';
 
 export interface WorkspaceImportOptions {
   readonly dryRun?: boolean;
@@ -37,6 +38,8 @@ export class WorkspaceImporterService {
     private readonly workspaceManager: WorkspaceManager,
     private readonly contentImportService: ContentImportService,
     private readonly assetService: ContentAssetService,
+    private readonly contentEngine: ContentEngineService,
+    private readonly engineTimeoutMs: number,
   ) {}
 
   /**
@@ -146,53 +149,60 @@ export class WorkspaceImporterService {
     autoSegment?: boolean;
     units?: Array<any>;
   }) {
-    const coords = {
-      term: input.term,
-      grade: input.grade,
-      subject: input.subject,
-    };
+    const coords = { term: input.term, grade: input.grade, subject: input.subject };
+    const wsDir = this.workspaceManager.getWorkspaceDir(coords);
+    const edition = input.edition || '2026';
 
-    let storeRes;
     if (input.pdfBuffer && input.pdfBuffer.length > 0) {
-      storeRes = await this.workspaceManager.storeTextbookSource(
-        coords,
-        input.pdfBuffer,
-        input.edition || '2026',
-        input.title,
-      );
-    } else {
-      const wsDir = this.workspaceManager.getWorkspaceDir(coords);
-      storeRes = {
-        workspaceDir: wsDir,
-        pdfRelativePath: 'textbook/textbook.pdf',
-        pdfFullPath: `${wsDir}/textbook/textbook.pdf`,
-        sizeBytes: 0,
-        sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      };
-    }
+      if (input.autoSegment === false) {
+        throw new DomainErrorException(
+          Errors.validation(
+            'workspace.prepare_requires_engine',
+            'Book upload must run through the Python content engine; disabling segmentation is not supported for uploaded books.',
+          ),
+        );
+      }
 
-    // Physical segmentation is performed by edu7-content-engine (Python).
-    // Never manufacture unit/lesson PDFs here. If a generated workspace already
-    // exists, reconcile it; otherwise return the source workspace and an explicit
-    // segmentation-required state.
-    if (input.autoSegment !== false) {
-      const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
-      const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
-      if (index && pkg) {
-        const segmentRes = await this.workspaceManager.segmentWorkspace(storeRes.workspaceDir);
-        return { ...storeRes, ...segmentRes, segmentationStatus: 'RECONCILED' as const };
+      const engineResult = await this.contentEngine.prepare({
+        pdf: input.pdfBuffer,
+        workspaceDir: wsDir,
+        subject: input.subject,
+        grade: input.grade,
+        term: input.term,
+        edition,
+        title: input.title,
+        timeoutMs: this.engineTimeoutMs,
+      });
+
+      const index = await this.workspaceManager.readIndexManifest(wsDir);
+      const pkg = await this.workspaceManager.readContentPackage(wsDir);
+      if (!index || !pkg) {
+        throw new DomainErrorException(
+          Errors.internal(
+            'workspace.engine_output_invalid',
+            'The content engine completed but did not produce a valid workspace package.',
+            { stdout: engineResult.stdout.slice(-4000), stderr: engineResult.stderr.slice(-4000) },
+          ),
+        );
       }
       return {
-        ...storeRes,
+        workspaceDir: wsDir,
+        sourcePdfPersisted: false,
         indexManifest: index,
         package: pkg,
-        segmentationStatus: 'REQUIRES_CONTENT_ENGINE' as const,
+        segmentationStatus: 'PREPARED_BY_CONTENT_ENGINE' as const,
+        engine: { stdout: engineResult.stdout, stderr: engineResult.stderr },
       };
     }
 
-    const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
-    const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
-    return { ...storeRes, indexManifest: index, package: pkg, segmentationStatus: 'NOT_REQUESTED' as const };
+    const index = await this.workspaceManager.readIndexManifest(wsDir);
+    const pkg = await this.workspaceManager.readContentPackage(wsDir);
+    return {
+      workspaceDir: wsDir,
+      indexManifest: index,
+      package: pkg,
+      segmentationStatus: index && pkg ? 'RECONCILED' as const : 'REQUIRES_CONTENT_ENGINE' as const,
+    };
   }
 
   /**
