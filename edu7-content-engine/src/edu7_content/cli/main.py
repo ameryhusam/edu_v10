@@ -55,8 +55,8 @@ def main():
                         help="Path to PDF; relative paths resolve from repository-root books_input/")
     p_prep.add_argument("--workspace", default=None,
                         help="Output workspace dir (default: workspace/T01/G04/MATH/<textbookKey>)")
-    p_prep.add_argument("--subject", default="MATH", help="Database Subject.key (e.g. MATH, SCI, ARAB)")
-    p_prep.add_argument("--grade", default="G07", help="Grade code/number (e.g. G04, 07)")
+    p_prep.add_argument("--subject", required=True, help="Database Subject.key (e.g. MATH, SCI, ARAB)")
+    p_prep.add_argument("--grade", required=True, help="Grade code/number (e.g. G04, 07)")
     p_prep.add_argument("--term", default="T1", help="Term folder code (T01, T02, ...)")
     p_prep.add_argument("--edition", default="2026", help="Printed textbook edition (e.g. 2026)")
     p_prep.add_argument("--title", default=None, help="Textbook title")
