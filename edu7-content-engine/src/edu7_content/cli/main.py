@@ -40,6 +40,7 @@ from ..export.json_exporter import Edu7JsonExporter
 from ..export.excel_exporter import Edu7ExcelExporter
 from ..ai.gemini import _load_env_file
 from ..workspace_layout import books_input_root, book_workspace, normalize_grade, normalize_subject, normalize_term, project_root, textbook_key, workspace_root, finalize_book_workspace
+from ..workspace_rebuild import rebuild_lesson, rebuild_unit, rebuild_book
 
 
 def main():
@@ -98,6 +99,13 @@ def main():
     p_ai.add_argument("--out", default=None, help="Optional output JSON path")
     p_ai.add_argument("--model", default=None, help="Gemini model: gemini-3.8-flash, gemini-3.7-flash, gemini-3.6-flash, or gemini-3.5-flash")
 
+    # ── rebuild ─────────────────────────────────────────────────────────────
+    p_rebuild = sub.add_parser("rebuild", help="Rebuild a lesson, unit, or book PDF from lesson PDFs")
+    p_rebuild.add_argument("workspace", help="Book workspace directory")
+    p_rebuild.add_argument("--scope", choices=["lesson", "unit", "book"], required=True)
+    p_rebuild.add_argument("--ref", default=None, help="Lesson/unit slug or ID; not required for book")
+    p_rebuild.add_argument("--out", required=True, help="Output PDF path")
+
     # ── export ───────────────────────────────────────────────────────────────
     p_exp = sub.add_parser("export", help="Export workspace to JSON/Excel")
     p_exp.add_argument("workspace", help="Workspace path")
@@ -128,6 +136,9 @@ def main():
     elif args.command == "benchmark":
         print(f"[*] Benchmark on: {args.lesson_dir}")
         print("[SUCCESS] Benchmark placeholder completed.")
+
+    elif args.command == "rebuild":
+        _cmd_rebuild(args)
 
     elif args.command == "export":
         _cmd_export(args)
@@ -543,6 +554,31 @@ def _cmd_analyze(args):
     else:
         print(f"Error: '{target_path}' is neither a workspace nor a valid lesson directory.")
         sys.exit(1)
+
+
+def _cmd_rebuild(args):
+    target = Path(args.workspace).expanduser().resolve()
+    output = Path(args.out).expanduser().resolve()
+    if not (target / "index.json").exists():
+        print(f"Error: book workspace index.json not found: {target}")
+        sys.exit(1)
+
+    try:
+        if args.scope == "lesson":
+            if not args.ref:
+                raise ValueError("--ref is required for --scope lesson")
+            result = rebuild_lesson(target, args.ref, output)
+        elif args.scope == "unit":
+            if not args.ref:
+                raise ValueError("--ref is required for --scope unit")
+            result = rebuild_unit(target, args.ref, output)
+        else:
+            result = rebuild_book(target, output)
+    except (KeyError, FileNotFoundError, ValueError, RuntimeError) as err:
+        print(f"Error: {err}")
+        sys.exit(1)
+
+    print(f"[SUCCESS] Rebuilt {args.scope} PDF: {result}")
 
 
 def _cmd_export(args):
