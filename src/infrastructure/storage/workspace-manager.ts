@@ -37,6 +37,7 @@ export interface WorkspaceCoordinates {
   readonly term: string;
   readonly grade: string;
   readonly subject: string;
+  readonly edition?: string | undefined;
 }
 
 export interface WorkspaceIndexManifest {
@@ -48,6 +49,12 @@ export interface WorkspaceIndexManifest {
   readonly subject: string;
   readonly edition: string;
   readonly title: string;
+  readonly storagePolicy?: {
+    readonly sourcePdfPersisted?: boolean;
+    readonly unitPdfPersisted?: boolean;
+    readonly bookPdfPersisted?: boolean;
+    readonly textbookPageImagesPersisted?: boolean;
+  };
   readonly source: {
     readonly engine: string;
     readonly engineVersion: string;
@@ -109,7 +116,11 @@ export class WorkspaceManager {
     const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    return path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);
+    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);
+    if (!coords.edition) return base;
+    const editionNorm = coords.edition.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/^ED(?=\d)/, '');
+    if (!editionNorm) throw new Error('Printed edition is required for a textbook workspace.');
+    return path.join(base, `ED${editionNorm}`);
   }
 
   /**
@@ -127,7 +138,7 @@ export class WorkspaceManager {
     sizeBytes: number;
     sha256: string;
   }> {
-    const wsDir = this.getWorkspaceDir(coords);
+    const wsDir = this.getWorkspaceDir({ ...coords, edition });
     const textbookDir = path.join(wsDir, 'textbook');
     const pagesDir = path.join(textbookDir, 'pages');
 
@@ -308,7 +319,8 @@ export class WorkspaceManager {
 
     const pdfRelative = indexManifest?.source?.sourcePdf?.relativePath || 'textbook/textbook.pdf';
     const pdfFullPath = path.join(workspaceDir, pdfRelative);
-    const sourcePdfExists = fs.existsSync(pdfFullPath);
+    const sourcePersisted = indexManifest?.storagePolicy?.sourcePdfPersisted !== false;
+    const sourcePdfExists = sourcePersisted && fs.existsSync(pdfFullPath);
 
     const assets: Array<{
       relativePath: string;
@@ -374,7 +386,8 @@ export class WorkspaceManager {
     }
 
     const source = indexManifest.source?.sourcePdf;
-    if (source) {
+    const sourcePersisted = indexManifest.storagePolicy?.sourcePdfPersisted !== false;
+    if (source && sourcePersisted) {
       const sourceFile = await this.readAssetFile(workspaceDir, source.relativePath);
       if (!sourceFile) throw new Error(`Workspace source PDF missing: ${source.relativePath}`);
       const sourceHash = crypto.createHash('sha256').update(sourceFile).digest('hex');

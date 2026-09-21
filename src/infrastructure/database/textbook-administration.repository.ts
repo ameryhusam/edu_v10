@@ -54,6 +54,11 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         subject: { select: { key: true, name: true } },
         grade: { select: { key: true, name: true } },
         term: { select: { key: true, name: true } },
+        assets: {
+          where: { scope: 'TEXTBOOK', isActive: true, relativePath: { startsWith: 'cover/' } },
+          select: { key: true },
+          take: 1,
+        },
         _count: { select: { adoptions: true, units: true } },
       },
     });
@@ -96,6 +101,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         unitCount: row._count.units,
         questionCount: questionCountByKey.get(row.key) ?? 0,
         updatedAt: row.updatedAt,
+        coverUrl: row.assets[0] ? `/api/v1/content/assets/${encodeURIComponent(row.assets[0].key)}/stream` : null,
       })),
     };
   }

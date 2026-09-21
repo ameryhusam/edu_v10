@@ -24,6 +24,8 @@ export interface HandlerOptions<TInput, TOutput> {
   readonly input?: ZodType<TInput>;
   /** Reject with 401 before the use case runs when true. */
   readonly requireAuth?: boolean;
+  /** When true, validate req.body directly instead of merging JSON/query/params. */
+  readonly rawBody?: boolean;
   readonly execute: (ctx: HandlerContext<TInput>) => Promise<Result<TOutput>>;
   /** HTTP status on success. Defaults to 200. */
   readonly successStatus?: number;
@@ -51,7 +53,7 @@ export function handle<TInput, TOutput>(options: HandlerOptions<TInput, TOutput>
 
     let input = {} as TInput;
     if (options.input) {
-      const merged = { ...req.query, ...req.params, ...(req.body ?? {}) };
+      const merged = options.rawBody ? req.body : { ...req.query, ...req.params, ...(req.body ?? {}) };
       const parsed = options.input.safeParse(merged);
       if (!parsed.success) {
         reply(

@@ -51,6 +51,7 @@ export interface TextbookSummary {
   readonly unitCount: number;
   readonly questionCount: number;
   readonly updatedAt: string;
+  readonly coverUrl: string | null;
   readonly description?: string | null;
   readonly issuer?: string | null;
   readonly isbn?: string | null;
@@ -298,6 +299,23 @@ export interface UpdateResourceInput {
   readonly estimatedMins?: number | null;
 }
 
+export interface ContentAssetRecord {
+  readonly key: string;
+  readonly assetType: string;
+  readonly originalName: string;
+  readonly relativePath: string;
+  readonly mimeType: string;
+  readonly sizeBytes: number;
+  readonly sha256: string;
+  readonly scope: string;
+  readonly pageStart: number | null;
+  readonly pageEnd: number | null;
+  readonly title: string | null;
+  readonly altText: string | null;
+  readonly caption: string | null;
+  readonly lessonKey: string | null;
+}
+
 export interface ResourceRecord {
   readonly key: string;
   readonly kind: string;
@@ -419,6 +437,10 @@ export const textbookAdministrationApi = {
   lessonMaterials: (lessonKey: string) =>
     api.get<readonly LessonMaterial[]>(`content/lessons/${encodeURIComponent(lessonKey)}/materials`),
 
+  /** Physical lesson pages, AI page explanations and attached media. */
+  lessonAssets: (lessonKey: string) =>
+    api.get<readonly ContentAssetRecord[]>(`content/lessons/${encodeURIComponent(lessonKey)}/assets`),
+
   /** The book-wide shelf — resources attached to the textbook itself. */
   textbookResources: (textbookKey: string) =>
     api.get<readonly ResourceRecord[]>(`content/textbooks/${encodeURIComponent(textbookKey)}/resources`),
@@ -485,6 +507,26 @@ export const textbookAdministrationApi = {
     api.get<unknown>(`content/textbooks/${encodeURIComponent(textbookKey)}/export`),
 
   /** Workspace operations */
+  workspacePrepareUpload: (input: {
+    file: File;
+    term: string;
+    grade: string;
+    subject: string;
+    edition?: string;
+    title?: string;
+    autoSegment?: boolean;
+  }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
+    query: {
+      term: input.term,
+      grade: input.grade,
+      subject: input.subject,
+      edition: input.edition,
+      title: input.title,
+      autoSegment: input.autoSegment,
+    },
+    rawContentType: 'application/pdf',
+  }),
+
   workspacePrepare: (input: {
     term: string;
     grade: string;
@@ -506,8 +548,8 @@ export const textbookAdministrationApi = {
   workspaceInspect: (workspaceDir: string) =>
     api.get<any>('content/workspace/inspect', { query: { workspaceDir } }),
 
-  workspaceSegment: (input: { workspaceDir: string; units?: Array<any> }) =>
-    api.post<any>('content/workspace/segment', input),
+  workspaceReconcile: (input: { workspaceDir: string }) =>
+    api.post<any>('content/workspace/reconcile', input),
 
   workspaceImport: (input: {
     workspaceDir: string;

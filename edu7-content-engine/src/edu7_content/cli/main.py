@@ -25,13 +25,15 @@ import sys
 import os
 import argparse
 import re
+import shutil
+import tempfile
 from pathlib import Path
 from typing import List
 
 from ..pdf.reader import PdfReader
 from ..pdf.page_mapping import PageMappingEngine
 from ..pdf.toc import TocExtractor
-from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision
+from ..pdf.vision_ocr import is_image_based_pdf, extract_toc_via_vision, extract_edition_from_cover
 from ..pdf.segmentation import LessonSegmenter
 from ..ai.registry import AIProviderRegistry
 from ..ai.content_service import ContentAIService
@@ -60,7 +62,7 @@ def main():
     p_prep.add_argument("--subject", required=True, help="Database Subject.key (e.g. MATH, SCI, ARAB)")
     p_prep.add_argument("--grade", required=True, help="Grade code/number (e.g. G04, 07)")
     p_prep.add_argument("--term", default="T1", help="Term folder code (T01, T02, ...)")
-    p_prep.add_argument("--edition", default="2026", help="Printed textbook edition (e.g. 2026)")
+    p_prep.add_argument("--edition", default=None, help="Printed textbook edition; if omitted, extract it from the cover")
     p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
@@ -262,24 +264,43 @@ def _cmd_prepare(args):
         grade_number, grade_key = normalize_grade(args.grade)
         term_number, term_key = normalize_term(args.term)
         subject_key = normalize_subject(args.subject)
-        book_key = textbook_key(subject_key, grade_number, term_number, args.edition)
+        supplied_edition = str(args.edition).strip() if args.edition else None
     except (TypeError, ValueError) as err:
         print(f"[invalid workspace coordinates] {err}")
         sys.exit(2)
 
-    ws_path = (
-        Path(args.workspace).expanduser().resolve()
-        if args.workspace
-        else book_workspace(subject_key, grade_number, term_number, args.edition)
-    )
-
     print(f"[+] Workspace root: {workspace_root()}")
-    print(f"[+] Book key: {book_key}")
     print(f"[+] Coordinates: {term_key}/{grade_key}/{subject_key}")
 
     print(f"\n[*] Reading PDF: {target_pdf}")
     reader = PdfReader(str(target_pdf))
     print(f"[+] Pages: {reader.page_count}")
+
+    edition = supplied_edition
+    if not edition:
+        edition = extract_edition_from_cover(
+            reader,
+            model_name=getattr(args, "model", None),
+            use_gemini=not getattr(args, "no_gemini", False),
+            dpi=getattr(args, "dpi", 150),
+        )
+    if not edition:
+        print("[invalid workspace coordinates] Printed edition could not be established from the cover.")
+        sys.exit(2)
+    book_key = textbook_key(subject_key, grade_number, term_number, edition)
+    ws_path = (
+        Path(args.workspace).expanduser().resolve()
+        if args.workspace
+        else book_workspace(subject_key, grade_number, term_number, edition)
+    )
+    # When the Node bridge supplies the shared subject root, create the edition
+    # as the final identity segment instead of creating a duplicate textbook key.
+    if args.workspace:
+        expected_edition_dir = "ED" + re.sub(r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-"))
+        if ws_path.name.upper() != expected_edition_dir:
+            ws_path = ws_path / expected_edition_dir
+    print(f"[+] Edition: {edition}")
+    print(f"[+] Book key: {book_key}")
 
     # Detect PDF type
     pdf_is_image = is_image_based_pdf(reader, sample_pages=8)
@@ -313,58 +334,28 @@ def _cmd_prepare(args):
         use_ollama = True
         use_gemini = False
 
-    # AI-assisted TOC extraction is attempted first, even for text PDFs.
-    ai_units = extract_toc_via_vision(
-        reader,
-        max_pages=vision_pages,
-        dpi=dpi,
-        api_key=None,
-        model_name=model_arg,
-        use_ollama=use_ollama,
-        use_gemini=use_gemini,
-        force_vision=getattr(args, "force_vision", False),
-    )
-
-    if ai_units:
-        units = ai_units
-        print("[+] Segmentation source: AI-extracted TOC from first ten pages.")
-
-        # For scanned books, verify the first lesson's physical PDF page
-        # using the reference algorithm's evidence-backed visual calibration.
-        if pdf_is_image and use_gemini:
-            try:
-                from ..pdf.visual_calibration import calibrate_first_lesson
-                calibrated = calibrate_first_lesson(
-                    reader, units, mapper, model_arg, dpi=dpi, radius=6
-                )
-                if calibrated:
-                    first_lesson = next(
-                        lesson for unit in units for lesson in unit.get("lessons", [])
-                        if lesson.get("startPage") is not None and lesson.get("title")
-                    )
-                    offset = mapper.calibrate_from_pdf_page(
-                        int(first_lesson["startPage"]), calibrated
-                    )
-                    print(
-                        f"[+] Visual page calibration: printed {first_lesson['startPage']} -> "
-                        f"PDF {calibrated} (offset {offset})."
-                    )
-                else:
-                    print("[!] Visual page calibration did not produce a high-confidence mapping; using detected offset.")
-            except Exception as err:
-                print(f"[!] Visual page calibration skipped: {err}")
-    else:
-        # Deterministic fallback for installations without an available AI
-        # provider or when AI cannot establish a reliable TOC.
-        toc = TocExtractor(reader)
-        toc_pages = toc.find_toc_pages(max_search=10)
+    # Deterministic parsing is the default. AI is used for scanned/image
+    # books or only as a fallback when a text-layer TOC cannot be parsed.
+    toc = TocExtractor(reader)
+    toc_pages = toc.find_toc_pages(max_search=10)
+    if toc_pages and not pdf_is_image:
+        units = toc.extract_hierarchy(toc_pages)
         print(f"[+] Rule-based TOC pages: {[p + 1 for p in toc_pages]}")
-        if toc_pages:
+        print(f"[+] Segmentation source: deterministic TOC parser ({len(units)} units, {sum(len(u.get('lessons', [])) for u in units)} lessons).")
+    else:
+        print("[*] Using Gemini Vision for scanned TOC." if pdf_is_image else "[*] Deterministic TOC unavailable; using AI as fallback.")
+        ai_units = extract_toc_via_vision(
+            reader, max_pages=vision_pages, dpi=dpi, api_key=None,
+            model_name=model_arg, use_ollama=use_ollama, use_gemini=use_gemini,
+            force_vision=getattr(args, "force_vision", False),
+        )
+        if ai_units:
+            units = ai_units
+            print("[+] Segmentation source: AI TOC proposal.")
+        elif toc_pages:
             units = toc.extract_hierarchy(toc_pages)
-            print(
-                f"[+] Rule-based TOC: {len(units)} units, "
-                f"{sum(len(u['lessons']) for u in units)} lessons."
-            )
+            print(f"[+] Deterministic TOC fallback: {len(units)} units, {sum(len(u.get('lessons', [])) for u in units)} lessons.")
+
     _finalize_toc_page_bounds(units, mapper, reader.page_count)
 
     # Summary
@@ -388,7 +379,7 @@ def _cmd_prepare(args):
         "subject": subject_key,
         "grade": grade_number,
         "term": term_number,
-        "edition": args.edition,
+        "edition": edition,
         "title": book_title,
     }
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
@@ -473,7 +464,7 @@ def _cmd_analyze(args):
             text = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
 
             print(f"\n[{idx}/{len(lesson_dirs)}] Analyzing: {manifest.get('title', l_dir.name)}...")
-            res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
+            res = _analyze_with_temporary_page_bundle(provider, manifest, text, l_dir)
             report = validator.validate(res, text)
             print(f"    [+] Concepts: {len(res.concepts)} | Questions: {len(res.questions)} | Flashcards: {len(res.flashcards)}")
             print(f"    [*] Evidence verified: concepts={report['verifiedEvidenceConcepts']} questions={report['verifiedEvidenceQuestions']}")
@@ -520,7 +511,7 @@ def _cmd_analyze(args):
 
         print(f"\n[*] Analyzing single lesson: {manifest.get('title', l_dir.name)}")
         print(f"[*] Provider: {provider.provider_name}")
-        res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
+        res = _analyze_with_temporary_page_bundle(provider, manifest, text, l_dir)
 
         print("[*] Validating Evidence-First compliance...")
         report = validator.validate(res, text)
@@ -638,6 +629,25 @@ def _cmd_export(args):
 
     print("[SUCCESS] Export complete.")
 
+
+def _analyze_with_temporary_page_bundle(provider, manifest, lesson_text: str, lesson_dir: Path):
+    """Send a temporary page-image bundle to AI; never make the bundle canonical."""
+    source_pages = lesson_dir / "pages"
+    if not source_pages.exists():
+        return provider.analyze_lesson(manifest, lesson_text, lesson_dir=lesson_dir)
+
+    with tempfile.TemporaryDirectory(prefix="edu7-ai-pages-") as tmp:
+        request_dir = Path(tmp)
+        request_pages = request_dir / "pages"
+        request_pages.mkdir(parents=True, exist_ok=True)
+        max_images = max(1, int(os.environ.get("GEMINI_MAX_LESSON_IMAGES", "30")))
+        images = sorted(
+            p for p in source_pages.iterdir()
+            if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+        )[:max_images]
+        for image in images:
+            shutil.copy2(image, request_pages / image.name)
+        return provider.analyze_lesson(manifest, lesson_text, lesson_dir=request_dir)
 
 def _dict_to_analysis_result(d: dict):
     """Reconstruct LessonAnalysisResult dataclass from saved JSON dict."""

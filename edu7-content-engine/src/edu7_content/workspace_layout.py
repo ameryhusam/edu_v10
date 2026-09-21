@@ -79,14 +79,18 @@ def textbook_key(subject: str, grade: int, term: int, edition: str) -> str:
         edition_key = "ED" + re.sub(r"[^A-Z0-9-]", "", edition.upper().replace("_", "-"))
     if not edition_key or edition_key == "ED":
         raise ValueError("Printed edition is required.")
-    return f"EDU-{subject}-G{grade:02d}-T{term}-{edition_key}"
+    return f"EDU-{subject}-G{grade:02d}-T{int(term)}-{edition_key}"
 
 
 def book_workspace(subject: str, grade: int, term: int, edition: str) -> Path:
     _, grade_key = normalize_grade(grade)
     term_number, term_key = normalize_term(term)
-    key = textbook_key(subject, int(grade), term_number, edition)
-    return workspace_root() / term_key / grade_key / normalize_subject(subject) / key
+    edition_segment = "ED" + re.sub(
+        r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
+    )
+    if edition_segment == "ED":
+        raise ValueError("Printed edition is required.")
+    return workspace_root() / term_key / grade_key / normalize_subject(subject) / edition_segment
 
 
 def _rewrite_json(path: Path, replacements: Dict[str, str]) -> None:
@@ -121,7 +125,9 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
         index.setdefault("storagePolicy", {}).update({
             "bookPdfPersisted": False,
             "unitPdfPersisted": False,
-            "pageImagesPersisted": False,
+            "pageImagesPersisted": True,
+            "aiPagesPersisted": True,
+            "coverImagePersisted": True,
             "lessonPdfPersisted": True,
             "reconstruction": "ordered lesson PDFs",
         })
@@ -130,7 +136,7 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
     if package_path.exists():
         package = json.loads(package_path.read_text(encoding="utf-8"))
         package.setdefault("meta", {})["profileVersion"] = "2.0"
-        package["meta"]["storagePolicy"] = "LESSON_PDFS_ONLY"
+        package["meta"]["storagePolicy"] = "LESSON_PDFS_AND_PAGE_IMAGES"
         package["textbook"]["key"] = book_key
         package["textbook"]["subjectKey"] = subject_key
         package["textbook"]["workspacePath"] = str(book_dir.relative_to(project))
@@ -150,7 +156,9 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
             "unitPdf": "DERIVED_ON_DEMAND",
             "bookPdf": "DERIVED_ON_DEMAND",
             "lessonPdf": "PERSISTED_CANONICAL",
-            "pageImages": "NOT_PERSISTED",
+            "pageImages": "PERSISTED_PER_LESSON",
+            "aiPages": "OPTIONAL_PERSISTED_PER_LESSON",
+            "coverImage": "PERSISTED",
         },
         "databaseImport": {
             "identity": "Textbook.key",

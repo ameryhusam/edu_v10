@@ -74,10 +74,12 @@ class LessonSegmenter:
         subject = coords.get("subject", raw_meta.get("subject", "GENERAL"))
         grade = coords.get("grade", "G07")
         term = coords.get("term", "T1")
-        edition = str(coords.get("edition", "2026"))
+        edition = str(coords.get("edition", "")).strip()
+        if not edition:
+            raise ValueError("Printed edition is required; it must be supplied or extracted before segmentation.")
         title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
 
-        textbook_key = f"EDU-{subject}-{grade}-{term}-ED{edition}"
+        textbook_key = f"EDU-{subject}-G{int(str(grade).replace('G', '')):02d}-T{int(str(term).replace('T', ''))}-ED{edition}"
 
         # 1. Record source provenance only. The original book PDF is temporary
         # input and is never copied into workspace. Lesson PDFs are the only
@@ -114,6 +116,27 @@ class LessonSegmenter:
         processed_units: List[Dict[str, Any]] = []
         flat_lessons_pkg: List[Dict[str, Any]] = []
         flat_units_pkg: List[Dict[str, Any]] = []
+        assets_registry: List[Dict[str, Any]] = []
+
+        # Retain the physical cover for textbook cards/catalogue presentation.
+        cover_dir = workspace_dir / "cover"
+        cover_dir.mkdir(parents=True, exist_ok=True)
+        cover_data = self.reader.render_page_to_png(0, dpi=120)
+        if cover_data:
+            cover_path = cover_dir / "cover.png"
+            cover_path.write_bytes(cover_data)
+            assets_registry.append({
+                "scope": "TEXTBOOK",
+                "assetType": "PAGE_IMAGE",
+                "originalName": "cover.png",
+                "relativePath": "cover/cover.png",
+                "mimeType": "image/png",
+                "sizeBytes": cover_path.stat().st_size,
+                "sha256": compute_sha256(cover_path),
+                "version": 1,
+                "title": "Textbook cover",
+                "altText": title,
+            })
 
         # 2. Iterate units and lessons
         for u_idx, u in enumerate(units, start=1):
@@ -159,7 +182,15 @@ class LessonSegmenter:
                 l_dir.mkdir(parents=True, exist_ok=True)
 
                 text_dir = l_dir / "text"
+                pages_dir = l_dir / "pages"
+                ai_pages_dir = l_dir / "ai_pages"
+                resource_dir = l_dir / "resource"
                 text_dir.mkdir(exist_ok=True)
+                pages_dir.mkdir(exist_ok=True)
+                ai_pages_dir.mkdir(exist_ok=True)
+                resource_dir.mkdir(exist_ok=True)
+                for resource_kind in ("flashcards", "questions", "concepts", "misconceptions", "audio", "video"):
+                    (resource_dir / resource_kind).mkdir(exist_ok=True)
 
                 start_p = les.get("startPage", unit_start_page)
                 end_p = les.get("endPage", start_p)
@@ -196,6 +227,28 @@ class LessonSegmenter:
                                 "textSha256": _text_sha256(chunk_text),
                             })
                         (text_dir / f"page_{p_print:03d}.txt").write_text(p_text, encoding="utf-8")
+                        page_png = self.reader.render_page_to_png(pdf_idx, dpi=150)
+                        page_rel = None
+                        if page_png:
+                            page_path = pages_dir / f"page_{p_print:03d}.png"
+                            page_path.write_bytes(page_png)
+                            page_rel = f"{u_dir_name}/{l_dir_name}/pages/{page_path.name}"
+                            assets_registry.append({
+                                "scope": "LESSON",
+                                "unitSlug": u_slug,
+                                "lessonSlug": l_slug,
+                                "assetType": "PAGE_IMAGE",
+                                "originalName": page_path.name,
+                                "relativePath": page_rel,
+                                "mimeType": "image/png",
+                                "sizeBytes": page_path.stat().st_size,
+                                "sha256": compute_sha256(page_path),
+                                "version": 1,
+                                "pageStart": p_print,
+                                "pageEnd": p_print,
+                                "title": f"Page {p_print}",
+                            })
+                        grounding_pages[-1]["imagePath"] = page_rel
                         aggregated_text.append(f"--- [صفحة {p_print}] ---\n{p_text}")
 
                 l_sha = compute_sha256(lesson_pdf_path)
@@ -249,7 +302,17 @@ class LessonSegmenter:
                     "printedPageEnd": end_p,
                     "pdfPageStart": pdf_pages[0] if pdf_pages else None,
                     "pdfPageEnd": pdf_pages[-1] if pdf_pages else None,
-                    "pageImages": [],
+                    "pageImages": [
+                        f"{u_dir_name}/{l_dir_name}/pages/page_{p:03d}.png"
+                        for p in printed_pages
+                        if (pages_dir / f"page_{p:03d}.png").exists()
+                    ],
+                    "aiPages": [
+                        f"{u_dir_name}/{l_dir_name}/ai_pages/page_{p:03d}.png"
+                        for p in printed_pages
+                        if (ai_pages_dir / f"page_{p:03d}.png").exists()
+                    ],
+                    "resourceDir": f"{u_dir_name}/{l_dir_name}/resource",
                     "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
                     "grounding": {
                         "pageCount": len(grounding_pages),
@@ -316,7 +379,9 @@ class LessonSegmenter:
             "storagePolicy": {
                 "bookPdfPersisted": False,
                 "unitPdfPersisted": False,
-                "pageImagesPersisted": False,
+                "pageImagesPersisted": True,
+                "aiPagesPersisted": True,
+                "coverImagePersisted": bool(cover_data),
                 "lessonPdfPersisted": True,
                 "reconstruction": "lesson PDFs in manifest order",
             },
@@ -333,7 +398,7 @@ class LessonSegmenter:
                 "profileVersion": "1.1",
                 "scope": "FULL",
                 "exportedAt": "2026-09-20T00:00:00.000Z",
-                "storagePolicy": "LESSON_PDFS_ONLY",
+                "storagePolicy": "LESSON_PDFS_AND_PAGE_IMAGES",
             },
             "textbook": {
                 "key": textbook_key,

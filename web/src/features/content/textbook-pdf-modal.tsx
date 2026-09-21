@@ -48,6 +48,7 @@ export function TextbookPdfModal({
   const [pdfTitle, setPdfTitle] = useState('');
   const [totalPages, setTotalPages] = useState<string>('');
   const [notes, setNotes] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [selectedFileSize, setSelectedFileSize] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -79,23 +80,42 @@ export function TextbookPdfModal({
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!textbook) throw new Error('No textbook selected');
-      const finalUrl = pdfUrl.trim();
-      const finalTitle = pdfTitle.trim() || t('textbookAdmin.pdfCurrentAttached');
-      if (!finalUrl) {
-        throw new Error(t('textbookAdmin.pdfSourceUrlHint'));
+      const finalTitle = pdfTitle.trim() || textbook.title;
+
+      if (inputMode === 'FILE') {
+        if (!selectedFile) throw new Error('يرجى اختيار ملف PDF');
+        const prepared = await textbookAdministrationApi.workspacePrepareUpload({
+          file: selectedFile,
+          term: textbook.termKey,
+          grade: textbook.gradeKey,
+          subject: textbook.subjectKey,
+          edition: textbook.edition,
+          title: finalTitle,
+          autoSegment: true,
+        });
+        await textbookAdministrationApi.workspaceImport({
+          workspaceDir: prepared.workspaceDir,
+          dryRun: true,
+          syncAssets: true,
+        });
+        await textbookAdministrationApi.workspaceImport({
+          workspaceDir: prepared.workspaceDir,
+          dryRun: false,
+          syncAssets: true,
+        });
+      } else {
+        const finalUrl = pdfUrl.trim();
+        if (!finalUrl) throw new Error(t('textbookAdmin.pdfSourceUrlHint'));
+        await textbookAdministrationApi.createLearningResource({
+          textbookKey: textbook.key,
+          kind: 'TEXTBOOK_PAGE',
+          title: finalTitle,
+          url: finalUrl,
+          body: notes.trim() || null,
+          orderIndex: 1,
+        });
       }
 
-      // 1. Create or attach learning resource as TEXTBOOK_PAGE
-      await textbookAdministrationApi.createLearningResource({
-        textbookKey: textbook.key,
-        kind: 'TEXTBOOK_PAGE',
-        title: finalTitle,
-        url: finalUrl,
-        body: notes.trim() || null,
-        orderIndex: 1,
-      });
-
-      // 2. If total pages is provided, update textbook metadata
       const pagesNum = parseInt(totalPages, 10);
       if (!Number.isNaN(pagesNum) && pagesNum > 0) {
         await textbookAdministrationApi.updateNode({
@@ -110,6 +130,7 @@ export function TextbookPdfModal({
       setErrorMsg(null);
       setPdfUrl('');
       setPdfTitle('');
+      setSelectedFile(null);
       setSelectedFileName(null);
       setSelectedFileSize(null);
       await refetch();
@@ -136,6 +157,7 @@ export function TextbookPdfModal({
   if (!open || !textbook) return null;
 
   const handleFileSelect = (file: File) => {
+    setSelectedFile(file);
     setSelectedFileName(file.name);
     const sizeKb = Math.round(file.size / 1024);
     setSelectedFileSize(sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`);
@@ -171,7 +193,7 @@ export function TextbookPdfModal({
             </Button>
             <Button
               variant="primary"
-              disabled={saveMutation.isPending || !pdfUrl.trim()}
+              disabled={saveMutation.isPending || (inputMode === 'URL' ? !pdfUrl.trim() : !selectedFile)}
               onClick={() => saveMutation.mutate()}
             >
               {saveMutation.isPending ? t('common.working') : t('catalogue.save')}

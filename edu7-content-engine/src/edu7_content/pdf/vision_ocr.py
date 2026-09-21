@@ -36,6 +36,41 @@ def render_pages_to_b64(reader, max_pages: int = 10, dpi: int = 150) -> List[str
 def render_page_to_b64(reader, page_idx: int, dpi: int = 150) -> Optional[str]:
     return reader.render_page_to_b64(page_idx, dpi=dpi) if hasattr(reader, "render_page_to_b64") else None
 
+def extract_edition_from_cover(reader, model_name=None, use_gemini=True, dpi=150) -> Optional[str]:
+    """Extract printed edition/year from the cover without inventing a value."""
+    import re
+    text = "\n".join(reader.extract_page_text(i) for i in range(min(3, reader.page_count)))
+    patterns = [
+        r"(?:طبعة|الطبعة|إصدار|الاصدار|عام|سنة)\s*[:：\-]?\s*((?:19|20)\d{2}(?:\s*[/\-]\s*(?:19|20)\d{2})?)",
+        r"\b((?:19|20)\d{2})\b",
+    ]
+    for pattern in patterns:
+        matches = re.findall(pattern, text)
+        if matches:
+            return re.sub(r"\s+", "", matches[-1])
+    if not use_gemini:
+        return None
+    try:
+        images = render_pages_to_b64(reader, max_pages=1, dpi=dpi)
+        if not images:
+            return None
+        from ..ai.content_service import ContentAIService
+        service = ContentAIService(model_name=model_name if model_name and model_name.startswith("gemini") else None)
+        if not service.provider.client.api_keys:
+            return None
+        schema = {"type":"object","properties":{"edition":{"type":["string","null"]}},"required":["edition"]}
+        prompt = "اقرأ غلاف الكتاب المرفق فقط. استخرج سنة/رقم الطبعة المطبوعة بوضوح. إذا لم توجد أعد null. لا تخمن. JSON فقط."
+        result = service.request("COVER_EDITION", prompt, schema, images_b64=images, timeout=120)
+        value = result.get("edition")
+        if value:
+            value = re.sub(r"[^0-9/\-]", "", str(value))
+            if re.fullmatch(r"(?:19|20)\d{2}(?:[-/]\d{4})?", value):
+                return value
+    except Exception as err:
+        print(f"[!] Cover edition extraction failed: {err}")
+    return None
+
+
 def extract_toc_via_vision(reader, max_pages=10, dpi=150, api_key=None,
                            model_name=None, use_ollama=False,
                            use_gemini=True, force_vision=False) -> List[Dict[str, Any]]:

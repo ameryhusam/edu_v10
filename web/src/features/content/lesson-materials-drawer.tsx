@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { MaterialsList } from './content-materials-panel';
+import { LessonPageViewer } from './lesson-page-viewer';
 import { useI18n } from '../../shared/i18n/i18n';
 
 export interface LessonMaterialsDrawerProps {
@@ -34,6 +35,7 @@ export function LessonMaterialsDrawer({
             {t('common.close')}
           </button>
         </div>
+        <LessonPageViewer lessonKey={lessonKey} />
         <MaterialsList lessonKey={lessonKey} />
       </div>
     </div>

@@ -9,12 +9,15 @@
  */
 
 import * as crypto from 'node:crypto';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import type { ContentImportService, ImportResult } from './content-import.service.js';
 import type { ContentAssetService } from './content-asset.service.js';
 import type { WorkspaceManager } from '../../../infrastructure/storage/workspace-manager.js';
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
 import type { AuthorContext } from './authoring.service.js';
+import type { ContentEngineService } from '../../../infrastructure/content/content-engine.service.js';
 
 export interface WorkspaceImportOptions {
   readonly dryRun?: boolean;
@@ -37,6 +40,8 @@ export class WorkspaceImporterService {
     private readonly workspaceManager: WorkspaceManager,
     private readonly contentImportService: ContentImportService,
     private readonly assetService: ContentAssetService,
+    private readonly contentEngine: ContentEngineService,
+    private readonly engineTimeoutMs: number,
   ) {}
 
   /**
@@ -108,6 +113,19 @@ export class WorkspaceImporterService {
       }
     }
 
+    // Reconcile physical page/AI-page/resource files that may have been added
+    // after preparation. The workspace is intentionally an editable content
+    // source; package manifests are not the only source of physical assets.
+    const packagedPaths = new Set((pkg.assets ?? []).map((asset) => asset.relativePath));
+    const discovered = await this.discoverEditableAssets(workspaceDir, textbookKey, packagedPaths);
+    for (const asset of discovered) {
+      if (!dryRun && options.syncAssets !== false) {
+        await this.assetService.uploadAsset(asset);
+        assetsUploaded++;
+      }
+      assetsVerified++;
+    }
+
     return {
       workspaceDir,
       textbookKey,
@@ -117,6 +135,111 @@ export class WorkspaceImporterService {
       assetsUploaded,
       missingAssets,
     };
+  }
+
+  private async discoverEditableAssets(
+    workspaceDir: string,
+    textbookKey: string,
+    packagedPaths: Set<string>,
+  ): Promise<Array<{
+    textbookKey: string;
+    relativePath: string;
+    buffer: Buffer;
+    assetType: any;
+    scope: 'TEXTBOOK' | 'LESSON';
+    lessonKey?: string | null;
+    unitKey?: string | null;
+    mimeType?: string;
+    originalName?: string;
+    pageStart?: number | null;
+    pageEnd?: number | null;
+    title?: string | null;
+  }>> {
+    const discovered: Array<any> = [];
+    const add = async (
+      relativePath: string,
+      assetType: string,
+      scope: 'TEXTBOOK' | 'LESSON',
+      unitSlug?: string,
+      lessonSlug?: string,
+    ) => {
+      if (packagedPaths.has(relativePath)) return;
+      const full = path.join(workspaceDir, relativePath);
+      const buffer = await fs.readFile(full);
+      const parts = relativePath.split('/');
+      const file = parts[parts.length - 1];
+      const mimeType =
+        file.endsWith('.png') ? 'image/png' :
+        file.endsWith('.jpg') || file.endsWith('.jpeg') ? 'image/jpeg' :
+        file.endsWith('.webp') ? 'image/webp' :
+        file.endsWith('.mp3') ? 'audio/mpeg' :
+        file.endsWith('.wav') ? 'audio/wav' :
+        file.endsWith('.mp4') ? 'video/mp4' :
+        file.endsWith('.webm') ? 'video/webm' :
+        'application/octet-stream';
+      const pageMatch = file.match(/page_(\d+)/i);
+      discovered.push({
+        textbookKey,
+        relativePath,
+        buffer,
+        assetType,
+        scope,
+        ...(unitSlug && lessonSlug ? {
+          unitKey: `${textbookKey}-U-${unitSlug}`,
+          lessonKey: `${textbookKey}-U-${unitSlug}-L-${lessonSlug}`,
+        } : {}),
+        mimeType,
+        originalName: file,
+        pageStart: pageMatch ? Number(pageMatch[1]) : null,
+        pageEnd: pageMatch ? Number(pageMatch[1]) : null,
+      });
+    };
+
+    const cover = path.join(workspaceDir, 'cover', 'cover.png');
+    try { await fs.access(cover); await add('cover/cover.png', 'PAGE_IMAGE', 'TEXTBOOK'); } catch {}
+
+    const unitEntries = await fs.readdir(workspaceDir, { withFileTypes: true });
+    for (const unitEntry of unitEntries) {
+      if (!unitEntry.isDirectory() || !unitEntry.name.startsWith('unit_')) continue;
+      const unitDir = path.join(workspaceDir, unitEntry.name);
+      const lessonEntries = await fs.readdir(unitDir, { withFileTypes: true });
+      for (const lessonEntry of lessonEntries) {
+        if (!lessonEntry.isDirectory() || !lessonEntry.name.startsWith('lesson_')) continue;
+        const lessonDir = path.join(unitDir, lessonEntry.name);
+        const manifestPath = path.join(lessonDir, 'lesson_manifest.json');
+        let manifest: any;
+        try { manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8')); } catch { continue; }
+        const unitSlug = String(manifest.unitSlug ?? '').trim();
+        const lessonSlug = String(manifest.lessonSlug ?? '').trim();
+        if (!unitSlug || !lessonSlug) continue;
+
+        for (const [dirName, type] of [['pages', 'PAGE_IMAGE'], ['ai_pages', 'IMAGE_SUMMARY']] as const) {
+          const dir = path.join(lessonDir, dirName);
+          try {
+            const files = await fs.readdir(dir);
+            for (const file of files.filter((f) => /\.(png|jpe?g|webp)$/i.test(f)).sort()) {
+              await add(`${unitEntry.name}/${lessonEntry.name}/${dirName}/${file}`, type, 'LESSON', unitSlug, lessonSlug);
+            }
+          } catch {}
+        }
+
+        const resourceDir = path.join(lessonDir, 'resource');
+        try {
+          const files = await fs.readdir(resourceDir, { recursive: true } as any);
+          for (const file of files as string[]) {
+            const rel = `${unitEntry.name}/${lessonEntry.name}/resource/${file}`;
+            const full = path.join(workspaceDir, rel);
+            const stat = await fs.stat(full);
+            if (!stat.isFile()) continue;
+            const ext = path.extname(file).toLowerCase();
+            const type = ['.mp3','.wav','.m4a','.ogg'].includes(ext) ? 'AUDIO'
+              : ['.mp4','.webm','.mov'].includes(ext) ? 'VIDEO' : 'RESOURCE_FILE';
+            await add(rel, type, 'LESSON', unitSlug, lessonSlug);
+          }
+        } catch {}
+      }
+    }
+    return discovered;
   }
 
   /**
@@ -146,53 +269,63 @@ export class WorkspaceImporterService {
     autoSegment?: boolean;
     units?: Array<any>;
   }) {
-    const coords = {
-      term: input.term,
-      grade: input.grade,
-      subject: input.subject,
-    };
+    const edition = input.edition;
+    const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
+    const wsDir = edition
+      ? this.workspaceManager.getWorkspaceDir(coords)
+      : this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject });
 
-    let storeRes;
     if (input.pdfBuffer && input.pdfBuffer.length > 0) {
-      storeRes = await this.workspaceManager.storeTextbookSource(
-        coords,
-        input.pdfBuffer,
-        input.edition || '2026',
-        input.title,
-      );
-    } else {
-      const wsDir = this.workspaceManager.getWorkspaceDir(coords);
-      storeRes = {
-        workspaceDir: wsDir,
-        pdfRelativePath: 'textbook/textbook.pdf',
-        pdfFullPath: `${wsDir}/textbook/textbook.pdf`,
-        sizeBytes: 0,
-        sha256: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      };
-    }
+      if (input.autoSegment === false) {
+        throw new DomainErrorException(
+          Errors.validation(
+            'workspace.prepare_requires_engine',
+            'Book upload must run through the Python content engine; disabling segmentation is not supported for uploaded books.',
+          ),
+        );
+      }
 
-    // Physical segmentation is performed by edu7-content-engine (Python).
-    // Never manufacture unit/lesson PDFs here. If a generated workspace already
-    // exists, reconcile it; otherwise return the source workspace and an explicit
-    // segmentation-required state.
-    if (input.autoSegment !== false) {
-      const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
-      const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
-      if (index && pkg) {
-        const segmentRes = await this.workspaceManager.segmentWorkspace(storeRes.workspaceDir);
-        return { ...storeRes, ...segmentRes, segmentationStatus: 'RECONCILED' as const };
+      const engineResult = await this.contentEngine.prepare({
+        pdf: input.pdfBuffer,
+        workspaceDir: wsDir,
+        subject: input.subject,
+        grade: input.grade,
+        term: input.term,
+        edition,
+        title: input.title,
+        timeoutMs: this.engineTimeoutMs,
+      });
+
+      const preparedWorkspaceDir = engineResult.workspaceDir;
+      const index = await this.workspaceManager.readIndexManifest(preparedWorkspaceDir);
+      const pkg = await this.workspaceManager.readContentPackage(preparedWorkspaceDir);
+      if (!index || !pkg) {
+        throw new DomainErrorException(
+          Errors.internal(
+            'workspace.engine_output_invalid',
+            'The content engine completed but did not produce a valid workspace package.',
+            { stdout: engineResult.stdout.slice(-4000), stderr: engineResult.stderr.slice(-4000) },
+          ),
+        );
       }
       return {
-        ...storeRes,
+        workspaceDir: preparedWorkspaceDir,
+        sourcePdfPersisted: false,
         indexManifest: index,
         package: pkg,
-        segmentationStatus: 'REQUIRES_CONTENT_ENGINE' as const,
+        segmentationStatus: 'PREPARED_BY_CONTENT_ENGINE' as const,
+        engine: { stdout: engineResult.stdout, stderr: engineResult.stderr },
       };
     }
 
-    const index = await this.workspaceManager.readIndexManifest(storeRes.workspaceDir);
-    const pkg = await this.workspaceManager.readContentPackage(storeRes.workspaceDir);
-    return { ...storeRes, indexManifest: index, package: pkg, segmentationStatus: 'NOT_REQUESTED' as const };
+    const index = await this.workspaceManager.readIndexManifest(wsDir);
+    const pkg = await this.workspaceManager.readContentPackage(wsDir);
+    return {
+      workspaceDir: wsDir,
+      indexManifest: index,
+      package: pkg,
+      segmentationStatus: index && pkg ? 'RECONCILED' as const : 'REQUIRES_CONTENT_ENGINE' as const,
+    };
   }
 
   /**

@@ -208,6 +208,14 @@ export class ContentAssetService {
     return this.assetRepo.listAssetsForTextbook(textbookKey, options);
   }
 
+  /** Lists the physical pages, AI pages and lesson resources for a lesson. */
+  async listLessonAssets(
+    lessonKey: string,
+    options?: { assetType?: ContentAssetType },
+  ): Promise<readonly ContentAssetRecord[]> {
+    return this.assetRepo.listAssetsForLesson(lessonKey, options);
+  }
+
   /**
    * Synchronises assets declared in an exported ContentPackage
    */

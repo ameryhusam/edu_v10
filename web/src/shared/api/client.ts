@@ -30,6 +30,9 @@ type Envelope<T> =
 export interface RequestOptions {
   readonly method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
   readonly body?: unknown;
+  /** Raw browser body for binary uploads; uses the same auth/refresh path. */
+  readonly rawBody?: BodyInit;
+  readonly rawContentType?: string;
   readonly query?: Record<string, string | number | boolean | undefined | null>;
   readonly signal?: AbortSignal;
   /** Set for login/refresh, which must not recurse into the refresh flow. */
@@ -133,14 +136,22 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   const send = async (): Promise<Response> => {
     const headers: Record<string, string> = { accept: 'application/json' };
-    if (options.body !== undefined) headers['content-type'] = 'application/json';
+    if (options.rawBody !== undefined) {
+      headers['content-type'] = options.rawContentType ?? 'application/octet-stream';
+    } else if (options.body !== undefined) {
+      headers['content-type'] = 'application/json';
+    }
     if (accessToken) headers['authorization'] = `Bearer ${accessToken}`;
 
     return fetch(buildUrl(path, options.query), {
       method: options.method ?? 'GET',
       headers,
       credentials: 'same-origin',
-      ...(options.body !== undefined ? { body: JSON.stringify(options.body) } : {}),
+      ...(options.rawBody !== undefined
+        ? { body: options.rawBody }
+        : options.body !== undefined
+          ? { body: JSON.stringify(options.body) }
+          : {}),
       ...(options.signal ? { signal: options.signal } : {}),
     });
   };
@@ -197,6 +208,8 @@ export const api = {
     request<T>(path, { ...options, method: 'GET' }),
   post: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'POST', ...(body !== undefined ? { body } : {}) }),
+  postRaw: <T>(path: string, body: BodyInit, options?: Omit<RequestOptions, 'method' | 'body' | 'rawBody'>) =>
+    request<T>(path, { ...options, method: 'POST', rawBody: body }),
   patch: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'PATCH', ...(body !== undefined ? { body } : {}) }),
   put: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>

@@ -71,6 +71,19 @@ export class PrismaContentAssetRepository implements ContentAssetRepository {
     return row ? this.map(row) : null;
   }
 
+  async listAssetsForLesson(lessonKey: string, options?: { assetType?: ContentAssetType }): Promise<readonly ContentAssetRecord[]> {
+    const rows = await this.db.contentAsset.findMany({
+      where: {
+        lesson: { key: lessonKey },
+        isActive: true,
+        ...(options?.assetType ? { assetType: options.assetType as never } : {}),
+      },
+      include: this.include,
+      orderBy: [{ pageStart: 'asc' }, { relativePath: 'asc' }],
+    });
+    return rows.map((row) => this.map(row));
+  }
+
   async listAssetsForTextbook(textbookKey: string, options?: { scope?: ContentAssetScope; assetType?: ContentAssetType }): Promise<readonly ContentAssetRecord[]> {
     const rows = await this.db.contentAsset.findMany({
       where: { textbook: { key: textbookKey }, isActive: true, ...(options?.scope ? { scope: options.scope } : {}), ...(options?.assetType ? { assetType: options.assetType } : {}) },
