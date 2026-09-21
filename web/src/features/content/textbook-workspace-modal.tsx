@@ -149,12 +149,12 @@ export function TextbookWorkspaceModal({
   const segmentMutation = useMutation({
     mutationFn: async () => {
       if (!selectedWorkspaceDir) throw new Error('يرجى اختيار مساحة عمل أولاً');
-      return textbookAdministrationApi.workspaceSegment({
+      return textbookAdministrationApi.workspaceReconcile({
         workspaceDir: selectedWorkspaceDir,
       });
     },
     onSuccess: () => {
-      setActionSuccess('تم تحديث تقطيع الوحدات والدروس بنجاح!');
+      setActionSuccess('تم التحقق من مساحة العمل والأصول والتقسيم الموجود بنجاح.');
       refetchInspect();
     },
     onError: (err: any) => {
@@ -481,7 +481,7 @@ export function TextbookWorkspaceModal({
                       disabled={segmentMutation.isPending}
                     >
                       <RefreshCw className={`w-3.5 h-3.5 mr-1 ${segmentMutation.isPending ? 'animate-spin' : ''}`} />
-                      <span>إعادة التقطيع</span>
+                      <span>التحقق من التقطيع</span>
                     </Button>
                   </div>
 
