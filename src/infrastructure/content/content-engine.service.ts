@@ -66,8 +66,19 @@ export class ContentEngineService {
         },
       });
 
+      let preparedWorkspaceDir = input.workspaceDir;
+      if (!input.edition) {
+        const entries = await fs.readdir(input.workspaceDir, { withFileTypes: true });
+        const candidates = entries
+          .filter((entry) => entry.isDirectory() && /^ED[A-Z0-9-]+$/i.test(entry.name))
+          .map((entry) => path.join(input.workspaceDir, entry.name));
+        if (candidates.length !== 1) {
+          throw new Error('Content engine did not produce exactly one edition workspace when edition was not supplied.');
+        }
+        preparedWorkspaceDir = candidates[0];
+      }
       return {
-        workspaceDir: input.workspaceDir,
+        workspaceDir: preparedWorkspaceDir,
         stdout: result.stdout,
         stderr: result.stderr,
       };
