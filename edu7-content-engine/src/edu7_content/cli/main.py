@@ -3,10 +3,10 @@ cli/main.py — Edu7 Content Engine CLI
 ======================================
 Usage examples:
 
-  # Auto-detect PDF in books_input/ and prepare (rule-based only):
+  # Prepare a book with Gemini-assisted TOC/range detection:
   python -m edu7_content.cli.main prepare
 
-  # Prepare specific PDF (auto-fallback to Ollama if image-based):
+  # Prepare a specific PDF:
   python -m edu7_content.cli.main prepare books_input/<book>.pdf
 
   # Force Ollama vision extraction with specific model:
@@ -85,12 +85,6 @@ def main():
                            help="Model: heuristic-micro-engine | gemini | gemini-3.6-flash | gemini-3.5-flash | ollama-qwen2.5:7b | ...")
     p_analyze.add_argument("--delay", type=float, default=4.0,
                            help="Delay in seconds between lessons to pace Gemini requests (default: 4.0s)")
-
-    # ── benchmark ────────────────────────────────────────────────────────────
-    p_bench = sub.add_parser("benchmark", help="Multi-model comparison on a lesson")
-    p_bench.add_argument("lesson_dir")
-    p_bench.add_argument("--models", default="heuristic-micro-engine",
-                         help="Comma-separated model names")
 
     # ── export ───────────────────────────────────────────────────────────────
     p_exp = sub.add_parser("export", help="Export workspace to JSON/Excel")
