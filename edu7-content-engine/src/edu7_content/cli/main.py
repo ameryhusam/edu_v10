@@ -25,6 +25,8 @@ import sys
 import os
 import argparse
 import re
+import shutil
+import tempfile
 from pathlib import Path
 from typing import List
 
@@ -462,7 +464,7 @@ def _cmd_analyze(args):
             text = t_file.read_text(encoding="utf-8") if t_file.exists() else ""
 
             print(f"\n[{idx}/{len(lesson_dirs)}] Analyzing: {manifest.get('title', l_dir.name)}...")
-            res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
+            res = _analyze_with_temporary_page_bundle(provider, manifest, text, l_dir)
             report = validator.validate(res, text)
             print(f"    [+] Concepts: {len(res.concepts)} | Questions: {len(res.questions)} | Flashcards: {len(res.flashcards)}")
             print(f"    [*] Evidence verified: concepts={report['verifiedEvidenceConcepts']} questions={report['verifiedEvidenceQuestions']}")
@@ -509,7 +511,7 @@ def _cmd_analyze(args):
 
         print(f"\n[*] Analyzing single lesson: {manifest.get('title', l_dir.name)}")
         print(f"[*] Provider: {provider.provider_name}")
-        res = provider.analyze_lesson(manifest, text, lesson_dir=l_dir)
+        res = _analyze_with_temporary_page_bundle(provider, manifest, text, l_dir)
 
         print("[*] Validating Evidence-First compliance...")
         report = validator.validate(res, text)
@@ -627,6 +629,25 @@ def _cmd_export(args):
 
     print("[SUCCESS] Export complete.")
 
+
+def _analyze_with_temporary_page_bundle(provider, manifest, lesson_text: str, lesson_dir: Path):
+    """Send a temporary page-image bundle to AI; never make the bundle canonical."""
+    source_pages = lesson_dir / "pages"
+    if not source_pages.exists():
+        return provider.analyze_lesson(manifest, lesson_text, lesson_dir=lesson_dir)
+
+    with tempfile.TemporaryDirectory(prefix="edu7-ai-pages-") as tmp:
+        request_dir = Path(tmp)
+        request_pages = request_dir / "pages"
+        request_pages.mkdir(parents=True, exist_ok=True)
+        max_images = max(1, int(os.environ.get("GEMINI_MAX_LESSON_IMAGES", "30")))
+        images = sorted(
+            p for p in source_pages.iterdir()
+            if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp"}
+        )[:max_images]
+        for image in images:
+            shutil.copy2(image, request_pages / image.name)
+        return provider.analyze_lesson(manifest, lesson_text, lesson_dir=request_dir)
 
 def _dict_to_analysis_result(d: dict):
     """Reconstruct LessonAnalysisResult dataclass from saved JSON dict."""
