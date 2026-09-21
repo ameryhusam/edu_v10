@@ -149,9 +149,11 @@ export class WorkspaceImporterService {
     autoSegment?: boolean;
     units?: Array<any>;
   }) {
-    const coords = { term: input.term, grade: input.grade, subject: input.subject };
-    const wsDir = this.workspaceManager.getWorkspaceDir(coords);
-    const edition = input.edition || '2026';
+    const edition = input.edition;
+    const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
+    const wsDir = edition
+      ? this.workspaceManager.getWorkspaceDir(coords)
+      : this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject });
 
     if (input.pdfBuffer && input.pdfBuffer.length > 0) {
       if (input.autoSegment === false) {
