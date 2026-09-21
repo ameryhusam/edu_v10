@@ -125,7 +125,9 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
         index.setdefault("storagePolicy", {}).update({
             "bookPdfPersisted": False,
             "unitPdfPersisted": False,
-            "pageImagesPersisted": False,
+            "pageImagesPersisted": True,
+            "aiPagesPersisted": True,
+            "coverImagePersisted": True,
             "lessonPdfPersisted": True,
             "reconstruction": "ordered lesson PDFs",
         })
@@ -154,7 +156,9 @@ def finalize_book_workspace(book_dir: Path, book_key: str, subject_key: str) -> 
             "unitPdf": "DERIVED_ON_DEMAND",
             "bookPdf": "DERIVED_ON_DEMAND",
             "lessonPdf": "PERSISTED_CANONICAL",
-            "pageImages": "NOT_PERSISTED",
+            "pageImages": "PERSISTED_PER_LESSON",
+            "aiPages": "OPTIONAL_PERSISTED_PER_LESSON",
+            "coverImage": "PERSISTED",
         },
         "databaseImport": {
             "identity": "Textbook.key",
