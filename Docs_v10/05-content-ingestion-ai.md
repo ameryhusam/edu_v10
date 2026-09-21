@@ -1,11 +1,11 @@
 # Content Ingestion, Workspace, Grounding and AI
 
-**Status:** ADOPTED; implementation is progressing through the current G1–G4 work.
+**Status:** ADOPTED; target production contract. Implementation status is tracked only in `Docs_v10/11-current-state.md`.
 
 ## 1. Canonical pipeline
 
 ```text
-Approved external source
+External source
       ↓
 Python Content Engine
   PDF reading / TOC / page mapping / segmentation / rendering
@@ -79,7 +79,7 @@ Grounding records should include:
 
 Missing source, invalid mapping, or checksum mismatch is a blocking error for grounded analysis.
 
-## 4. Workspace
+## 4. Canonical workspace
 
 The workspace is an evidence/preparation boundary, not a database.
 
@@ -192,17 +192,9 @@ The content-preparation engine may support local models and remote providers beh
 
 Provider choice must not alter the canonical import contract.
 
-## 11. Current G1–G4 boundary
+## 11. Implementation staging
 
-G1 establishes assets/workspace/provider transport.
-
-G2 establishes AI-assisted TOC extraction with deterministic fallback and PyMuPDF → pypdf reader abstraction.
-
-G3 establishes grounding manifests and checksums.
-
-G4 establishes lesson analysis as draft-only workspace output.
-
-The next canonical step is preview/dedup/human Apply through the existing authoring services, not an AI-specific DB writer.
+The production architecture may be implemented incrementally through foundation gates such as workspace/assets/provider transport, deterministic TOC and PDF-reader fallback, grounding manifests/checksums, draft-only lesson AI analysis, preview/deduplication/human Apply, canonical page/chunk persistence, and page/resource authoring. These are implementation stages, not separate architectural owners or alternative pipelines.
 
 ## 12. External library integration
 
