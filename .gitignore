@@ -38,3 +38,6 @@ workspace/*
 # Generated local content-engine artifacts
 edu7-content-engine/workspaces/
 edu7-content-engine/.tmp/
+
+# Local migration backups: temporary working data, never commit.
+.local-migration-backups/
