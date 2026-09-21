@@ -83,3 +83,29 @@ AI lesson analysis remains draft-only and workspace-based until human Apply.
 This file records repository inspection. It does not claim a command was executed during documentation migration unless a later commit records that evidence.
 
 Before merging implementation work, run the relevant verification commands and update this document only when the state materially changes.
+
+
+## Workspace ZIP synchronization implementation update
+
+The current repository now includes a safe workspace ZIP exchange path:
+- full workspace ZIP import;
+- partial workspace ZIP import when textbookKey is supplied;
+- isolated extraction and archive safety limits;
+- SHA-256 comparison of incoming versus existing workspace files;
+- staged merge that preserves files omitted from partial updates;
+- dry-run reconciliation before apply;
+- canonical content/asset import before the staged workspace becomes the new snapshot;
+- textbook-keyed ZIP export of the actual workspace tree.
+
+Current HTTP operations:
+- POST /api/v1/content/workspace/import-zip
+- GET /api/v1/content/workspaces/:textbookKey/export-zip
+
+The implementation deliberately keeps semantic ownership separate: a physical question/flashcard file discovered under resource/ becomes a physical ContentAsset until a dedicated canonical semantic importer processes its contents.
+
+Known production gaps remain:
+1. distributed per-textbook operation lock/idempotency record;
+2. durable operation/readiness history rather than process-local status;
+3. dedicated semantic ZIP import adapters for QuestionBank and Flashcard updates;
+4. stronger append-only ContentAsset versioning when a binary at the same relative path changes;
+5. end-to-end tests for full round-trip ZIP, partial update, duplicate/no-op, changed asset, identity conflict, malformed ZIP and rollback/retry cases.
