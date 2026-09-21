@@ -269,7 +269,7 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
   const contentStorage = new LocalContentStorage({
     rootDir: process.env.STORAGE_ROOT || './data/storage',
   });
-  const workspaceManager = new WorkspaceManager();
+  const workspaceManager = new WorkspaceManager(env.WORKSPACE_ROOT);
   const contentEngine = new ContentEngineService(env.CONTENT_ENGINE_PYTHON, env.CONTENT_ENGINE_ROOT);
   const contentAssetRepository = new PrismaContentAssetRepository(db);
 
