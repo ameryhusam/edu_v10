@@ -2,9 +2,9 @@
  * TextbookWorkspaceModal — Unified Workspace Slicing, Inspection, and Syncing Modal
  *
  * Implements the unified book addition and segmentation workflow:
- * 1. Uploads/assigns book PDF directly into the standardized Workspace folder (T01/G07/MATH)
- * 2. Automated slicing into Units (U_01_*.pdf) and Lessons (L_01_*.pdf) with manifests
- * 3. Inspects and previews extraction outputs, page assets, and structure
+ * 1. Uploads the book PDF to the backend; the Python content engine prepares the lesson-only workspace
+ * 2. Automated slicing into logical Units and canonical Lesson PDFs with manifests
+ * 3. Inspects and previews extraction outputs and structure
  * 4. Executes Dry-Run verification & conflict detection
  * 5. Synchronizes and saves extraction results into PostgreSQL via ContentImportService
  */
@@ -63,7 +63,6 @@ export function TextbookWorkspaceModal({
 
   // File Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [pdfBase64, setPdfBase64] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Active Workspace Selection
@@ -100,13 +99,7 @@ export function TextbookWorkspaceModal({
     setSelectedFile(file);
     setActionError(null);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      const base64 = result.split(',')[1] || result;
-      setPdfBase64(base64);
-    };
-    reader.readAsDataURL(file);
+
   };
 
   // Mutation: Prepare & Segment Workspace
@@ -120,7 +113,6 @@ export function TextbookWorkspaceModal({
         subject: string;
         edition?: string;
         title?: string;
-        pdfBase64?: string;
         autoSegment?: boolean;
       } = {
         term: term.trim(),
@@ -130,15 +122,21 @@ export function TextbookWorkspaceModal({
         title: title.trim() || `كتاب ${subject.trim()}`,
         autoSegment: true,
       };
-      if (pdfBase64) {
-        payload.pdfBase64 = pdfBase64;
-      }
-      const res = await textbookAdministrationApi.workspacePrepare(payload);
+      if (!selectedFile) throw new Error('يرجى اختيار ملف PDF للكتاب');
+      const res = await textbookAdministrationApi.workspacePrepareUpload({
+        file: selectedFile,
+        term: payload.term,
+        grade: payload.grade,
+        subject: payload.subject,
+        edition: payload.edition,
+        title: payload.title,
+        autoSegment: payload.autoSegment,
+      });
       return res;
     },
     onSuccess: (data: any) => {
       setSelectedWorkspaceDir(data.workspaceDir);
-      setActionSuccess('تم تجهيز وتقطيع مساحة عمل الكتاب بنجاح!');
+      setActionSuccess('تم تجهيز الكتاب عبر محرك المحتوى وحفظ شرائح الدروس المعيارية بنجاح!');
       refetchWorkspaces();
       setCurrentStep(2);
     },
@@ -404,7 +402,7 @@ export function TextbookWorkspaceModal({
                 <p className="text-xs text-text-muted mt-1">
                   {selectedFile
                     ? `الحجم: ${(selectedFile.size / (1024 * 1024)).toFixed(2)} ميجابايت`
-                    : 'سيتم حفظ الكتاب مباشرة في مسار Workspace وتجهيز شرائح الوحدات والدروس'}
+                    : 'سيُرسل الكتاب إلى الخادم مؤقتاً ثم يعالجه محرك المحتوى؛ الحفظ الدائم يكون لملفات الدروس فقط'}
                 </p>
               </div>
               <Button
