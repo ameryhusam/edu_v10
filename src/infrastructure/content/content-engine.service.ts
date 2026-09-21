@@ -56,7 +56,9 @@ export class ContentEngineService {
       if (input.title) args.push('--title', input.title);
 
       const result = await execFileAsync(this.pythonCommand, args, {
-        cwd: this.engineRoot,
+        // Run from the repository root so the Python engine can discover the
+        // shared .env while PYTHONPATH points at its src package.
+        cwd: path.resolve(this.engineRoot, '..'),
         timeout: input.timeoutMs,
         maxBuffer: 8 * 1024 * 1024,
         env: {
