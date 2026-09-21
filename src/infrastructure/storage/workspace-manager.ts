@@ -48,6 +48,12 @@ export interface WorkspaceIndexManifest {
   readonly subject: string;
   readonly edition: string;
   readonly title: string;
+  readonly storagePolicy?: {
+    readonly sourcePdfPersisted?: boolean;
+    readonly unitPdfPersisted?: boolean;
+    readonly bookPdfPersisted?: boolean;
+    readonly textbookPageImagesPersisted?: boolean;
+  };
   readonly source: {
     readonly engine: string;
     readonly engineVersion: string;
