@@ -2,25 +2,12 @@
 
 **Status:** ADOPTED target roadmap. Repository implementation status is tracked in `Docs_v10/11-current-state.md`, not here.
 
-## 1. Current implemented foundation
+## 1. Production target
 
-The repository currently contains tested foundations for:
+Edu7 is intended to converge on one production architecture in which bounded contexts own their business decisions, canonical application services own writes, Prisma is the persistence source of truth, Python prepares content but never writes the database, AI proposes grounded drafts but never becomes a canonical writer, Web and Android consume the same authorized API contracts, and learner state remains historical, reproducible and server-owned.
 
-- assessment evaluation and attempts;
-- evidence and mastery computation;
-- retention;
-- adaptive learning decision;
-- prerequisite traversal;
-- grounded tutoring;
-- canonical identifiers;
-- identity/access foundations;
-- content authoring foundations;
-- content assets/workspace integration;
-- lesson page/AI page viewer;
-- AI lesson analysis draft stage;
-- architecture fitness checks.
+This roadmap describes the target capability graph and dependency order, not a claim that every capability already exists.
 
-The exact capability status must be rechecked in code before each milestone; this document is not a substitute for repository inspection.
 
 ## 2. Content direction
 
