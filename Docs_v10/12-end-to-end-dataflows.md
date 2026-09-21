@@ -409,3 +409,168 @@ These are comparative references, not copied schemas.
 ## 18. Non-goals
 
 Do not create a second textbook registry, Python→PostgreSQL writer, AI→canonical DB writer, UI-owned readiness/deduplication, filename-based identity, silent same-key overwrite, or permanent source-PDF retention merely for convenience.
+
+
+## 13. Workspace ↔ Content Administration Synchronization
+
+The workspace is the physical preparation/reconciliation source for content artifacts; it is not a second canonical database. Synchronization is always performed through the Node canonical content services.
+
+### 13.1 Canonical ownership
+
+| Concern | Owner |
+|---|---|
+| PDF segmentation, printed-page mapping, page rendering | Python Content Engine |
+| Workspace files/manifests/grounding | Workspace |
+| Textbook/unit/lesson/concept/question/resource canonical records | Node canonical services + PostgreSQL |
+| Physical binaries | ContentStorage + ContentAsset |
+| Learner mastery/evidence/XP/completion | Their owning bounded contexts, never workspace |
+
+Therefore a file appearing in workspace/.../resource/ is not by itself a QuestionBank row, LearningResource row, mastery fact, or learner assignment. The correct canonical importer decides what the file represents.
+
+### 13.2 New educational resource intake
+
+Every new resource follows:
+
+upload -> fingerprint -> identify target -> validate -> stage -> compare -> reconcile -> canonical import -> publish/readiness
+
+1. Calculate SHA-256 before accepting the file as a candidate.
+2. Resolve the textbook/lesson target from the canonical textbook key and workspace coordinates.
+3. Reject path traversal, unknown target, malformed manifest, checksum mismatch, unsupported file type, or identity conflict.
+4. Place the physical artifact only under its canonical workspace location.
+5. Compare (relativePath, sha256, size, metadata) with the existing workspace.
+6. UNCHANGED: do not rewrite.
+7. NEW: add the file and register a new ContentAsset through the canonical service.
+8. UPDATED: stage the replacement, validate it, then replace the workspace file only after validation.
+9. Never delete an existing file merely because it is absent from an incoming partial package.
+10. For structural/question/resource records, run the corresponding canonical import service; a physical file is evidence/artifact, not permission to invent a database record.
+
+### 13.3 Re-importing an already prepared book
+
+A prepared book is identified by the derived Textbook.key and package fingerprint, not by the uploaded filename.
+
+Decision algorithm:
+
+ZIP
+ ↓
+safe inspection/extraction
+ ↓
+find exactly one package (if full-book package)
+ ↓
+derive/verify textbookKey
+ ↓
+resolve canonical workspace
+ ↓
+build staged candidate = existing workspace + incoming files
+ ↓
+SHA-256 compare
+ ├─ all unchanged → NOOP / READY
+ ├─ only new assets → ADD
+ ├─ changed assets/records → UPDATE
+ ├─ coordinates differ → NEW PRINTED EDITION
+ └─ identity conflict → NEEDS_REVIEW / STOP
+ ↓
+dry-run canonical import against merged candidate
+ ↓
+apply canonical import
+ ↓
+commit staged workspace
+ ↓
+recompute readiness/inspection
+
+The merge is append-preserving: files omitted from a partial ZIP are retained. A full export/import round trip may replace changed files, but it must never silently delete unrelated workspace material.
+
+### 13.4 ZIP contract
+
+A full workspace export is named <Textbook.key>.zip.
+
+Archive root equals the textbook key:
+
+EDU-SCI-G04-T1-ED2026.zip
+└── EDU-SCI-G04-T1-ED2026/
+    ├── index.json
+    ├── edu7-content-package.json
+    ├── cover/
+    ├── unit_01_.../
+    │   └── lesson_01_.../
+    │       ├── L_01_....pdf
+    │       ├── lesson_manifest.json
+    │       ├── grounding_manifest.json
+    │       ├── lesson_full_text.txt
+    │       ├── text/
+    │       ├── pages/
+    │       ├── ai_pages/
+    │       └── resource/
+    └── ...
+
+Import accepts a full package or a partial workspace ZIP. A partial ZIP must provide textbookKey externally when the package manifest is absent. It is merged into the existing workspace and never creates a different textbook by guessing.
+
+### 13.5 ZIP safety gates
+
+Archive processing must:
+- reject absolute paths and .. traversal;
+- reject duplicate member names;
+- reject symbolic links;
+- enforce archive entry count, per-file, total-uncompressed, and compression-ratio limits;
+- extract only into an isolated staging directory;
+- never extract directly into the canonical workspace;
+- reject more than one workspace package in one archive;
+- validate the package textbook identity against its coordinates;
+- perform dry-run reconciliation before apply;
+- retain the old workspace until the staged candidate has passed canonical validation;
+- clean temporary files on success and failure.
+
+These controls are intentional because compressed archives can exhaust disk space and can contain unsafe paths; the Python standard library itself warns against extracting untrusted archives without inspection. See the Python zipfile security guidance.
+
+### 13.6 Export algorithm
+
+request textbookKey
+ ↓
+resolve canonical workspace
+ ↓
+require valid index + package
+ ↓
+verify workspace references/checksums
+ ↓
+walk the complete workspace tree
+ ↓
+create deterministic ZIP rooted at textbookKey
+ ↓
+stream <textbookKey>.zip
+ ↓
+delete temporary archive
+
+The export is a workspace export, not a PostgreSQL dump. It preserves physical preparation artifacts, manifests, grounding files, page images, AI-page images, and resource files that are actually present in the workspace. Derived learner state is never exported.
+
+### 13.7 Important distinction: physical resource vs QuestionBank update
+
+A ZIP can contain:
+- a new page image → ContentAsset;
+- an audio/video/resource file → ContentAsset;
+- a question JSON/data package → canonical QuestionBank import;
+- a flashcard package → canonical Flashcard import;
+- concept/misconception data → canonical content import.
+
+The physical file is first placed in the workspace and registered as provenance/asset. The semantic record is then reconciled by its canonical service. This prevents the filesystem from becoming an unauthorized second database.
+
+### 13.8 Failure decisions
+
+| Failure | Operational decision |
+|---|---|
+| Invalid ZIP | Reject; no workspace/DB changes |
+| ZIP bomb/resource limit | Reject; no extraction into canonical storage |
+| Multiple packages | Reject; require one textbook package |
+| Missing textbook identity | Reject unless textbookKey is explicitly supplied for partial import |
+| Identity mismatch | Stop; NEEDS_REVIEW |
+| Same checksum | No-op |
+| New file | Add |
+| Changed file | Stage + validate + update |
+| Missing incoming file | Retain existing file |
+| Dry-run failure | Do not apply |
+| Canonical import failure | Keep existing workspace; discard staged candidate |
+| Final filesystem commit failure after canonical import | Mark operation retryable; canonical DB/storage remain authoritative and the workspace commit must be retried |
+| Unsupported semantic file | Keep physical asset only if its placement is valid; do not invent a QuestionBank/LearningResource record |
+| Concurrent import for same textbook | Must be serialized by textbook operation lock before production-scale concurrent use |
+
+### 13.9 Remaining production gap
+
+The current implementation now provides safe ZIP staging/import/export and workspace reconciliation, but a durable distributed operation lock/idempotency record is still required before multiple API workers can safely mutate the same textbook concurrently. The implementation must also add dedicated semantic import adapters for question/flashcard packages that are stored under resource/; merely discovering those files as ContentAsset is not equivalent to updating the QuestionBank.
