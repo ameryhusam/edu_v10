@@ -7,7 +7,7 @@ Usage examples:
   python -m edu7_content.cli.main prepare
 
   # Prepare specific PDF (auto-fallback to Ollama if image-based):
-  python -m edu7_content.cli.main prepare books_input/book1.pdf
+  python -m edu7_content.cli.main prepare books_input/<book>.pdf
 
   # Force Ollama vision extraction with specific model:
   python -m edu7_content.cli.main prepare books_input/book1.pdf --model llava:7b
@@ -16,10 +16,10 @@ Usage examples:
   python -m edu7_content.cli.main prepare books_input/book1.pdf --model gemini
 
   # Analyze a lesson with Gemini:
-  python -m edu7_content.cli.main analyze workspaces/book1/units/01/lessons/01 --model gemini
+  python -m edu7_content.cli.main analyze workspace/T01/G07/MATH/<textbookKey>/unit_01_<slug>/lesson_01_<slug> --model gemini
 
   # Export workspace:
-  python -m edu7_content.cli.main export workspaces/book1 --format all
+  python -m edu7_content.cli.main export workspace/T01/G07/MATH/<textbookKey> --format all
 """
 import sys
 import os
@@ -38,6 +38,7 @@ from ..validation.evidence_validator import EvidenceValidator
 from ..export.json_exporter import Edu7JsonExporter
 from ..export.excel_exporter import Edu7ExcelExporter
 from ..ai.gemini import _load_env_file
+from ..workspace_layout import books_input_root, book_workspace, normalize_grade, normalize_subject, normalize_term, project_root, textbook_key, workspace_root, finalize_book_workspace
 
 
 def main():
@@ -51,13 +52,13 @@ def main():
     # ── prepare ──────────────────────────────────────────────────────────────
     p_prep = sub.add_parser("prepare", help="Ingest PDF: detect TOC, map pages, segment lessons")
     p_prep.add_argument("pdf_path", nargs="?", default=None,
-                        help="Path to PDF (default: first PDF in books_input/)")
+                        help="Path to PDF; relative paths resolve from repository-root books_input/")
     p_prep.add_argument("--workspace", default=None,
-                        help="Output workspace dir (default: workspaces/<TERM>/<GRADE>/<SUBJECT> or workspaces/<pdf_stem>)")
-    p_prep.add_argument("--subject", default="MATH", help="Subject code (e.g. MATH, SCI, ARB)")
-    p_prep.add_argument("--grade", default="G07", help="Grade code (e.g. G07, G08)")
-    p_prep.add_argument("--term", default="T1", help="Term code (e.g. T1, T2)")
-    p_prep.add_argument("--edition", default="2026", help="Edition year (e.g. 2026)")
+                        help="Output workspace dir (default: workspace/T01/G04/MATH/<textbookKey>)")
+    p_prep.add_argument("--subject", default="MATH", help="Database Subject.key (e.g. MATH, SCI, ARAB)")
+    p_prep.add_argument("--grade", default="G07", help="Grade code/number (e.g. G04, 07)")
+    p_prep.add_argument("--term", default="T1", help="Term folder code (T01, T02, ...)")
+    p_prep.add_argument("--edition", default="2026", help="Printed textbook edition (e.g. 2026)")
     p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
@@ -193,7 +194,24 @@ def _cmd_info():
 
 def _cmd_prepare(args):
     target_pdf = _resolve_pdf(args)
-    ws_path = Path(args.workspace) if args.workspace else Path("workspaces") / target_pdf.stem
+    try:
+        grade_number, grade_key = normalize_grade(args.grade)
+        term_number, term_key = normalize_term(args.term)
+        subject_key = normalize_subject(args.subject)
+        book_key = textbook_key(subject_key, grade_number, term_number, args.edition)
+    except (TypeError, ValueError) as err:
+        print(f"[invalid workspace coordinates] {err}")
+        sys.exit(2)
+
+    ws_path = (
+        Path(args.workspace).expanduser().resolve()
+        if args.workspace
+        else book_workspace(subject_key, grade_number, term_number, args.edition)
+    )
+
+    print(f"[+] Workspace root: {workspace_root()}")
+    print(f"[+] Book key: {book_key}")
+    print(f"[+] Coordinates: {term_key}/{grade_key}/{subject_key}")
 
     print(f"\n[*] Reading PDF: {target_pdf}")
     reader = PdfReader(str(target_pdf))
@@ -302,13 +320,14 @@ def _cmd_prepare(args):
     print(f"[+] Book title: {book_title}")
 
     coordinates = {
-        "subject": args.subject,
-        "grade": args.grade,
-        "term": args.term,
+        "subject": subject_key,
+        "grade": grade_number,
+        "term": term_number,
         "edition": args.edition,
         "title": book_title,
     }
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
+    finalize_book_workspace(ws_path, book_key, subject_key)
     print(f"[SUCCESS] Book prepared at: {ws_path}\n")
 
 
@@ -577,25 +596,28 @@ def _derive_book_title(stem: str) -> str:
 
 
 def _resolve_pdf(args) -> Path:
+    input_root = books_input_root()
+    input_root.mkdir(parents=True, exist_ok=True)
+
     if getattr(args, "pdf_path", None):
         p = Path(args.pdf_path).expanduser()
-        if p.exists() and p.is_file():
-            return p.resolve()
-        candidate = (Path("books_input") / args.pdf_path).expanduser()
-        if candidate.exists() and candidate.is_file():
-            return candidate.resolve()
+        candidates = [p]
+        if not p.is_absolute():
+            candidates.extend([project_root() / p, input_root / p])
+        for candidate in candidates:
+            if candidate.exists() and candidate.is_file():
+                return candidate.resolve()
         print(f"Error: PDF not found: {args.pdf_path}")
+        print(f"Expected repository input directory: {input_root}")
         sys.exit(1)
 
-    in_dir = Path("books_input")
-    in_dir.mkdir(exist_ok=True)
-    pdfs = sorted(p for p in in_dir.glob("*.pdf") if p.is_file())
+    pdfs = sorted(p for p in input_root.glob("*.pdf") if p.is_file())
     if not pdfs:
-        print(f"Error: No PDFs in {in_dir.resolve()}")
-        print("Put your book in books_input/ or: edu7-content prepare path/to/book.pdf")
+        print(f"Error: No PDFs in {input_root}")
+        print("Put the source PDF in repository-root books_input/ or provide an exact path.")
         sys.exit(1)
     if len(pdfs) > 1:
-        print("Error: Multiple PDFs found in books_input; refusing to guess the book.")
+        print("Error: Multiple PDFs found in repository-root books_input; refusing to guess.")
         for p in pdfs:
             print(f"  - {p.name}")
         print("Run: edu7-content prepare books_input/<exact-file-name>.pdf")
