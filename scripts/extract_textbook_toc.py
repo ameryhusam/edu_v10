@@ -349,12 +349,15 @@ def generate_edu7_json(
     textbook_title: str,
     subject_key: str,
     grade_key: str,
-    term_ordinal: int,
+    part: str,
     edition: str = "2026",
     output_path: str = "curriculum.json"
 ) -> Dict[str, Any]:
     pad_grade = grade_key.replace("G", "").zfill(2)
-    textbook_key = f"EDU-{subject_key}-G{pad_grade}-T{term_ordinal}-{edition}"
+    part_code = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}.get(str(part).upper())
+    if not part_code:
+        raise ValueError("Physical part must be PART_1, PART_2, or BOTH")
+    textbook_key = f"EDU-{subject_key}-G{pad_grade}-{part_code}-ED{edition}"
     
     total_pages = 0
     if units and units[-1].get("endPage"):
@@ -413,7 +416,7 @@ def generate_edu7_json(
             "key": textbook_key,
             "subjectKey": subject_key,
             "gradeKey": grade_key,
-            "termKey": f"T{term_ordinal:02d}",
+            "part": part,
             "title": textbook_title,
             "edition": edition,
             "description": f"منهج {textbook_title} المعتمد",
@@ -525,7 +528,7 @@ def generate_edu7_excel(
 
 # ─── واجهة سطر الأوامر (CLI Main) ───────────────────────────────────────────
 
-def infer_metadata_from_filename(filename: str) -> Tuple[str, str, int, str]:
+def infer_metadata_from_filename(filename: str) -> Tuple[str, str, str, str]:
     base = os.path.basename(filename).upper()
     
     subject = "GENERAL"
@@ -543,12 +546,12 @@ def infer_metadata_from_filename(filename: str) -> Tuple[str, str, int, str]:
     elif "ثامن" in base: grade = "G08"
     elif "تاسع" in base: grade = "G09"
 
-    term = 1
-    if "T2" in base or "الفصل_الثاني" in base or "ترم2" in base:
-        term = 2
+    part = "PART_1"
+    if "T2" in base or "P2" in base or "الفصل_الثاني" in base or "ترم2" in base:
+        part = "PART_2"
 
-    title = f"كتاب {subject} للصف {grade} الفصل {term}"
-    return subject, grade, term, title
+    title = f"كتاب {subject} للصف {grade} الجزء {1 if part == 'PART_1' else 2}"
+    return subject, grade, part, title
 
 
 def main():
@@ -559,7 +562,7 @@ def main():
     parser.add_argument("--output-dir", "-o", default="./extracted_curriculum", help="مجلد حفظ الملفات المستخرجة")
     parser.add_argument("--subject", help="رمز المادة (مثال: MATH, SCI)")
     parser.add_argument("--grade", help="رمز الصف (مثال: G07, G08)")
-    parser.add_argument("--term", type=int, choices=[1, 2], help="رقم الفصل الدراسي (1 أو 2)")
+    parser.add_argument("--part", choices=["PART_1", "PART_2", "BOTH"], help="الجزء الفيزيائي للكتاب")
     parser.add_argument("--title", help="عنوان الكتاب المعتمد")
     parser.add_argument("--edition", default="2026", help="طبعة الكتاب (افتراضي: 2026)")
     parser.add_argument("--max-pages", type=int, default=10, help="أقصى عدد صفحات للبحث عن الفهرس من البداية (افتراضي: 10)")
@@ -606,13 +609,13 @@ def main():
     for u in units:
         print(f"  • {u['name']} (ص {u['startPage']} - {u['endPage']}) — {len(u['lessons'])} درساً")
 
-    inf_subj, inf_grade, inf_term, inf_title = infer_metadata_from_filename(args.pdf_path)
+    inf_subj, inf_grade, inf_part, inf_title = infer_metadata_from_filename(args.pdf_path)
     subject = args.subject or inf_subj
     grade = args.grade or inf_grade
-    term = args.term or inf_term
+    part = args.part or inf_part
     title = args.title or inf_title
 
-    base_name = f"{grade}-{subject}-T{term}"
+    base_name = f"{grade}-{subject}-{part.replace("PART_", "P")}"
     json_path = os.path.join(args.output_dir, f"{base_name}.json")
     xlsx_path = os.path.join(args.output_dir, f"{base_name}.xlsx")
 
@@ -621,7 +624,7 @@ def main():
         textbook_title=title,
         subject_key=subject,
         grade_key=grade,
-        term_ordinal=term,
+        part=part,
         edition=args.edition,
         output_path=json_path
     )

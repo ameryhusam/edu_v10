@@ -3,7 +3,7 @@
  * adoption ledger.
  *
  * Reads assemble names alongside keys — an administrator triages "which book,
- * which school", not "EDU-MATH-G07-T1-ED2026 at sch_demo". Names are
+ * which school", not "EDU-MATH-G07-P1-ED2026 at sch_demo". Names are
  * presentation fields on a read model, the same shape GuardianChild uses.
  *
  * Sequential, like every other adapter: PGlite serves one connection in
@@ -35,7 +35,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       ...(search ? { title: { contains: search, mode: 'insensitive' as const } } : {}),
       ...(query.subjectKey ? { subject: { key: query.subjectKey } } : {}),
       ...(query.gradeKey ? { grade: { key: query.gradeKey } } : {}),
-      ...(query.termKey ? { term: { key: query.termKey } } : {}),
+      ...(query.part ? { part: query.part } : {}),
       ...(query.status ? { status: query.status as never } : {}),
     };
 
@@ -53,7 +53,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         updatedAt: true,
         subject: { select: { key: true, name: true } },
         grade: { select: { key: true, name: true } },
-        term: { select: { key: true, name: true } },
+        part: true,
         assets: {
           where: { scope: 'TEXTBOOK', isActive: true, relativePath: { startsWith: 'cover/' } },
           select: { key: true },
@@ -93,8 +93,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         subjectName: row.subject.name,
         gradeKey: row.grade.key,
         gradeName: row.grade.name,
-        termKey: row.term.key,
-        termName: row.term.name,
+        part: row.part,
         edition: row.edition,
         status: String(row.status),
         adoptionCount: row._count.adoptions,
@@ -109,14 +108,14 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
   async findTextbookByCoordinates(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2';
     edition: string;
   }) {
     const row = await this.db.textbook.findFirst({
       where: {
         subject: { key: input.subjectKey },
         grade: { key: input.gradeKey },
-        term: { key: input.termKey },
+        part: input.part,
         edition: input.edition,
       },
       select: { key: true, title: true, edition: true },
@@ -126,12 +125,12 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
 
   async textbooksForGrade(input: {
     gradeKey: string;
-    termKey?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | undefined;
   }): Promise<TextbookCoordinateMatch[]> {
     const rows = await this.db.textbook.findMany({
       where: {
         grade: { key: input.gradeKey },
-        ...(input.termKey ? { term: { key: input.termKey } } : {}),
+        ...(input.part ? { part: input.part } : {}),
       },
       select: { key: true, title: true, edition: true },
       orderBy: { key: 'asc' },
@@ -374,6 +373,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         textbook: { select: { key: true, title: true, status: true } },
         school: { select: { key: true, name: true } },
         academicYear: { select: { key: true } },
+        term: { select: { key: true } },
       },
     });
 
@@ -386,6 +386,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         schoolKey: row.school.key,
         schoolName: row.school.name,
         academicYearKey: row.academicYear.key,
+        termKey: row.term.key,
         adoptedAt: row.adoptedAt,
       })),
     };
@@ -407,6 +408,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         textbook: { select: { key: true, title: true, status: true } },
         school: { select: { key: true, name: true } },
         academicYear: { select: { key: true } },
+        term: { select: { key: true } },
       },
     });
     if (!row) return null;
@@ -417,6 +419,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       schoolKey: row.school.key,
       schoolName: row.school.name,
       academicYearKey: row.academicYear.key,
+      termKey: row.term.key,
       adoptedAt: row.adoptedAt,
     };
   }
@@ -425,18 +428,21 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
     textbookKey: string;
     schoolKey: string;
     academicYearKey: string;
+    termKey: string;
   }): Promise<AdoptionRow> {
     const created = await this.db.textbookAdoption.create({
       data: {
         textbook: { connect: { key: input.textbookKey } },
         school: { connect: { key: input.schoolKey } },
         academicYear: { connect: { key: input.academicYearKey } },
+        term: { connect: { key: input.termKey } },
       },
       select: {
         adoptedAt: true,
         textbook: { select: { key: true, title: true, status: true } },
         school: { select: { key: true, name: true } },
         academicYear: { select: { key: true } },
+        term: { select: { key: true } },
       },
     });
     return {
@@ -446,6 +452,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       schoolKey: created.school.key,
       schoolName: created.school.name,
       academicYearKey: created.academicYear.key,
+      termKey: created.term.key,
       adoptedAt: created.adoptedAt,
     };
   }
@@ -479,6 +486,11 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       where: { key: academicYearKey },
       select: { key: true },
     });
+    return row !== null;
+  }
+
+  async termExists(termKey: string): Promise<boolean> {
+    const row = await this.db.term.findUnique({ where: { key: termKey }, select: { key: true } });
     return row !== null;
   }
 }

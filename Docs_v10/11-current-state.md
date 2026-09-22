@@ -1,7 +1,7 @@
 # Current Repository State — edu_v10
 
-**Review date:** 2026-09-21  
-**HEAD at review:** a085a306acbdb74ca800dad64ab9910f30310dcc
+**Review date:** 2026-09-22  
+**HEAD at review:** 11ec77d2cef2a98c77c18cca0a8629c0e2236952
 
 ## Repository facts
 
@@ -29,7 +29,8 @@ The current schema includes:
 
 - Textbook → Unit → Lesson → Concept.
 - PublicationStatus: DRAFT, IN_REVIEW, PUBLISHED, ARCHIVED.
-- TextbookAdoption for academic-year usage.
+- Textbook identity is subject + grade + P1/P2 physical part + printed edition.
+- TextbookAdoption for school/year usage, with an explicit term link; P1 resolves to term 1 and P2 to term 2.
 - canonical key/slug fields for content.
 - orderIndex for presentation order.
 - ContentAsset, TextbookPage, ContentChunk, LearningResource.
@@ -56,6 +57,17 @@ The product requirement is adopted as a target contract:
 - a separate backend-owned inclusion flag controls guided learning-path eligibility.
 
 Before adding a field, inspect existing `isActive` semantics and the Learning context. Do not reuse `isActive` merely because it exists.
+
+## Textbook identity implementation update
+
+The branch now contains the minimum schema/code change for the adopted textbook identity:
+- `Textbook.termId` is removed from the Prisma target contract;
+- `Textbook.part` is canonical P1/P2 only;
+- `TextbookAdoption.termId` is explicit;
+- the migration backfills legacy term-scoped textbook rows to P1/P2 and rejects unsupported term ordinals instead of guessing;
+- creation/import/admin routes no longer accept `BOTH` or derive textbook identity from academic term.
+
+Local DB migration/typecheck/test execution is still required before marking this implementation verified.
 
 ## Current ingestion boundary
 

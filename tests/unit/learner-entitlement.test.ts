@@ -38,6 +38,7 @@ function dbDouble(options: {
         gradeId: string;
         termId: string;
         academicYear: { key: string };
+        term: { key: string; name: string };
       }
     | null;
   textbooks?: readonly {
@@ -74,6 +75,7 @@ const ENROLLMENT = {
   gradeId: 'grade-7',
   termId: 'term-1',
   academicYear: { key: '2026-2027' },
+  term: { key: '2026-2027-T01', name: 'الفصل الأول' },
 };
 
 describe('learner textbook entitlement', () => {
@@ -94,9 +96,12 @@ describe('learner textbook entitlement', () => {
     const { db, recorded } = dbDouble({ enrollment: ENROLLMENT });
     await new PrismaLearnerEntitlementReader(db).textbooksFor('lrn_x');
 
-    const where = recorded.textbookWhere as { gradeId?: string; termId?: string };
+    const where = recorded.textbookWhere as {
+      gradeId?: string;
+      adoptions?: { some?: { termId?: string } };
+    };
     expect(where.gradeId).toBe('grade-7');
-    expect(where.termId).toBe('term-1');
+    expect(where.adoptions?.some?.termId).toBe('term-1');
   });
 
   it('never returns unpublished content', async () => {
@@ -136,13 +141,12 @@ describe('learner textbook entitlement', () => {
       enrollment: ENROLLMENT,
       textbooks: [
         {
-          key: 'EDU-MATH-G07-T1-ED2026',
+          key: 'EDU-MATH-G07-P1-ED2026',
           title: 'الرياضيات',
           edition: '2026',
           totalPages: 180,
           subject: { key: 'MATH', name: 'الرياضيات' },
           grade: { key: 'G07', name: 'الصف السابع' },
-          term: { key: '2026-2027-T01', name: 'الفصل الأول' },
         },
       ],
     });
@@ -150,7 +154,7 @@ describe('learner textbook entitlement', () => {
     const [book] = await new PrismaLearnerEntitlementReader(db).textbooksFor('lrn_x');
 
     expect(book).toEqual({
-      key: 'EDU-MATH-G07-T1-ED2026',
+      key: 'EDU-MATH-G07-P1-ED2026',
       title: 'الرياضيات',
       subjectKey: 'MATH',
       subjectName: 'الرياضيات',

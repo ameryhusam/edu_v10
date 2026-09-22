@@ -28,8 +28,8 @@ export interface GradeMaterialsViewProps {
   readonly terms: readonly TermRecord[];
   readonly subjects: readonly SubjectRecord[];
   readonly textbooks: readonly TextbookSummary[];
-  readonly selectedTermOrdinal: 1 | 2;
-  readonly onSelectTermOrdinal: (termOrdinal: 1 | 2) => void;
+  readonly selectedPartOrdinal: 1 | 2;
+  readonly onSelectPartOrdinal: (termOrdinal: 1 | 2) => void;
   readonly onBackToGrades: () => void;
   readonly onTransitionTextbook: (textbook: TextbookSummary, action: PublicationAction) => Promise<void>;
   readonly onOpenPdfModal: (textbook: TextbookSummary) => void;
@@ -58,8 +58,8 @@ export function GradeMaterialsView({
   grade,
   subjects,
   textbooks,
-  selectedTermOrdinal,
-  onSelectTermOrdinal,
+  selectedPartOrdinal,
+  onSelectPartOrdinal,
   onBackToGrades,
   onTransitionTextbook,
   onOpenPdfModal,
@@ -78,11 +78,8 @@ export function GradeMaterialsView({
   const subjectsMap = useMemo(() => new Map(subjects.map((subject) => [subject.key, subject])), [subjects]);
   const gradeMaterials = useMemo(() => textbooks.filter((book) => {
     if (book.gradeKey !== grade.key) return false;
-    const term = book.termKey.toLowerCase();
-    return selectedTermOrdinal === 1
-      ? term.includes('1') || term.includes('t1') || term.includes('term1')
-      : term.includes('2') || term.includes('t2') || term.includes('term2');
-  }), [textbooks, grade.key, selectedTermOrdinal]);
+    return selectedPartOrdinal === 1 ? book.part === 'PART_1' : book.part === 'PART_2';
+  }), [textbooks, grade.key, selectedPartOrdinal]);
   const filteredMaterials = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return gradeMaterials;
@@ -91,7 +88,7 @@ export function GradeMaterialsView({
       return book.title.toLowerCase().includes(query) || book.key.toLowerCase().includes(query) || subject?.name.toLowerCase().includes(query);
     });
   }, [gradeMaterials, searchQuery, subjectsMap]);
-  const activeTermName = selectedTermOrdinal === 1 ? t('textbookAdmin.term1') : t('textbookAdmin.term2');
+  const activePartName = selectedPartOrdinal === 1 ? t('الجزء الأول') : t('الجزء الثاني');
   const publishedCount = gradeMaterials.filter((book) => book.status === 'PUBLISHED').length;
   const draftCount = gradeMaterials.filter((book) => book.status === 'DRAFT').length;
 
@@ -115,12 +112,12 @@ export function GradeMaterialsView({
             <span>{t('textbookAdmin.backToGrades')}</span>
           </Button>
           <div className="h-4 w-px bg-border" />
-          <div><h1 className="text-xl font-black text-text">{grade.name}</h1><p className="text-xs text-text-muted">{activeTermName}</p></div>
+          <div><h1 className="text-xl font-black text-text">{grade.name}</h1><p className="text-xs text-text-muted">{activePartName}</p></div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-xl border border-border bg-surface p-1 shadow-xs">
-            <button type="button" onClick={() => onSelectTermOrdinal(1)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedTermOrdinal === 1 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.term1')}</button>
-            <button type="button" onClick={() => onSelectTermOrdinal(2)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedTermOrdinal === 2 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.term2')}</button>
+            <button type="button" onClick={() => onSelectPartOrdinal(1)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 1 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('الجزء الأول')}</button>
+            <button type="button" onClick={() => onSelectPartOrdinal(2)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 2 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('الجزء الثاني')}</button>
           </div>
           <Button variant="primary" size="sm" onClick={onOpenCreateModal} className="gap-1.5 text-xs"><Plus className="size-4" />{t('textbookAdmin.addTextbookButton')}</Button>
           <Button variant="secondary" size="sm" onClick={onOpenBulkModal} className="gap-1.5 text-xs"><Sparkles className="size-4 text-accent" />{t('textbookAdmin.bulkSetupButton')}</Button>
@@ -132,7 +129,7 @@ export function GradeMaterialsView({
         <div className="relative w-full md:w-64"><Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-text-muted" /><Input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t('catalogue.search')} className="ps-9 text-xs" /></div>
       </div>
 
-      {filteredMaterials.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center space-y-3"><BookOpen className="mx-auto size-12 text-text-muted/30" /><h3 className="text-sm font-bold text-text">{t('textbookAdmin.noSubjectsInTerm')}</h3><p className="text-xs text-text-muted">{t('textbookAdmin.emptyBody')}</p><Button variant="primary" size="sm" onClick={onOpenBulkModal}>{t('textbookAdmin.bulkSetupButton')}</Button></div> : <div className="space-y-4">{filteredMaterials.map((book) => {
+      {filteredMaterials.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center space-y-3"><BookOpen className="mx-auto size-12 text-text-muted/30" /><h3 className="text-sm font-bold text-text">{t('textbookAdmin.noSubjectsInPart')}</h3><p className="text-xs text-text-muted">{t('textbookAdmin.emptyBody')}</p><Button variant="primary" size="sm" onClick={onOpenBulkModal}>{t('textbookAdmin.bulkSetupButton')}</Button></div> : <div className="space-y-4">{filteredMaterials.map((book) => {
         const subject = subjectsMap.get(book.subjectKey);
         const action = transitionFor[book.status];
         return <div key={book.key} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs transition-all hover:border-accent/30 lg:flex-row lg:items-center lg:justify-between">

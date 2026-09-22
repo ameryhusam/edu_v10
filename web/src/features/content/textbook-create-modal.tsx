@@ -21,12 +21,12 @@ export function TextbookCreateModal({
   open,
   onClose,
   initialGradeKey,
-  initialTermKey,
+  initialPart,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly initialGradeKey?: string | null | undefined;
-  readonly initialTermKey?: string | null | undefined;
+  readonly initialPart?: 'PART_1' | 'PART_2' | null | undefined;
 }): ReactNode {
   const { t } = useI18n();
   const queryClient = useQueryClient();
@@ -39,14 +39,9 @@ export function TextbookCreateModal({
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const terms = useQuery({
-    queryKey: queryKeys.administration.catalogue('terms'),
-    queryFn: () => administrationApi.terms.list(),
-  });
-
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState(initialGradeKey ?? '');
-  const [termKey, setTermKey] = useState(initialTermKey ?? '');
+  const [part, setPart] = useState<'PART_1' | 'PART_2'>(initialPart ?? 'PART_1');
   const [title, setTitle] = useState('');
   const [edition, setEdition] = useState(String(new Date().getFullYear()));
   const [isbn, setIsbn] = useState('');
@@ -64,7 +59,7 @@ export function TextbookCreateModal({
       textbookAdministrationApi.createTextbook({
         subjectKey,
         gradeKey,
-        termKey,
+        part,
         title: title.trim() || defaultTitle,
         edition: edition.trim(),
         isbn: isbn.trim() ? isbn.trim() : null,
@@ -150,19 +145,17 @@ export function TextbookCreateModal({
           </label>
 
           <label className="space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('collection.terms')} *</span>
+            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')} *</span>
             <select
-              value={termKey}
-              onChange={(e) => setTermKey(e.target.value)}
+              value={part}
+              onChange={(e) => setPart(e.target.value)}
               className={selectClass}
               required
             >
               <option value="">—</option>
-              {(terms.data ?? []).map((term) => (
-                <option key={term.key} value={term.key}>
-                  {term.name}
-                </option>
-              ))}
+              {<option value="PART_1">الجزء الأول</option>
+              <option value="PART_2">الجزء الثاني</option>
+              }
             </select>
           </label>
         </div>
@@ -243,7 +236,7 @@ export function TextbookCreateModal({
           <Button variant="ghost" size="sm" type="button" disabled={create.isPending} onClick={onClose}>
             {t('common.cancel')}
           </Button>
-          <Button variant="primary" size="sm" type="submit" disabled={create.isPending || !subjectKey || !gradeKey || !termKey}>
+          <Button variant="primary" size="sm" type="submit" disabled={create.isPending || !subjectKey || !gradeKey || !part}>
             {create.isPending ? t('common.working') : t('textbookAdmin.createOne')}
           </Button>
         </div>

@@ -43,8 +43,7 @@ export interface TextbookSummary {
   readonly subjectName: string;
   readonly gradeKey: string;
   readonly gradeName: string;
-  readonly termKey: string;
-  readonly termName: string;
+  readonly part: 'PART_1' | 'PART_2';
   readonly edition: string;
   readonly status: PublicationStatus;
   readonly adoptionCount: number;
@@ -80,7 +79,7 @@ export interface CreatedContentNode {
 export interface CreateTextbookInput {
   readonly subjectKey: string;
   readonly gradeKey: string;
-  readonly termKey: string;
+  readonly part: 'PART_1' | 'PART_2';
   readonly title: string;
   readonly edition: string;
   readonly isbn?: string | null;
@@ -92,7 +91,7 @@ export interface CreateTextbookInput {
 
 export interface EnsureTextbooksResult {
   readonly gradeKey: string;
-  readonly termKey: string;
+  readonly part: 'PART_1' | 'PART_2';
   readonly edition: string;
   readonly created: number;
   readonly unchanged: number;
@@ -104,14 +103,14 @@ export interface TextbookQuery {
   readonly search?: string | undefined;
   readonly subjectKey?: string | undefined;
   readonly gradeKey?: string | undefined;
-  readonly termKey?: string | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | undefined;
   readonly status?: PublicationStatus | undefined;
   readonly limit?: number | undefined;
   readonly offset?: number | undefined;
   readonly [key: string]: string | number | boolean | null | undefined;
 }
 
-/** An adoption: identity is the (textbook, school, year) triple. */
+/** An adoption is the textbook/school/year deployment fact with an explicit term link. */
 export interface AdoptionRow {
   readonly textbookKey: string;
   readonly textbookTitle: string;
@@ -119,6 +118,7 @@ export interface AdoptionRow {
   readonly schoolKey: string;
   readonly schoolName: string;
   readonly academicYearKey: string;
+  readonly termKey: string;
   readonly adoptedAt: string;
 }
 
@@ -145,7 +145,7 @@ export interface AdoptionInput {
 /** Accredit one book (`textbookKey` given) or a grade's whole shelf. */
 export interface GradeAdoptionInput {
   readonly gradeKey: string;
-  readonly termKey?: string | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | undefined;
   readonly textbookKey?: string | undefined;
   readonly schoolKey: string;
   readonly academicYearKey: string;
@@ -421,7 +421,7 @@ export const textbookAdministrationApi = {
   },
   ensureForGrade: (input: {
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2';
     edition: string;
     issuer?: string | null;
     publishYear?: number | null;
@@ -509,7 +509,7 @@ export const textbookAdministrationApi = {
   /** Workspace operations */
   workspacePrepareUpload: (input: {
     file: File;
-    term: string;
+    part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
     edition?: string;
@@ -517,7 +517,7 @@ export const textbookAdministrationApi = {
     autoSegment?: boolean;
   }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
     query: {
-      term: input.term,
+      part: input.part,
       grade: input.grade,
       subject: input.subject,
       edition: input.edition,
@@ -528,7 +528,7 @@ export const textbookAdministrationApi = {
   }),
 
   workspacePrepare: (input: {
-    term: string;
+    part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
     edition?: string;

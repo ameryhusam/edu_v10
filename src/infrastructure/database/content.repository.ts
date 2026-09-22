@@ -133,14 +133,12 @@ export class PrismaContentRepository implements ContentRepository {
     return keys.length + 1;
   }
 
-  async resolveTextbookCoordinates(input: {
+  async resolveTextbookPlacement(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
   }): Promise<{
     subject: { id: string; key: string; name: string } | null;
     grade: { id: string; key: string; ordinal: number; name: string } | null;
-    term: { id: string; key: string; ordinal: number; name: string } | null;
   }> {
     // Sequential, not Promise.all: the dev database serves one connection and
     // parallel queries kill it mid-flight.
@@ -152,11 +150,7 @@ export class PrismaContentRepository implements ContentRepository {
       where: { key: input.gradeKey },
       select: { id: true, key: true, ordinal: true, name: true },
     });
-    const term = await this.db.term.findUnique({
-      where: { key: input.termKey },
-      select: { id: true, key: true, ordinal: true, name: true },
-    });
-    return { subject, grade, term };
+    return { subject, grade };
   }
 
   async textbookExists(key: string): Promise<boolean> {
@@ -168,7 +162,7 @@ export class PrismaContentRepository implements ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
-    termId: string;
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
     description?: string | null;
@@ -182,7 +176,7 @@ export class PrismaContentRepository implements ContentRepository {
         key: input.key,
         subjectId: input.subjectId,
         gradeId: input.gradeId,
-        termId: input.termId,
+        part: input.part,
         title: input.title,
         edition: input.edition,
         description: input.description ?? null,
@@ -666,7 +660,7 @@ export class PrismaContentRepository implements ContentRepository {
         status: true,
         subject: { select: { key: true } },
         grade: { select: { key: true } },
-        term: { select: { key: true } },
+        part: true,
         units: {
           select: {
             key: true,
@@ -946,7 +940,7 @@ export class PrismaContentRepository implements ContentRepository {
         key: book.key,
         subjectKey: book.subject.key,
         gradeKey: book.grade.key,
-        termKey: book.term.key,
+        part: book.part,
         title: book.title,
         edition: book.edition,
         description: book.description,

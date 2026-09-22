@@ -34,7 +34,7 @@ export interface TextbookWorkspaceModalProps {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly initialCoordinates?: {
-    term?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
     grade?: string | undefined;
     subject?: string | undefined;
     edition?: string | undefined;
@@ -55,7 +55,7 @@ export function TextbookWorkspaceModal({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   // Form coordinates
-  const [term, setTerm] = useState(initialCoordinates?.term || 'T01');
+  const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH'>(initialCoordinates?.part || 'PART_1');
   const [grade, setGrade] = useState(initialCoordinates?.grade || 'G07');
   const [subject, setSubject] = useState(initialCoordinates?.subject || 'MATH');
   const [edition, setEdition] = useState(initialCoordinates?.edition || '');
@@ -108,14 +108,14 @@ export function TextbookWorkspaceModal({
       setActionError(null);
       setActionSuccess(null);
       const payload: {
-        term: string;
+        part: 'PART_1' | 'PART_2' | 'BOTH';
         grade: string;
         subject: string;
         edition?: string;
         title?: string;
         autoSegment?: boolean;
       } = {
-        term: term.trim(),
+        part,
         grade: grade.trim(),
         subject: subject.trim(),
         edition: edition.trim() || undefined,
@@ -125,7 +125,7 @@ export function TextbookWorkspaceModal({
       if (!selectedFile) throw new Error('يرجى اختيار ملف PDF للكتاب');
       const res = await textbookAdministrationApi.workspacePrepareUpload({
         file: selectedFile,
-        term: payload.term,
+        part: payload.part,
         grade: payload.grade,
         subject: payload.subject,
         edition: payload.edition,
@@ -297,7 +297,7 @@ export function TextbookWorkspaceModal({
                       type="button"
                       onClick={() => {
                         setSelectedWorkspaceDir(ws.workspaceDir);
-                        setTerm(ws.manifest?.term || 'T01');
+                        setPart(ws.manifest?.part || 'PART_1');
                         setGrade(ws.manifest?.grade || 'G07');
                         setSubject(ws.manifest?.subject || 'MATH');
                         setEdition(ws.manifest?.edition || '');
@@ -313,7 +313,7 @@ export function TextbookWorkspaceModal({
                       <div className="flex items-center justify-between font-bold text-text">
                         <span>{ws.manifest?.title || ws.relativePath}</span>
                         <Badge tone="accent">
-                          {ws.manifest?.workspaceId || ws.manifest?.term}
+                          {ws.manifest?.workspaceId || ws.manifest?.part}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3 text-[11px] text-text-muted">
@@ -335,11 +335,11 @@ export function TextbookWorkspaceModal({
               </h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-muted">الفصل الدراسي (Term)</label>
+                  <label className="text-xs font-medium text-text-muted">الجزء الفيزيائي (Part)</label>
                   <Input
-                    value={term}
-                    onChange={(e) => setTerm(e.target.value.toUpperCase())}
-                    placeholder="T01"
+                    value={part}
+                    onChange={(e) => setPart(e.target.value.toUpperCase() as 'PART_1' | 'PART_2' | 'BOTH')}
+                    placeholder="PART_1"
                     className="h-9 text-xs uppercase"
                   />
                 </div>
@@ -377,7 +377,7 @@ export function TextbookWorkspaceModal({
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="كتاب الرياضيات - الصف السابع - الفصل الأول"
+                  placeholder="كتاب الرياضيات - الصف السابع - الجزء الأول"
                   className="h-9 text-xs"
                 />
               </div>
@@ -421,7 +421,7 @@ export function TextbookWorkspaceModal({
                 type="button"
                 variant="primary"
                 onClick={() => prepareMutation.mutate()}
-                disabled={prepareMutation.isPending || !subject || !grade || !term}
+                disabled={prepareMutation.isPending || !subject || !grade || !part}
                 className="gap-2"
               >
                 {prepareMutation.isPending ? (

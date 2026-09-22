@@ -69,9 +69,19 @@ def normalize_subject(raw: str) -> str:
     return value
 
 
-def textbook_key(subject: str, grade: int, term: int, edition: str) -> str:
+def normalize_part(raw: str) -> str:
+    value = str(raw).strip().upper()
+    mapping = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}
+    value = mapping.get(value, value)
+    if value not in {"P1", "P2", "PB"}:
+        raise ValueError("Physical part must be P1, P2, or PB.")
+    return value
+
+
+def textbook_key(subject: str, grade: int, part: str, edition: str) -> str:
     """Mirror src/shared/kernel/identifiers.ts textbookKey exactly."""
     subject = normalize_subject(subject)
+    part_key = normalize_part(part)
     edition = str(edition).strip()
     if re.fullmatch(r"\d{4}([/-]\d{4})?", edition):
         edition_key = "ED" + edition.replace("/", "-")
@@ -79,19 +89,18 @@ def textbook_key(subject: str, grade: int, term: int, edition: str) -> str:
         edition_key = "ED" + re.sub(r"[^A-Z0-9-]", "", edition.upper().replace("_", "-"))
     if not edition_key or edition_key == "ED":
         raise ValueError("Printed edition is required.")
-    return f"EDU-{subject}-G{grade:02d}-T{int(term)}-{edition_key}"
+    return f"EDU-{subject}-G{grade:02d}-{part_key}-{edition_key}"
 
 
-def book_workspace(subject: str, grade: int, term: int, edition: str) -> Path:
+def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
     _, grade_key = normalize_grade(grade)
-    term_number, term_key = normalize_term(term)
+    part_key = normalize_part(part)
     edition_segment = "ED" + re.sub(
         r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
     )
     if edition_segment == "ED":
         raise ValueError("Printed edition is required.")
-    return workspace_root() / term_key / grade_key / normalize_subject(subject) / edition_segment
-
+    return workspace_root() / part_key / grade_key / normalize_subject(subject) / edition_segment
 
 def _rewrite_json(path: Path, replacements: Dict[str, str]) -> None:
     if not path.exists():

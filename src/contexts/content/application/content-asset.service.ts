@@ -23,7 +23,7 @@ import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import { contentAssetKey, textbookKey as buildTextbookKey } from '../../../shared/kernel/identifiers.js';
 
 export interface UploadTextbookSourceInput {
-  readonly term: string;
+  readonly part: 'PART_1' | 'PART_2';
   readonly grade: string;
   readonly subject: string;
   readonly edition?: string;
@@ -61,12 +61,10 @@ export class ContentAssetService {
   async uploadTextbookSource(input: UploadTextbookSourceInput): Promise<ContentAssetRecord> {
     const edition = input.edition || '2026';
     const gradeNum = parseInt(input.grade.replace(/\D/g, ''), 10) || 1;
-    const termNum = parseInt(input.term.replace(/\D/g, ''), 10) || 1;
-
     const tbKeyRes = buildTextbookKey({
       subject: input.subject,
       grade: gradeNum,
-      term: termNum,
+      part: input.part,
       edition,
     });
 
@@ -83,7 +81,7 @@ export class ContentAssetService {
       assetType: 'TEXTBOOK_PDF',
       scope: 'TEXTBOOK',
       mimeType: 'application/pdf',
-      originalName: `${input.subject}_${input.grade}_${input.term}.pdf`,
+      originalName: `${input.subject}_${input.grade}_${input.part}.pdf`,
       title: input.title || `Textbook ${input.subject} ${input.grade}`,
     });
   }

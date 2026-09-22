@@ -1239,7 +1239,7 @@ DRAFT
 
 ```bash
 edu7-content summarize-image \
-  --lesson Workspace/T01/G07/MATH/unit_01_algebra/lessons/lesson_01_linear_equations \
+  --lesson Workspace/P1/G07/MATH/unit_01_algebra/lessons/lesson_01_linear_equations \
   --concept linear-equations \
   --model gemini
 ```

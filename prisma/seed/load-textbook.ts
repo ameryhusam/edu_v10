@@ -74,7 +74,7 @@ type UnitSpec = {
 export interface TextbookSpec {
   subjectKey: string;
   gradeKey: string;
-  term: number;
+  part: 'PART_1' | 'PART_2';
   edition: string;
   title: string;
   issuer?: string;
@@ -96,8 +96,6 @@ export function readTextbookSpec(file: string): TextbookSpec {
 }
 
 export interface TextbookSeedContext {
-  termId: string;
-  termKey: string;
   academicYearId: string;
   schoolId: string;
 }
@@ -120,28 +118,25 @@ export async function seedTextbookFromSpec(
   ctx: TextbookSeedContext,
   spec: TextbookSpec,
 ): Promise<TextbookSeedReport> {
-  if (!ctx.termKey.endsWith(`-T0${spec.term}`)) {
-    throw new Error(
-      `textbook spec term ${spec.term} does not match seeding term ${ctx.termKey}`,
-    );
-  }
-
   const grade = await prisma.grade.findUniqueOrThrow({ where: { key: spec.gradeKey } });
   const subject = await prisma.subject.findUniqueOrThrow({ where: { key: spec.subjectKey } });
   const tbKey = unwrap(
     textbookKey({
       subject: spec.subjectKey,
       grade: Number(spec.gradeKey.replace('G0', '').replace('G', '')),
-      term: spec.term,
+      part: spec.part,
       edition: spec.edition,
     }),
   );
+
+  const termOrdinal = spec.part === 'PART_1' ? 1 : 2;
+  const term = await prisma.term.findFirstOrThrow({ where: { academicYearId: ctx.academicYearId, ordinal: termOrdinal } });
 
   const textbook = await prisma.textbook.upsert({
     where: { key: tbKey },
     create: {
       key: tbKey,
-      termId: ctx.termId,
+      part: spec.part,
       gradeId: grade.id,
       subjectId: subject.id,
       edition: spec.edition,
@@ -162,7 +157,7 @@ export async function seedTextbookFromSpec(
         academicYearId: ctx.academicYearId,
       },
     },
-    create: { textbookId: textbook.id, schoolId: ctx.schoolId, academicYearId: ctx.academicYearId },
+    create: { textbookId: textbook.id, schoolId: ctx.schoolId, academicYearId: ctx.academicYearId, termId: term.id },
     update: {},
   });
 

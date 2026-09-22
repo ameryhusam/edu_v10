@@ -31,6 +31,7 @@ import {
 import {
   lessonKey as buildLessonKey,
   unitKey as buildUnitKey,
+  textbookKey as buildTextbookKey,
   normalizeSlug,
   type TextbookKey,
   type UnitKey,
@@ -136,12 +137,17 @@ export function normalizeOrConvertPackage(
     !Array.isArray(raw?.lessons);
 
   if (isHierarchical) {
-    const tbKey =
-      options.targetTextbookKey ||
-      raw.textbook?.key ||
-      (raw.subjectKey
-        ? `EDU-${raw.subjectKey}-${raw.gradeKey || 'G01'}-T${raw.term || 1}-ED${raw.edition || '2026'}`
-        : 'EDU-CUSTOM-G01-T1-ED2026');
+    const rawPart = raw.textbook?.part ?? raw.part;
+    const part = rawPart === 'P1' || rawPart === 'PART_1' ? 'PART_1' : rawPart === 'P2' || rawPart === 'PART_2' ? 'PART_2' : null;
+    let derivedKey = raw.textbook?.key ?? '';
+    if (!derivedKey && raw.subjectKey && raw.gradeKey && part && raw.edition) {
+      const gradeMatch = /^G?(\\d{1,2})$/i.exec(String(raw.gradeKey).trim());
+      if (gradeMatch) {
+        const built = buildTextbookKey({ subject: raw.subjectKey, grade: Number(gradeMatch[1]), part, edition: String(raw.edition) });
+        if (built.ok) derivedKey = built.value;
+      }
+    }
+    const tbKey = options.targetTextbookKey || derivedKey || 'UNRESOLVED-TEXTBOOK-KEY';
 
     const flatUnits: any[] = [];
     const flatLessons: any[] = [];
@@ -301,9 +307,9 @@ export function normalizeOrConvertPackage(
         key: tbKey,
         subjectKey: raw.textbook?.subjectKey || raw.subjectKey || 'GENERAL',
         gradeKey: raw.textbook?.gradeKey || raw.gradeKey || 'G01',
-        termKey: raw.textbook?.termKey || '2026-2027-T01',
+        part: part || '',
         title: raw.textbook?.title || raw.title || 'كتاب دراسي',
-        edition: String(raw.textbook?.edition || raw.edition || '2026'),
+        edition: String(raw.textbook?.edition || raw.edition || ''),
         status: 'DRAFT',
         issuer: raw.textbook?.issuer || raw.issuer || null,
         totalPages: raw.textbook?.totalPages || raw.totalPages || null,
@@ -620,7 +626,7 @@ export class ContentImportService {
       const createdTextbook = await this.authoring.createTextbook(ctx, {
         subjectKey: pkg.textbook.subjectKey,
         gradeKey: pkg.textbook.gradeKey,
-        termKey: pkg.textbook.termKey,
+        part: pkg.textbook.part,
         title: pkg.textbook.title,
         edition: pkg.textbook.edition,
         description: pkg.textbook.description ?? null,

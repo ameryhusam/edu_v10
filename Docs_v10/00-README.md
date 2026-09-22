@@ -1,8 +1,12 @@
 # Edu_v10 Documentation System
 
+## Primary Architecture Reference
+
+The durable architectural source is `architecture/README.md` and the numbered documents under `architecture/`. Read them before making architectural or cross-cutting changes. `Docs_v10/` contains the detailed capability contracts, algorithms, roadmap and current-state evidence.
+
 **Status:** Canonical documentation set  
 **Repository:** ameryhusam/edu_v10  
-**Branch:** main  
+**Branch:** 03_build_algorithm_and_new_Docs  
 **Last reviewed:** 2026-09-21
 
 ## Purpose
@@ -17,9 +21,10 @@ When documents disagree, resolve them in this order:
 
 1. Current `prisma/schema.prisma` for persisted data shape.
 2. Current source code and enforced architecture checks for implemented behavior.
-3. Docs_v10 normative architecture decisions for the target architecture.
-4. Current tests and executable contracts.
-5. Historical documents only as evidence, never as a current rule.
+3. architecture/ durable adopted architecture decisions.
+4. Docs_v10 detailed capability contracts, algorithms and target/current-state records.
+5. Current tests and executable contracts.
+6. Historical documents only as evidence, never as a current rule.
 
 A documented target-state decision may intentionally describe behavior that code does not yet implement. It must be labeled **TARGET / NOT YET IMPLEMENTED** and becomes the implementation contract for the next change.
 
@@ -46,6 +51,8 @@ A documented target-state decision may intentionally describe behavior that code
 | 09-ai-developer-instructions.md | short operational system instruction for AI coding agents |
 | 10-documentation-governance.md | how Docs_v10 is maintained and how obsolete docs are retired |
 | 11-current-state.md | verified repository snapshot and gaps at the review date |\n| 12-end-to-end-dataflows.md | complete operational data flows, algorithms, status model, field contracts and workflow boundaries |
+| 13-content-storage-page-classification-and-import-algorithms.md | storage boundary, Workspace synchronization, page classification, aliases, AI classification and import algorithms |
+| 14-developer-content-ingestion-guide.md | developer-facing preparation, classification, ZIP import, question/resource and troubleshooting workflow |
 
 ## Operational workflow rule\n\nDocs_v10 defines both architecture and end-to-end data movement. For major workflows, 12-end-to-end-dataflows.md is the normative reference for entry conditions, required fields, state transitions, reconciliation, idempotency, audit/provenance and terminal outcomes.\n\n## Core architectural flow
 
@@ -105,3 +112,16 @@ Do not delete `docs/` until:
 - an architecture check and repository verification have passed.
 
 After that, delete the old `docs/` directory in a separate cleanup commit.
+
+
+## Documentation ownership for content ingestion
+
+To prevent duplicated or contradictory algorithms:
+
+- architecture/02-content-workspace-ingestion.md: architectural boundary, ownership, P1/P2 physical-part rule, page metadata invariant, synchronization invariants.
+- architecture/03-ai-evidence-provenance.md: AI authority, evidence and provenance invariants.
+- Docs_v10/12-end-to-end-dataflows.md: end-to-end operational workflow.
+- Docs_v10/13-content-storage-page-classification-and-import-algorithms.md: detailed page classification, two-part segmentation, storage and import algorithms.
+- Docs_v10/14-developer-content-ingestion-guide.md: developer execution guide and troubleshooting.
+
+Do not create another document that repeats these algorithms. If a rule is architectural, change architecture/ first. If only the procedure changes, change the owning Docs_v10 document.

@@ -26,9 +26,9 @@ class Edu7JsonExporter:
         metadata = book_manifest.get("metadata", {})
         subject = metadata.get("subjectKey", metadata.get("subject", "GENERAL"))
         grade = metadata.get("gradeKey", metadata.get("grade", "G01"))
-        term = metadata.get("termKey", metadata.get("term", "2026-2027-T01"))
+        part = metadata.get("part", "P1")
         edition = str(metadata.get("edition", "2026"))
-        textbook_key = metadata.get("textbookKey", f"EDU-{subject}-{grade}-T1-ED{edition}")
+        textbook_key = metadata.get("textbookKey", f"EDU-{subject}-{grade}-{part}-ED{edition}")
 
         units: Dict[str, Dict[str, Any]] = {}
         lessons: List[Dict[str, Any]] = []
@@ -142,7 +142,7 @@ class Edu7JsonExporter:
                 "key": textbook_key,
                 "subjectKey": subject,
                 "gradeKey": grade,
-                "termKey": term,
+                "part": part,
                 "title": metadata.get("title", textbook_key),
                 "edition": edition,
                 "description": metadata.get("description"),

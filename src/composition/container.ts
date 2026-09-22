@@ -270,7 +270,7 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
   const decisionLog = new PrismaDecisionLogWriter(db);
 
   const contentStorage = new LocalContentStorage({
-    rootDir: process.env.STORAGE_ROOT || './data/storage',
+    rootDir: env.STORAGE_ROOT,
   });
   const workspaceManager = new WorkspaceManager(env.WORKSPACE_ROOT);
   const contentEngine = new ContentEngineService(env.CONTENT_ENGINE_PYTHON, env.CONTENT_ENGINE_ROOT);

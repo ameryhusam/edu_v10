@@ -19,7 +19,7 @@ import type { ContentNodeKind } from '../../src/contexts/content/domain/authorin
 import type { PublicationState } from '../../src/contexts/content/domain/publication.js';
 import type { TextbookStructure } from '../../src/contexts/content/domain/structural-validation.js';
 
-const TB = 'EDU-MATH-G07-T1-ED2026';
+const TB = 'EDU-MATH-G07-P1-ED2026';
 const UNIT = `${TB}-U-SETS`;
 const LESSON = `${UNIT}-L-BASICS`;
 
@@ -97,16 +97,12 @@ class FakeRepo implements ContentRepository {
   grades = new Map<string, { id: string; key: string; ordinal: number; name: string }>([
     ['G07', { id: 'gr-1', key: 'G07', ordinal: 7, name: 'الصف السابع' }],
   ]);
-  terms = new Map<string, { id: string; key: string; ordinal: number; name: string }>([
-    ['2026-2027-T01', { id: 'tm-1', key: '2026-2027-T01', ordinal: 1, name: 'الفصل الأول' }],
-  ]);
   textbooks = new Map<string, { key: string; title: string; edition: string; status: string }>();
 
-  async resolveTextbookCoordinates(i: { subjectKey: string; gradeKey: string; termKey: string }) {
+  async resolveTextbookPlacement(i: { subjectKey: string; gradeKey: string }) {
     return {
       subject: this.subjects.get(i.subjectKey) ?? null,
       grade: this.grades.get(i.gradeKey) ?? null,
-      term: this.terms.get(i.termKey) ?? null,
     };
   }
 
@@ -118,7 +114,7 @@ class FakeRepo implements ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
-    termId: string;
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
   }) {
@@ -673,7 +669,7 @@ describe('publishing', () => {
 
   it('reports a missing textbook', async () => {
     const { publishing } = setup();
-    const outcome = await publishing.apply(CTX, 'EDU-NOPE-G01-T1-ED2026', 'SUBMIT');
+    const outcome = await publishing.apply(CTX, 'EDU-NOPE-G01-P1-ED2026', 'SUBMIT');
 
     expect(outcome.ok).toBe(false);
     if (outcome.ok) return;
@@ -754,7 +750,7 @@ describe('createTextbook', () => {
   const COORDS = {
     subjectKey: 'MATH',
     gradeKey: 'G07',
-    termKey: '2026-2027-T01',
+    part: 'PART_1' as const,
     title: 'Mathematics — Grade 7',
     edition: '2026',
   };
@@ -765,7 +761,7 @@ describe('createTextbook', () => {
 
     expect(created.ok).toBe(true);
     if (!created.ok) return;
-    expect(created.value.key).toBe('EDU-MATH-G07-T1-ED2026');
+    expect(created.value.key).toBe('EDU-MATH-G07-P1-ED2026');
     expect(created.value.status).toBe('DRAFT');
   });
 
@@ -779,7 +775,7 @@ describe('createTextbook', () => {
 
     expect(created.ok).toBe(true);
     if (!created.ok) return;
-    expect(created.value.key).toBe('EDU-MATH-G07-T1-ED2026');
+    expect(created.value.key).toBe('EDU-MATH-G07-P1-ED2026');
   });
 
   it('a new printed edition is a different textbook', async () => {
@@ -790,10 +786,10 @@ describe('createTextbook', () => {
     expect(first.ok && second.ok).toBe(true);
     if (!first.ok || !second.ok) return;
     expect(first.value.key).not.toBe(second.value.key);
-    expect(second.value.key).toBe('EDU-MATH-G07-T1-EDREV2');
+    expect(second.value.key).toBe('EDU-MATH-G07-P1-EDREV2');
   });
 
-  it('refuses a duplicate subject+grade+term+edition', async () => {
+  it('refuses a duplicate subject+grade+part+edition', async () => {
     const { authoring } = setup();
     await authoring.createTextbook(CTX, COORDS);
     const again = await authoring.createTextbook(CTX, COORDS);
@@ -818,12 +814,12 @@ describe('createTextbook', () => {
     const created = await authoring.createTextbook(CTX, {
       ...COORDS,
       subjectKey: 'NOPE',
-      termKey: 'ALSO-NOPE',
+      gradeKey: 'ALSO-NOPE',
     });
 
     expect(created.ok).toBe(false);
     if (created.ok) return;
-    expect(created.error.details).toMatchObject({ missing: ['subjectKey', 'termKey'] });
+    expect(created.error.details).toMatchObject({ missing: ['subjectKey', 'gradeKey'] });
   });
 
   it('requires a title', async () => {
@@ -867,12 +863,11 @@ describe('createTextbook', () => {
     expect(created.error.code).toBe('content.title_repeats_placement');
   });
 
-  it('refuses a title that repeats the resolved term name (§2.2)', async () => {
+  it('refuses a title that repeats the physical part (§2.2)', async () => {
     const { authoring } = setup();
-    // FakeRepo's 2026-2027-T01 resolves to term name 'الفصل الأول'.
     const created = await authoring.createTextbook(CTX, {
       ...COORDS,
-      title: 'رياضيات الفصل الأول',
+      title: 'رياضيات PART_1',
     });
 
     expect(created.ok).toBe(false);
@@ -880,7 +875,7 @@ describe('createTextbook', () => {
     expect(created.error.code).toBe('content.title_repeats_placement');
   });
 
-  it('accepts a title that does not mention the grade or term', async () => {
+  it('accepts a title that does not mention the grade or part', async () => {
     const { authoring } = setup();
     const created = await authoring.createTextbook(CTX, COORDS);
 

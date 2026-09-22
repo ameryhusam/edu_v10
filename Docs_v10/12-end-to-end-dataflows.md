@@ -95,15 +95,15 @@ A different printed edition is a new textbook identity, not an update to the pre
 
 Canonical identity:
 
-    subject + grade + term + printedEdition
+    subject + grade + physicalPart + printedEdition
               ↓
           Textbook.key
 
 Example:
 
-    T01/G04/SCI/ED2026
+    P1/G04/SCI/ED2026
               ↓
-    EDU-SCI-G04-T01-ED2026
+    EDU-SCI-G04-P1-ED2026
 
 Academic year of school use is not part of printed-book identity.
 
@@ -485,8 +485,8 @@ A full workspace export is named <Textbook.key>.zip.
 
 Archive root equals the textbook key:
 
-EDU-SCI-G04-T1-ED2026.zip
-└── EDU-SCI-G04-T1-ED2026/
+EDU-SCI-G04-P1-ED2026.zip
+└── EDU-SCI-G04-P1-ED2026/
     ├── index.json
     ├── edu7-content-package.json
     ├── cover/
@@ -574,3 +574,132 @@ The physical file is first placed in the workspace and registered as provenance/
 ### 13.9 Remaining production gap
 
 The current implementation now provides safe ZIP staging/import/export and workspace reconciliation, but a durable distributed operation lock/idempotency record is still required before multiple API workers can safely mutate the same textbook concurrently. The implementation must also add dedicated semantic import adapters for question/flashcard packages that are stored under resource/; merely discovering those files as ContentAsset is not equivalent to updating the QuestionBank.
+
+
+## 20. Canonical storage and synchronization
+
+The database is the canonical semantic store; Workspace is the controlled preparation/exchange snapshot. Binary bytes are kept in ContentStorage/object storage. PostgreSQL stores ContentAsset metadata and checksum plus TextbookPage/ContentChunk semantic text.
+
+Synchronization is controlled reconciliation, not live bidirectional mirroring:
+
+    Workspace → normalize → validate → reconcile → dry-run → canonical services → DB/ContentStorage → commit Workspace
+
+A Workspace edit is therefore an import operation. A database update is not allowed to bypass canonical services. A raw Workspace path is never a learner-facing URL.
+
+## 21. Page classification algorithm
+
+For each page:
+
+    page image/text
+      ↓
+    page coordinate validation
+      ↓
+    explicit page_classification.json lookup
+      ↓ if absent
+    deterministic rules
+      ↓
+    TOC evidence + neighboring pages
+      ↓
+    subject/branch profile
+      ↓
+    AI classifier when configured
+      ↓
+    confidence/review gate
+      ↓
+    classification result + provenance
+
+Precedence is explicit manifest > deterministic mapping > TOC > subject profile > AI > review.
+
+The page file remains page_{number}.png. Classification never changes the filename.
+
+Null or missing classification fields mean no addition/override. Empty strings are invalid.
+
+Arabic, Islamic Studies and Quran are branch-aware. In Arabic, “الدرس” is not sufficient to identify the semantic lesson type because a unit may contain reading, grammar, spelling, morphology and expression branches. Manual JSON classification is authoritative when supplied.
+
+## 22. Page-to-question algorithm
+
+    classified page
+      ↓
+    detect question blocks
+      ↓
+    extract structured question
+      ↓
+    validate QuestionType
+      ↓
+    normalize
+      ↓
+    semantic fingerprint
+      ↓
+    compare existing Question
+      ↓
+    CREATE / UNCHANGED / CONFLICT / INVALID
+      ↓
+    canonical Question service
+
+A MIXED page is split into blocks; the whole page is never assumed to be one Question role.
+
+## 23. Identifier normalization algorithm
+
+Before any path or database lookup:
+
+    input grade G4/G04 → canonical G04
+    input part P1/PART_1 → canonical PART_1
+    input part P2/PART_2 → canonical PART_2
+
+Textbook identity never contains academic term. Canonical examples are EDU-SCI-G04-P1-ED2026 and EDU-SCI-G04-P2-ED2026.
+
+Normalization must happen before uniqueness checks so an import using G4 cannot create a second Grade row or an alias spelling can create a second physical-part identity.
+
+## 24. Page classification JSON contract
+
+Recommended lesson-level file:
+
+    lesson_01_<slug>/page_classification.json
+
+Minimum structure:
+
+    {
+      "schemaVersion": "1",
+      "lessonKey": "...",
+      "textbookKey": "EDU-SCI-G07-P1-ED2026",
+      "part": "P1",
+      "pages": [
+        {
+          "pageNumber": 1,
+          "contentType": "READING",
+          "branch": "READING",
+          "lessonType": "READING",
+          "questionRole": null,
+          "addToQuestionBank": false,
+          "addToResources": true
+        }
+      ]
+    }
+
+Only configured labels are accepted. The file controls classification, not physical filenames.
+
+## 25. Roadmap implementation gate
+
+The algorithm roadmap is:
+
+    storage boundary
+      ↓
+    alias normalization
+      ↓
+    TOC/mapping
+      ↓
+    subject-aware segmentation
+      ↓
+    manual page classification
+      ↓
+    AI classification fallback
+      ↓
+    semantic question/resource import
+      ↓
+    ZIP reconciliation
+      ↓
+    durable idempotency/locking
+      ↓
+    E2E verification
+
+Detailed developer steps are maintained in Docs_v10/14-developer-content-ingestion-guide.md.

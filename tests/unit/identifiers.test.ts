@@ -29,27 +29,27 @@ import {
 } from '../../src/shared/kernel/identifiers.js';
 import { unwrap } from '../../src/shared/kernel/result.js';
 
-const coords = { subject: 'MATH', grade: 7, term: 1, edition: '2026' };
+const coords = { subject: 'MATH', grade: 7, part: 'PART_1' as const, edition: '2026' };
 const book = (): TextbookKey => unwrap(textbookKey(coords));
 const unit = (slug = 'SETS-RELATIONS'): UnitKey => unwrap(unitKey(book(), slug));
 const lesson = (slug = 'SET-AND-ELEMENT'): LessonKey => unwrap(lessonKey(unit(), slug));
 
 describe('textbookKey — identified by printed edition', () => {
   it('builds the canonical shape', () => {
-    expect(book()).toBe('EDU-MATH-G07-T1-ED2026');
+    expect(book()).toBe('EDU-MATH-G07-P1-ED2026');
   });
 
   it('is deterministic', () => {
     expect(unwrap(textbookKey(coords))).toBe(unwrap(textbookKey(coords)));
   });
 
-  it('distinguishes two printings of the same subject/grade/term', () => {
+  it('distinguishes two printings of the same subject/grade/part', () => {
     // The whole point of keying on edition: a reprint is a different book.
     const first = unwrap(textbookKey({ ...coords, edition: '2026' }));
     const revised = unwrap(textbookKey({ ...coords, edition: 'REV2' }));
 
     expect(first).not.toBe(revised);
-    expect(revised).toBe('EDU-MATH-G07-T1-EDREV2');
+    expect(revised).toBe('EDU-MATH-G07-P1-EDREV2');
   });
 
   it('does NOT change when the book is taught in a different academic year', () => {
@@ -63,7 +63,7 @@ describe('textbookKey — identified by printed edition', () => {
 
   it('accepts a year span as an edition', () => {
     expect(unwrap(textbookKey({ ...coords, edition: '2026-2027' }))).toBe(
-      'EDU-MATH-G07-T1-ED2026-2027',
+      'EDU-MATH-G07-P1-ED2026-2027',
     );
   });
 
@@ -74,17 +74,16 @@ describe('textbookKey — identified by printed edition', () => {
     expect(r.error.code).toBe('identity.edition_required');
   });
 
-  it('rejects out-of-range grade and term', () => {
+  it('rejects out-of-range grade', () => {
     expect(textbookKey({ ...coords, grade: 0 }).ok).toBe(false);
     expect(textbookKey({ ...coords, grade: 13 }).ok).toBe(false);
-    expect(textbookKey({ ...coords, term: 5 }).ok).toBe(false);
   });
 
   it('round-trips through parseTextbookKey', () => {
     expect(unwrap(parseTextbookKey(book()))).toEqual({
       subject: 'MATH',
       grade: 7,
-      term: 1,
+      part: 'PART_1',
       edition: '2026',
     });
   });
@@ -97,10 +96,10 @@ describe('textbookKey — identified by printed edition', () => {
 
 describe('hierarchy keys — slug-based, never positional', () => {
   it('builds the canonical chain', () => {
-    expect(unit()).toBe('EDU-MATH-G07-T1-ED2026-U-SETS-RELATIONS');
-    expect(lesson()).toBe('EDU-MATH-G07-T1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT');
+    expect(unit()).toBe('EDU-MATH-G07-P1-ED2026-U-SETS-RELATIONS');
+    expect(lesson()).toBe('EDU-MATH-G07-P1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT');
     expect(unwrap(conceptKey(lesson(), 'SET-UNION'))).toBe(
-      'EDU-MATH-G07-T1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT-C-SET-UNION',
+      'EDU-MATH-G07-P1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT-C-SET-UNION',
     );
   });
 

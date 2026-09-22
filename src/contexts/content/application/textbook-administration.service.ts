@@ -38,6 +38,7 @@ import type {
 } from './ports.js';
 import type { ContentAuthoringService } from './authoring.service.js';
 import { textbookTitleForSubject } from '../domain/authoring.js';
+import { parseTextbookKey } from '../../../shared/kernel/identifiers.js';
 
 /** Who is performing the act. Authorization already happened at the edge. */
 export interface AdminContext {
@@ -91,7 +92,7 @@ export class TextbookAdministrationService {
     search?: string | undefined;
     subjectKey?: string | undefined;
     gradeKey?: string | undefined;
-    termKey?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | undefined;
     status?: string | undefined;
     limit?: number | undefined;
     offset?: number | undefined;
@@ -101,7 +102,7 @@ export class TextbookAdministrationService {
         ...(query.search ? { search: query.search } : {}),
         ...(query.subjectKey ? { subjectKey: query.subjectKey } : {}),
         ...(query.gradeKey ? { gradeKey: query.gradeKey } : {}),
-        ...(query.termKey ? { termKey: query.termKey } : {}),
+        ...(query.part ? { part: query.part } : {}),
         ...(query.status ? { status: query.status } : {}),
         limit: Math.min(Math.max(query.limit ?? 25, 1), 100),
         offset: Math.max(query.offset ?? 0, 0),
@@ -113,7 +114,7 @@ export class TextbookAdministrationService {
     ctx: AdminContext,
     input: {
       gradeKey: string;
-      termKey: string;
+      part: 'PART_1' | 'PART_2';
       edition: string;
       issuer?: string | null;
       publishYear?: number | null;
@@ -122,7 +123,7 @@ export class TextbookAdministrationService {
   ): Promise<
     Result<{
       gradeKey: string;
-      termKey: string;
+      part: 'PART_1' | 'PART_2';
       edition: string;
       created: number;
       unchanged: number;
@@ -152,7 +153,7 @@ export class TextbookAdministrationService {
       const created = await this.authoring.createTextbook(ctx, {
         subjectKey: subject.subjectKey,
         gradeKey: subject.gradeKey,
-        termKey: input.termKey,
+        part: input.part,
         title,
         edition: input.edition,
         issuer: input.issuer ?? null,
@@ -168,7 +169,7 @@ export class TextbookAdministrationService {
         const existing = await this.repo.findTextbookByCoordinates({
           subjectKey: subject.subjectKey,
           gradeKey: subject.gradeKey,
-          termKey: input.termKey,
+          part: input.part,
           edition: input.edition,
         });
         textbookKey = existing?.key ?? null;
@@ -183,7 +184,7 @@ export class TextbookAdministrationService {
             {
               subjectKey: subject.subjectKey,
               gradeKey: subject.gradeKey,
-              termKey: input.termKey,
+              part: input.part,
               edition: input.edition,
             },
           ),
@@ -209,13 +210,13 @@ export class TextbookAdministrationService {
 
     await this.audit(ctx, 'content.grade_textbooks_ensured', input.gradeKey, {
       gradeKey: input.gradeKey,
-      termKey: input.termKey,
+      part: input.part,
       edition: input.edition,
     });
 
     return Ok({
       gradeKey: input.gradeKey,
-      termKey: input.termKey,
+      part: input.part,
       edition: input.edition,
       created: rows.filter((row) => row.created).length,
       unchanged: rows.filter((row) => !row.created).length,
@@ -235,7 +236,7 @@ export class TextbookAdministrationService {
     ctx: AdminContext,
     input: {
       gradeKey: string;
-      termKey?: string | undefined;
+      part?: 'PART_1' | 'PART_2' | undefined;
       textbookKey?: string | undefined;
       schoolKey: string;
       academicYearKey: string;
@@ -277,14 +278,14 @@ export class TextbookAdministrationService {
     } else {
       const candidates = await this.repo.textbooksForGrade({
         gradeKey: input.gradeKey,
-        termKey: input.termKey,
+        part: input.part,
       });
       if (candidates.length === 0) {
         return Err(
           Errors.validation(
             'content.grade_has_no_textbooks',
             'This grade has no textbooks to accredit yet.',
-            { gradeKey: input.gradeKey, termKey: input.termKey ?? null },
+            { gradeKey: input.gradeKey, part: input.part ?? null },
           ),
         );
       }
@@ -368,6 +369,20 @@ export class TextbookAdministrationService {
       }
     }
 
+    const parsed = parseTextbookKey(input.textbookKey);
+    if (!parsed.ok) return parsed;
+    const termOrdinal = parsed.value.part === 'PART_1' ? 1 : 2;
+    const termKey = `${input.academicYearKey}-T0${termOrdinal}`;
+    if (!(await this.repo.termExists(termKey))) {
+      return Err(
+        Errors.notFound('content.adoption_term_not_found', 'The academic term required by this textbook part does not exist.', {
+          academicYearKey: input.academicYearKey,
+          termKey,
+          part: parsed.value.part,
+        }),
+      );
+    }
+
     const existing = await this.repo.findAdoption(input);
     if (existing) {
       return Err(
@@ -383,7 +398,7 @@ export class TextbookAdministrationService {
       );
     }
 
-    const created = await this.repo.createAdoption(input);
+    const created = await this.repo.createAdoption({ ...input, termKey });
     await this.audit(ctx, 'content.textbook_adopted', input.textbookKey, input);
     return Ok(created);
   }

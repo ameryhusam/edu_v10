@@ -59,14 +59,12 @@ export interface ContentRepository {
    * ordinals too, because the key is built from them and the caller must not
    * have to parse `G07` itself.
    */
-  resolveTextbookCoordinates(input: {
+  resolveTextbookPlacement(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
   }): Promise<{
     subject: { id: string; key: string; name: string } | null;
     grade: { id: string; key: string; ordinal: number; name: string } | null;
-    term: { id: string; key: string; ordinal: number; name: string } | null;
   }>;
 
   /** True when a textbook with this key already exists. */
@@ -76,7 +74,7 @@ export interface ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
-    termId: string;
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
     description?: string | null;
@@ -246,7 +244,7 @@ export interface ExportableTextbook {
     key: string;
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
     description: string | null;
@@ -413,8 +411,7 @@ export interface TextbookSummary {
   readonly subjectName: string;
   readonly gradeKey: string;
   readonly gradeName: string;
-  readonly termKey: string;
-  readonly termName: string;
+  readonly part: 'PART_1' | 'PART_2';
   readonly edition: string;
   readonly status: string;
   /** How many schools have adopted this book (any year). */
@@ -430,7 +427,7 @@ export interface TextbookListQuery {
   readonly search?: string | undefined;
   readonly subjectKey?: string | undefined;
   readonly gradeKey?: string | undefined;
-  readonly termKey?: string | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | undefined;
   readonly status?: string | undefined;
   readonly limit: number;
   readonly offset: number;
@@ -453,6 +450,7 @@ export interface AdoptionRow {
   readonly schoolKey: string;
   readonly schoolName: string;
   readonly academicYearKey: string;
+  readonly termKey: string;
   readonly adoptedAt: Date;
 }
 
@@ -558,19 +556,18 @@ export interface TextbookAdministrationRepository {
   findTextbookByCoordinates(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2';
     edition: string;
   }): Promise<TextbookCoordinateMatch | null>;
   /** Active subjects the catalogue says this grade teaches. */
   activeGradeSubjects(gradeKey: string): Promise<readonly GradeSubjectSeed[] | null>;
   /**
-   * Every textbook that exists for a grade, across every subject and term
-   * (or one term when given). Feeds bulk accreditation: naming a grade means
+   * Every textbook that exists for a grade, across every subject, optionally filtered by physical part. Feeds bulk accreditation: naming a grade means
    * naming every book it has, not one coordinate at a time.
    */
   textbooksForGrade(input: {
     gradeKey: string;
-    termKey?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | undefined;
   }): Promise<readonly TextbookCoordinateMatch[]>;
   listAdoptions(query: AdoptionListQuery): Promise<AdoptionListPage>;
   /** The unit→lesson outline of a book, or null when the book is unknown. */
@@ -589,6 +586,7 @@ export interface TextbookAdministrationRepository {
     textbookKey: string;
     schoolKey: string;
     academicYearKey: string;
+    termKey: string;
   }): Promise<AdoptionRow>;
   deleteAdoption(input: {
     textbookKey: string;
@@ -599,6 +597,7 @@ export interface TextbookAdministrationRepository {
   textbookExists(textbookKey: string): Promise<boolean>;
   schoolExists(schoolKey: string): Promise<boolean>;
   academicYearExists(academicYearKey: string): Promise<boolean>;
+  termExists(termKey: string): Promise<boolean>;
 }
 
 export interface ContentAssetRecord {

@@ -118,10 +118,10 @@ describe('Export Profile Assets Integration', () => {
       exportedAt: '2026-09-20T00:00:00.000Z',
     },
     textbook: {
-      key: 'EDU-MATH-G07-T1-ED2026',
+      key: 'EDU-MATH-G07-P1-ED2026',
       subjectKey: 'MATH',
       gradeKey: 'G07',
-      termKey: '2026-2027-T01',
+      part: 'PART_1',
       title: 'Mathematics',
       edition: '2026',
       description: null,
@@ -332,14 +332,14 @@ describe('ContentAssetService Application Service', () => {
     const record = await service.uploadTextbookSource({
       subject: 'MATH',
       grade: 'G07',
-      term: 'T1',
+      part: 'PART_1',
       edition: '2026',
       title: 'Grade 7 Math',
       buffer: pdfBuffer,
     });
 
     expect(record.assetType).toBe('TEXTBOOK_PDF');
-    expect(record.storageKey).toBe('content/EDU-MATH-G07-T1-ED2026/textbook/textbook.pdf');
+    expect(record.storageKey).toBe('content/EDU-MATH-G07-P1-ED2026/textbook/textbook.pdf');
     expect(record.relativePath).toBe('textbook/textbook.pdf');
     expect(storage.files.has(record.storageKey)).toBe(true);
   });

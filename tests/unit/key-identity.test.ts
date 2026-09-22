@@ -24,7 +24,7 @@ import {
 import { unwrap } from '../../src/shared/kernel/result.js';
 
 const book = (): TextbookKey =>
-  unwrap(textbookKey({ subject: 'MATH', grade: 7, term: 1, edition: '2026' }));
+  unwrap(textbookKey({ subject: 'MATH', grade: 7, part: 'PART_1', edition: '2026' }));
 const unit = (): UnitKey => unwrap(unitKey(book(), 'SETS'));
 const lesson = (): LessonKey => unwrap(lessonKey(unit(), 'SET-AND-ELEMENT'));
 

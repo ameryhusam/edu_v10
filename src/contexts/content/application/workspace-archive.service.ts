@@ -4,7 +4,7 @@ import * as fs from 'node:fs/promises';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
-import type { WorkspaceManager } from '../../../infrastructure/storage/workspace-manager.js';
+import type { WorkspacePort } from './workspace.ports.js';
 import type { WorkspaceImporterService, WorkspaceImportResult } from './workspace-importer.service.js';
 import { textbookKey as buildTextbookKey } from '../../../shared/kernel/identifiers.js';
 
@@ -29,7 +29,7 @@ export interface WorkspaceArchiveResult {
 
 export class WorkspaceArchiveService {
   constructor(
-    private readonly workspaceManager: WorkspaceManager,
+    private readonly workspaceManager: WorkspacePort,
     private readonly workspaceImporter: WorkspaceImporterService,
     private readonly pythonCommand: string,
     private readonly engineRoot: string,
@@ -60,7 +60,7 @@ export class WorkspaceArchiveService {
       const textbookKey = await this.resolveTextbookKey(pkg, options.textbookKey);
       const workspaceDir = pkg
         ? this.workspaceManager.getWorkspaceDir({
-            term: pkg.textbook.termKey,
+            part: pkg.textbook.part,
             grade: pkg.textbook.gradeKey,
             subject: pkg.textbook.subjectKey,
             edition: pkg.textbook.edition,
@@ -179,15 +179,21 @@ export class WorkspaceArchiveService {
     };
     await walk(extracted, 0);
     if (packageFiles.length > 1) throw new Error('ZIP contains more than one workspace package.');
-    if (packageFiles.length === 1) return packageFiles[0];
+    if (packageFiles.length === 1) {
+      const packageRoot = packageFiles[0];
+      if (packageRoot) return packageRoot;
+    }
 
     const entries = await fs.readdir(extracted, { withFileTypes: true });
     const dirs = entries.filter((e) => e.isDirectory());
     // Only unwrap a single top-level directory when it is clearly a textbook
     // archive root. A partial ZIP may legitimately start with unit_01_... and
     // unwrapping that directory would shift the canonical path by one level.
-    if (dirs.length === 1 && entries.length === 1 && /^EDU-[A-Z0-9-]+$/i.test(dirs[0].name)) {
-      return path.join(extracted, dirs[0].name);
+    if (dirs.length === 1 && entries.length === 1) {
+      const rootDir = dirs[0];
+      if (rootDir && /^EDU-[A-Z0-9-]+$/i.test(rootDir.name)) {
+        return path.join(extracted, rootDir.name);
+      }
     }
     return extracted;
   }
@@ -207,7 +213,7 @@ export class WorkspaceArchiveService {
       const derived = buildTextbookKey({
         subject: tb.subjectKey,
         grade: Number(String(tb.gradeKey).replace(/\D/g, '')),
-        term: Number(String(tb.termKey).replace(/\D/g, '')),
+        part: tb.part,
         edition: tb.edition,
       });
       if (!derived.ok || derived.value !== tb.key) {

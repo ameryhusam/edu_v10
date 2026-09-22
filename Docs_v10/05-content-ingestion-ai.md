@@ -106,13 +106,13 @@ READY additionally requires successful canonical reconciliation and learner-deli
 
 Canonical workspace:
 
-    workspace/T01/G04/SCI/ED2026/
+    workspace/P1/G04/SCI/ED2026/
 
 Canonical textbook key:
 
-    EDU-SCI-G04-T1-ED2026
+    EDU-SCI-G04-P1-ED2026
 
-Identity derives from subject + grade + term + printed edition.
+Identity derives from subject + grade + physical part + printed edition. Academic term is not a Workspace coordinate..
 
 For every upload:
 
@@ -165,7 +165,7 @@ Temporary source input may be deleted after successful verification/reconciliati
     textbookKey
     subjectKey
     gradeKey
-    termKey
+    part
     printedEdition
     title
     issuer when applicable
@@ -320,7 +320,7 @@ The workspace exchange boundary supports two safe ZIP modes:
 Import is never direct extraction into the canonical workspace. The archive is inspected with entry/path/resource limits, extracted to staging, merged with the existing textbook workspace without deleting omitted files, dry-run reconciled, canonically imported, then committed as the new workspace snapshot.
 
 Identity rules:
-1. full package textbook identity must match subjectKey + gradeKey + termKey + edition;
+1. full package textbook identity must match subjectKey + gradeKey + part + edition;
 2. a supplied textbookKey must match the package when both are present;
 3. an identity conflict stops the operation rather than creating a guessed book;
 4. the same SHA-256 is a no-op;
@@ -328,3 +328,43 @@ Identity rules:
 6. absent files in a partial update are retained.
 
 Export creates <Textbook.key>.zip with the textbook key as archive root and includes the actual workspace tree: manifests, cover, lesson PDFs, text, page images, AI pages, grounding and resource files. Export is physical workspace exchange, not a database dump.
+
+## 18. Storage and Workspace synchronization decision
+
+Binary content is external to PostgreSQL. ContentAsset stores physical identity, relativePath, storageKey, checksum and provenance. TextbookPage.text and ContentChunk.text are semantic canonical text and remain in PostgreSQL for search/grounding.
+
+Workspace is a controlled exchange snapshot, not a second database and not an unrestricted live mirror. Manual Workspace edits re-enter through the same validation/reconciliation/import path. Canonical database writes remain owned by Node/TypeScript application services.
+
+The synchronization flow is:
+
+    Workspace/package → normalize → validate → reconcile → dry-run → canonical services → DB + ContentStorage → Workspace commit
+
+A Workspace path is never exposed directly as a learner URL.
+
+## 19. Page classification contract
+
+Page images and page text retain stable page_{number} filenames. Classification is stored in page_classification.json at the lesson root when manual control is needed; filenames are never renamed to encode classification.
+
+Classification precedence is:
+
+    explicit manifest > deterministic mapping > TOC evidence > subject profile > AI proposal > review
+
+A null or missing classification field means no value is added or overridden. Empty strings are invalid. A page may be MIXED, so question extraction operates on question blocks rather than assuming one page has one semantic role.
+
+Arabic, Islamic Studies and Quran use branch-aware profiles. In Arabic, the word “الدرس” is not sufficient to identify a lesson type; reading/grammar/spelling/morphology/expression classification may be supplied manually per page or lesson.
+
+## 20. Identifier compatibility
+
+The importer normalizes aliases before any lookup:
+
+    G4 ↔ G04
+    P1 ↔ PART_1
+    P2 ↔ PART_2
+
+T01/T02 are academic-term coordinates only. They are never textbook-key or Workspace identity components. G4 must resolve to an existing G04 row rather than creating a new Grade identity.
+
+## 21. Algorithm configuration
+
+TOC detection, lesson segmentation, page classification, question detection and subject branch rules are configuration-driven. The Python engine implements algorithms; YAML/JSON configuration supplies thresholds, patterns and allowed labels. Configuration and algorithm versions are recorded with prepared packages/proposals for reproducibility.
+
+See Docs_v10/13-content-storage-page-classification-and-import-algorithms.md and Docs_v10/14-developer-content-ingestion-guide.md for the normative operational contract.

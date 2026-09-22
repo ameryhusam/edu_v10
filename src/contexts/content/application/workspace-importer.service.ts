@@ -13,11 +13,11 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { ContentImportService, ImportResult } from './content-import.service.js';
 import type { ContentAssetService } from './content-asset.service.js';
-import type { WorkspaceManager } from '../../../infrastructure/storage/workspace-manager.js';
+import type { WorkspacePort } from './workspace.ports.js';
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
 import type { AuthorContext } from './authoring.service.js';
-import type { ContentEngineService } from '../../../infrastructure/content/content-engine.service.js';
+import type { ContentEnginePort } from './content-engine.port.js';
 
 export interface WorkspaceImportOptions {
   readonly dryRun?: boolean;
@@ -37,10 +37,10 @@ export interface WorkspaceImportResult {
 
 export class WorkspaceImporterService {
   constructor(
-    private readonly workspaceManager: WorkspaceManager,
+    private readonly workspaceManager: WorkspacePort,
     private readonly contentImportService: ContentImportService,
     private readonly assetService: ContentAssetService,
-    private readonly contentEngine: ContentEngineService,
+    private readonly contentEngine: ContentEnginePort,
     private readonly engineTimeoutMs: number,
   ) {}
 
@@ -167,7 +167,9 @@ export class WorkspaceImporterService {
       const full = path.join(workspaceDir, relativePath);
       const buffer = await fs.readFile(full);
       const parts = relativePath.split('/');
-      const file = parts[parts.length - 1];
+      const file = parts.at(-1);
+      if (!file) return;
+
       const mimeType =
         file.endsWith('.png') ? 'image/png' :
         file.endsWith('.jpg') || file.endsWith('.jpeg') ? 'image/jpeg' :
@@ -260,7 +262,7 @@ export class WorkspaceImporterService {
    * Prepares and stores a textbook source PDF into workspace
    */
   async prepareWorkspace(input: {
-    term: string;
+    part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
     edition?: string;
@@ -270,10 +272,10 @@ export class WorkspaceImporterService {
     units?: Array<any>;
   }) {
     const edition = input.edition;
-    const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
+    const coords = { part: input.part, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
     const wsDir = edition
       ? this.workspaceManager.getWorkspaceDir(coords)
-      : this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject });
+      : this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject });
 
     if (input.pdfBuffer && input.pdfBuffer.length > 0) {
       if (input.autoSegment === false) {
@@ -290,7 +292,7 @@ export class WorkspaceImporterService {
         workspaceDir: wsDir,
         subject: input.subject,
         grade: input.grade,
-        term: input.term,
+        part: input.part,
         edition,
         title: input.title,
         timeoutMs: this.engineTimeoutMs,

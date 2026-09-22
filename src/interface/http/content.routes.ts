@@ -151,9 +151,9 @@ function requireAdoptionAdmin(
 const createTextbookInput = z.object({
   subjectKey: z.string().min(1),
   gradeKey: z.string().min(1),
-  termKey: z.string().min(1),
+  part: z.enum(['PART_1', 'PART_2']),
   title: z.string().min(1).max(300),
-  edition: z.string().min(1).max(40).optional(),
+  edition: z.string().min(1).max(40),
   description: z.string().max(4000).nullish(),
   issuer: z.string().max(200).nullish(),
   isbn: z.string().max(40).nullish(),
@@ -229,7 +229,7 @@ const textbookKeyInput = z.object({ textbookKey: z.string().min(1) });
 
 const ensureTextbooksInput = z.object({
   gradeKey: z.string().min(1).max(8),
-  termKey: z.string().min(1).max(32),
+  part: z.enum(['PART_1', 'PART_2']),
   edition: z.string().min(1).max(40),
   issuer: z.string().max(200).nullish(),
   publishYear: z.number().int().min(1900).max(2200).nullish(),
@@ -245,7 +245,7 @@ const textbookListInput = z.object({
   search: z.string().trim().min(1).max(120).optional(),
   subjectKey: z.string().min(1).max(24).optional(),
   gradeKey: z.string().min(1).max(8).optional(),
-  termKey: z.string().min(1).max(32).optional(),
+  part: z.enum(['PART_1', 'PART_2']).optional(),
   status: z.enum(PUBLICATION_STATES).optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
@@ -269,7 +269,6 @@ const adoptionInput = z.object({
  */
 const gradeAdoptionInput = z.object({
   gradeKey: z.string().min(1).max(8),
-  termKey: z.string().min(1).max(32).optional(),
   textbookKey: z.string().min(1).optional(),
   schoolKey: z.string().min(1).max(32),
   academicYearKey: z.string().min(1).max(16),
@@ -313,7 +312,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         if (!admin.ok) return admin;
         return deps.textbookAdministration.ensureTextbooksForGrade(admin.value, {
           gradeKey: input.gradeKey,
-          termKey: input.termKey,
+          part: input.part,
           edition: input.edition,
           issuer: input.issuer ?? null,
           publishYear: input.publishYear ?? null,
@@ -701,7 +700,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   );
 
   const uploadTextbookSourceInput = z.object({
-    term: z.string().min(1),
+    part: z.enum(['PART_1', 'PART_2']),
     grade: z.string().min(1),
     subject: z.string().min(1),
     edition: z.string().optional(),
@@ -800,7 +799,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
           return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
         }
         const query = z.object({
-          term: z.string().min(1),
+          part: z.enum(['PART_1', 'PART_2']),
           grade: z.string().min(1),
           subject: z.string().min(1),
           edition: z.string().optional(),
@@ -816,7 +815,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
           return Err(Errors.validation('content.empty_pdf', 'The uploaded PDF is empty.'));
         }
         const result = await deps.workspaceImporter.prepareWorkspace({
-          term: query.data.term,
+          part: query.data.part,
           grade: query.data.grade,
           subject: query.data.subject,
           edition: query.data.edition,
@@ -843,7 +842,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         }
         const buffer = Buffer.from(input.pdfBase64, 'base64');
         const res = await deps.contentAsset.uploadTextbookSource({
-          term: input.term,
+          part: input.part,
           grade: input.grade,
           subject: input.subject,
           edition: input.edition,
@@ -915,7 +914,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   });
 
   const workspacePrepareInput = z.object({
-    term: z.string().min(1),
+    part: z.enum(['PART_1', 'PART_2']),
     grade: z.string().min(1),
     subject: z.string().min(1),
     edition: z.string().optional(),
@@ -943,7 +942,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         }
         const pdfBuffer = input.pdfBase64 ? Buffer.from(input.pdfBase64, 'base64') : undefined;
         const res = await deps.workspaceImporter.prepareWorkspace({
-          term: input.term,
+          part: input.part,
           grade: input.grade,
           subject: input.subject,
           edition: input.edition,

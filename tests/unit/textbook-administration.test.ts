@@ -24,7 +24,7 @@ import type {
 const ACTOR = { actorKey: 'usr_admin' };
 
 const TRIPLE = {
-  textbookKey: 'EDU-MATH-G07-T1-ED2026',
+  textbookKey: 'EDU-MATH-G07-P1-ED2026',
   schoolKey: 'sch_demo',
   academicYearKey: '2026-2027',
 };
@@ -37,6 +37,7 @@ function adoption(over: Partial<AdoptionRow> = {}): AdoptionRow {
     schoolKey: TRIPLE.schoolKey,
     schoolName: 'Demo School',
     academicYearKey: TRIPLE.academicYearKey,
+    termKey: '2026-2027-T01',
     adoptedAt: new Date('2026-09-01T00:00:00Z'),
     ...over,
   };
@@ -67,11 +68,11 @@ class FakeRepo implements TextbookAdministrationRepository {
   async findTextbookByCoordinates(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2';
     edition: string;
   }) {
     return {
-      key: `EDU-${input.subjectKey}-${input.gradeKey}-${input.termKey}-ED${input.edition}`,
+      key: `EDU-${input.subjectKey}-${input.gradeKey}-P1-ED${input.edition}`,
       title: `${input.subjectKey} ${input.gradeKey}`,
       edition: input.edition,
     };
@@ -97,7 +98,7 @@ class FakeRepo implements TextbookAdministrationRepository {
       ) ?? null
     );
   }
-  async createAdoption(input: typeof TRIPLE): Promise<AdoptionRow> {
+  async createAdoption(input: typeof TRIPLE & { termKey: string }): Promise<AdoptionRow> {
     this.writes.push('create');
     return adoption({ ...input });
   }
@@ -113,6 +114,9 @@ class FakeRepo implements TextbookAdministrationRepository {
   async academicYearExists(): Promise<boolean> {
     return this.exists.academicYear;
   }
+  async termExists(): Promise<boolean> {
+    return true;
+  }
 }
 
 const codeOf = (r: { ok: boolean; error?: { code: string } }) =>
@@ -121,7 +125,7 @@ const codeOf = (r: { ok: boolean; error?: { code: string } }) =>
 function service(repo: FakeRepo) {
   const audits: string[] = [];
   const authoring = {
-    createTextbook: async (_ctx: unknown, input: { subjectKey: string; gradeKey: string; termKey: string; title: string; edition: string }) => ({
+    createTextbook: async (_ctx: unknown, input: { subjectKey: string; gradeKey: string; part: 'PART_1' | 'PART_2'; title: string; edition: string }) => ({
       ok: true,
       value: { key: `EDU-${input.subjectKey}-G07-T1-ED${input.edition}`, title: input.title, edition: input.edition, status: 'DRAFT' },
     }),
@@ -215,10 +219,10 @@ describe('accrediting a whole grade', () => {
   it('adopts every one of the grade\'s textbooks and reports which were already adopted', async () => {
     const repo = new FakeRepo();
     repo.gradeTextbooks = [
-      { key: 'EDU-MATH-G07-T1-ED2026', title: 'Maths G7', edition: '2026' },
-      { key: 'EDU-SCI-G07-T1-ED2026', title: 'Science G7', edition: '2026' },
+      { key: 'EDU-MATH-G07-P1-ED2026', title: 'Maths G7', edition: '2026' },
+      { key: 'EDU-SCI-G07-P1-ED2026', title: 'Science G7', edition: '2026' },
     ];
-    repo.adoptions = [adoption({ textbookKey: 'EDU-MATH-G07-T1-ED2026' })];
+    repo.adoptions = [adoption({ textbookKey: 'EDU-MATH-G07-P1-ED2026' })];
     const { inner, audits } = service(repo);
 
     const result = await inner.adoptGrade(ACTOR, {

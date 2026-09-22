@@ -42,11 +42,11 @@ export class PrismaLearnerExamCatalog {
       where: {
         ...publishedTextbook,
         gradeId: enrollment.gradeId,
-        termId: enrollment.termId,
         adoptions: {
           some: {
             schoolId: enrollment.schoolId,
             academicYearId: enrollment.academicYearId,
+            termId: enrollment.termId,
           },
         },
       },
@@ -120,9 +120,13 @@ export class PrismaLearnerExamCatalog {
     const bookConcepts = (bookId: string): readonly string[] => {
       const book = textbooks.find((entry) => entry.id === bookId);
       if (!book) return [];
-      return [
-        ...new Set(book.units.flatMap((unit) => unit.lessons.flatMap((lesson) => lesson.concepts.map((c) => c.key)))),
-      ];
+      const keys = new Set<string>();
+      for (const unit of book.units) {
+        for (const lesson of unit.lessons) {
+          for (const concept of lesson.concepts) keys.add(concept.key);
+        }
+      }
+      return [...keys];
     };
 
     return exams.map((exam) => {

@@ -134,7 +134,7 @@ export class ContentAuthoringService {
     input: {
       subjectKey: string;
       gradeKey: string;
-      termKey: string;
+      part: 'PART_1' | 'PART_2';
       title: string;
       edition: string;
       description?: string | null;
@@ -153,50 +153,37 @@ export class ContentAuthoringService {
       );
     }
 
-    const resolved = await this.repo.resolveTextbookCoordinates({
+    const resolved = await this.repo.resolveTextbookPlacement({
       subjectKey: input.subjectKey,
       gradeKey: input.gradeKey,
-      termKey: input.termKey,
     });
 
-    // Each missing reference is named. "Invalid input" would make an importer
-    // report a whole row as bad when one cell is wrong.
     const missing: string[] = [];
     if (!resolved.subject) missing.push('subjectKey');
     if (!resolved.grade) missing.push('gradeKey');
-    if (!resolved.term) missing.push('termKey');
     if (missing.length > 0) {
       return Err(
         Errors.notFound('content.coordinate_not_found', 'One or more references do not exist.', {
           missing,
           subjectKey: input.subjectKey,
           gradeKey: input.gradeKey,
-          termKey: input.termKey,
         }),
       );
     }
 
     const subject = resolved.subject!;
     const grade = resolved.grade!;
-    const term = resolved.term!;
 
-    // §2.2 of the production plan: every screen that shows a textbook appends
-    // `gradeName`/`termName` after `title` unconditionally, so a hand-typed
-    // title that already contains "الصف السابع الفصل الأول" doubles it on
-    // screen. Refusing it here, once, at the single write path, is cheaper
-    // than trying to clean it up in eight display components later.
     const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
       gradeName: grade.name,
-      termName: term.name,
+      part: input.part,
     });
     if (!placementCheck.ok) return placementCheck;
 
-    // The key is derived, never supplied. Edition is part of identity: a new
-    // printing is a new textbook, not a revision of this one.
     const key = buildTextbookKey({
       subject: subject.key,
       grade: grade.ordinal,
-      term: term.ordinal,
+      part: input.part,
       edition: input.edition,
     });
     if (!key.ok) return key;
@@ -205,7 +192,7 @@ export class ContentAuthoringService {
       return Err(
         Errors.conflict(
           'content.textbook_exists',
-          'A textbook already exists for this subject, grade, term and edition.',
+          'A textbook already exists for this subject, grade, physical part and edition.',
           { textbookKey: key.value },
         ),
       );
@@ -215,7 +202,7 @@ export class ContentAuthoringService {
       key: key.value,
       subjectId: subject.id,
       gradeId: grade.id,
-      termId: term.id,
+      part: input.part,
       title,
       edition: input.edition,
       description: input.description ?? null,
