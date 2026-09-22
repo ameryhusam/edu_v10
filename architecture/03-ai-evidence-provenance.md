@@ -18,7 +18,7 @@ AI may propose part boundary, unit/lesson boundaries, printed-page ranges, lesso
 
 The final Workspace manifest records the selected result, evidence and confidence. Conflicting evidence routes to review.
 
-Physical routing is P1 for PART_1, P2 for PART_2, and PB only for content explicitly shared by both parts. This is a physical Workspace coordinate; T1/T01 remains a separate term identity concern.
+Physical routing is P1 for PART_1 and P2 for PART_2. There is no PB Workspace package. T01/T02 are academic-term coordinates and are not textbook identity components.
 
 ## Page classification
 Page classification is semantic metadata. It is never encoded by renaming the image.
