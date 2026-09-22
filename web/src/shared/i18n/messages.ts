@@ -2730,6 +2730,8 @@ const en: Record<MessageKey, string> = {
   // ── Enrollments ──────────────────────────────────────────────────────────
   'enrollments.title': 'Enrolment management',
   'enrollments.subtitle': 'Placing learners in schools, years, terms and grades.',
+  'enrollments.manageFromUserProfile': 'To add a learner or create an enrolment, open the learner from Users. The learner profile owns their enrolments; this page is for browsing and managing existing placements.',
+  'enrollments.manageFromUserProfile': 'To add a learner or create an enrolment, open the learner from Users. The learner profile owns their enrolments; this page is for browsing and managing existing placements.',
   'enrollments.learner': 'Learner',
   'enrollments.school': 'School',
   'enrollments.year': 'Year',
