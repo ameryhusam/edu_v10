@@ -95,7 +95,7 @@ Example:
 
     {
       "schemaVersion": "1",
-      "lessonKey": "EDU-AR-G04-T1-ED2026-U01-L03",
+      "lessonKey": "EDU-AR-G04-P1-ED2026-U01-L03",
       "pages": [
         {
           "pageNumber": 41,
