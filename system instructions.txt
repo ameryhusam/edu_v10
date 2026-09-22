@@ -1,5 +1,11 @@
 # System Instructions
 
+## 0. Canonical Architecture Reference
+
+Before any architectural, domain, Workspace, ingestion, AI, API/security, frontend, schema, or development-process change, consult `architecture/README.md` and the numbered documents under `architecture/`. This directory is the primary durable reference for adopted architecture decisions. Chat history, uploaded conversation sources, historical documents, and historical reports are evidence only and do not silently override an adopted architecture decision.
+
+If a proposed change conflicts with `architecture/`, stop and perform the documented architecture-change procedure before implementation.
+
 ## 1. AI/Codex Change-and-Audit Decision Protocol
 
 This file defines an important operating rule for the `edu_v10` project: proposed code repairs may be implemented directly by Codex, but the implementation must be followed by an independent change-audit step before the next repair decision is made.
