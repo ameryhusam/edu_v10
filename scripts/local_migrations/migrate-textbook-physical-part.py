@@ -554,9 +554,11 @@ def transform(path: str, text: str) -> str:
             stop(path + ": physical textbook identity still depends on academic term")
     elif "edu7-content-engine" in path and path.endswith(".py"):
         if path.endswith("workspace_layout.py"):
-            old = out[out.find("def normalize_part"):out.find("\ndef _rewrite_json")]
-            if not old:
+            start = out.find("def textbook_key(")
+            end = out.find("\ndef _rewrite_json", start)
+            if start < 0 or end < 0:
                 stop(path + ": workspace_layout identity functions not found")
+            old = out[start:end]
             new = '''def normalize_part(raw: str) -> str:
     value = str(raw).strip().upper()
     mapping = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}
