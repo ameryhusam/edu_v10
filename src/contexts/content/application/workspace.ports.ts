@@ -1,7 +1,7 @@
 import type { ContentPackage } from '../domain/export-profile.js';
 
 export interface WorkspaceCoordinates {
-  readonly term: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly grade: string;
   readonly subject: string;
   readonly edition?: string | undefined;
