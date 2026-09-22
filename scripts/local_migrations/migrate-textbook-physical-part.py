@@ -474,6 +474,15 @@ def transform(path: str, text: str) -> str:
       orderBy: { key: 'asc' },
     });
   }"""
+        out = re.sub(r'(async findTextbookByCoordinates\\(input: \\{\\n    subjectKey: string;\\n    gradeKey: string;\\n)    termKey: string,', r"\\1    part: 'PART_1' | 'PART_2' | 'BOTH',", out)
+        out = re.sub(r'    const academicTerm = await this\\.db\\.term\\.findUnique\\(\\{\\n      where: \\{ key: input\\.termKey \\},[\\s\\S]*?    if \\(!academicTerm\\) return null;\\n', '', out, count=1)
+        out = re.sub(r'    const physicalParts: Array<\\x27PART_1\\x27 \\| \\x27PART_2\\x27 \\| \\x27BOTH\\x27> =\\n      academicTerm\\.ordinal === 1 \\? \\[\\x27PART_1\\x27, \\x27BOTH\\x27\\] :\\n        academicTerm\\.ordinal === 2 \\? \\[\\x27PART_2\\x27, \\x27BOTH\\x27\\] :\\n        \\[\\x27BOTH\\x27\\];\\n', '', out, count=1)
+        out = out.replace("part: { in: physicalParts },", "part: input.part,", 1)
+        out = re.sub(r'(async textbooksForGrade\\(input: \\{\\n    gradeKey: string;\\n)    termKey\\?: string \\| undefined;', r"\\1    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;", out)
+        out = re.sub(r'    const academicTerm = input\\.termKey[\\s\\S]*?    if \\(input\\.termKey && !academicTerm\\) return \\[\\];\\n', '', out, count=1)
+        out = re.sub(r'    const physicalParts: Array<\\x27PART_1\\x27 \\| \\x27PART_2\\x27 \\| \\x27BOTH\\x27> = academicTerm[\\s\\S]*?\\n    return this\\.db\\.textbook\\.findMany', '    return this.db.textbook.findMany', out, count=1)
+        out = out.replace("where: { grade: { key: input.gradeKey }, part: { in: physicalParts } },", "where: { grade: { key: input.gradeKey }, ...(input.part ? { part: input.part } : {}) },", 1)
+        if "academicTerm.ordinal" in out: stop(path + ": academic term still derives physical part")
         if old_grade not in out: stop(path + ": grade textbook lookup anchor not found")
         out=out.replace(old_grade,new_grade)
     elif "edu7-content-engine" in path and path.endswith(".py"):
