@@ -180,7 +180,7 @@ export function textbookKey(coords: TextbookCoordinates): Result<TextbookKey> {
   if (!v.ok) return v;
   const edition = normalizeEdition(v.value.edition);
   if (!edition.ok) return edition;
-  const { subject, grade, part, edition } = v.value;
+  const { subject, grade, part } = v.value;
   const partCode = part === 'PART_1' ? 'P1' : 'P2';
   return Ok(`EDU-${subject}-G${pad(grade)}-${partCode}-${edition.value}` as TextbookKey);
 }
