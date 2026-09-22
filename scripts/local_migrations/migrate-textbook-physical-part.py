@@ -201,9 +201,9 @@ def transform(path: str, text: str) -> str:
       gradeKey: input.gradeKey,
     });""")
 
-        old_missing = """  if (!resolved.subject) missing.push('subjectKey');
-  if (!resolved.grade) missing.push('gradeKey');
-  if (!resolved.term) missing.push('termKey');"""
+        old_missing = """    if (!resolved.subject) missing.push('subjectKey');
+    if (!resolved.grade) missing.push('gradeKey');
+    if (!resolved.term) missing.push('termKey');"""
         if old_missing not in out:
             stop(path + ": expected missing-reference block not found")
         out = out.replace(old_missing, """  if (!resolved.subject) missing.push('subjectKey');
