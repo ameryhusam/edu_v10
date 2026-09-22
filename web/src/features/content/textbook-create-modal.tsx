@@ -41,7 +41,7 @@ export function TextbookCreateModal({
   });
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState(initialGradeKey ?? '');
-  const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH'>(initialPart ?? 'PART_1');
+  const [part, setPart] = useState<'PART_1' | 'PART_2'>(initialPart ?? 'PART_1');
   const [title, setTitle] = useState('');
   const [edition, setEdition] = useState(String(new Date().getFullYear()));
   const [isbn, setIsbn] = useState('');
