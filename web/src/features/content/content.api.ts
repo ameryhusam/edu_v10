@@ -517,7 +517,7 @@ export const textbookAdministrationApi = {
     autoSegment?: boolean;
   }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
     query: {
-      term: input.term,
+      part: input.part,
       grade: input.grade,
       subject: input.subject,
       edition: input.edition,
@@ -528,7 +528,7 @@ export const textbookAdministrationApi = {
   }),
 
   workspacePrepare: (input: {
-    term: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     grade: string;
     subject: string;
     edition?: string;
