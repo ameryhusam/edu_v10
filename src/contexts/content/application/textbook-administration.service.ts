@@ -38,6 +38,7 @@ import type {
 } from './ports.js';
 import type { ContentAuthoringService } from './authoring.service.js';
 import { textbookTitleForSubject } from '../domain/authoring.js';
+import { parseTextbookKey } from '../../../shared/kernel/identifiers.js';
 
 /** Who is performing the act. Authorization already happened at the edge. */
 export interface AdminContext {
@@ -91,7 +92,7 @@ export class TextbookAdministrationService {
     search?: string | undefined;
     subjectKey?: string | undefined;
     gradeKey?: string | undefined;
-    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
+    part?: 'PART_1' | 'PART_2' | undefined;
     status?: string | undefined;
     limit?: number | undefined;
     offset?: number | undefined;
@@ -113,7 +114,7 @@ export class TextbookAdministrationService {
     ctx: AdminContext,
     input: {
       gradeKey: string;
-      part: 'PART_1' | 'PART_2' | 'BOTH';
+      part: 'PART_1' | 'PART_2';
       edition: string;
       issuer?: string | null;
       publishYear?: number | null;
@@ -368,6 +369,20 @@ export class TextbookAdministrationService {
       }
     }
 
+    const parsed = parseTextbookKey(input.textbookKey);
+    if (!parsed.ok) return parsed;
+    const termOrdinal = parsed.value.part === 'PART_1' ? 1 : 2;
+    const termKey = `${input.academicYearKey}-T0${termOrdinal}`;
+    if (!(await this.repo.termExists(termKey))) {
+      return Err(
+        Errors.notFound('content.adoption_term_not_found', 'The academic term required by this textbook part does not exist.', {
+          academicYearKey: input.academicYearKey,
+          termKey,
+          part: parsed.value.part,
+        }),
+      );
+    }
+
     const existing = await this.repo.findAdoption(input);
     if (existing) {
       return Err(
@@ -383,7 +398,7 @@ export class TextbookAdministrationService {
       );
     }
 
-    const created = await this.repo.createAdoption(input);
+    const created = await this.repo.createAdoption({ ...input, termKey });
     await this.audit(ctx, 'content.textbook_adopted', input.textbookKey, input);
     return Ok(created);
   }
