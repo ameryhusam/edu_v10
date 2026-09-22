@@ -350,11 +350,26 @@ def patch_cli(source: str) -> str:
 
 
 def apply() -> int:
-    # First run the read-only audit and refuse to mutate if the repository is
-    # already in an unexpected shape. This makes the migration replay-safe.
-    print("Running pre-migration structural audit...")
-    if audit() != 0:
-        fail("Blocking audit findings exist. Review them before applying the migration.")
+    # The pre-state is intentionally expected to contain the two findings
+    # this migration fixes. A failing audit is therefore normal before apply.
+    print("Checking structural preconditions...")
+    pre_seg = read(SEGMENTATION)
+    pre_cli = read(CLI)
+    pre_seg_mod = parse(SEGMENTATION, pre_seg)
+    pre_cli_mod = parse(CLI, pre_cli)
+    pre_seg_fn = function_node(pre_seg_mod, "segment_book")
+    pre_cli_fn = function_node(pre_cli_mod, "_cmd_prepare")
+    pre_seg_src = ast.get_source_segment(pre_seg, pre_seg_fn) or ""
+    pre_cli_src = ast.get_source_segment(pre_cli, pre_cli_fn) or ""
+
+    if "textbook_key: Optional[str] = None" in pre_seg_src:
+        fail("segment_book already accepts textbook_key; migration is already applied.")
+    if not re.search(r"textbook_key\s*=\s*f[\"']EDU-", pre_seg_src):
+        fail("Expected old direct textbook_key constructor was not found; refusing migration.")
+    if "coordinates=coordinates" not in pre_cli_src:
+        fail("Expected CLI segment_book call shape was not found; refusing migration.")
+
+    print("Preconditions PASS.")
 
     original_segmentation = read(SEGMENTATION)
     original_cli = read(CLI)
