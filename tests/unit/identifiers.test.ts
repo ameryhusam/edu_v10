@@ -36,7 +36,7 @@ const lesson = (slug = 'SET-AND-ELEMENT'): LessonKey => unwrap(lessonKey(unit(),
 
 describe('textbookKey — identified by printed edition', () => {
   it('builds the canonical shape', () => {
-    expect(book()).toBe('EDU-MATH-G07-T1-ED2026');
+    expect(book()).toBe('EDU-MATH-G07-P1-ED2026');
   });
 
   it('is deterministic', () => {
@@ -49,7 +49,7 @@ describe('textbookKey — identified by printed edition', () => {
     const revised = unwrap(textbookKey({ ...coords, edition: 'REV2' }));
 
     expect(first).not.toBe(revised);
-    expect(revised).toBe('EDU-MATH-G07-T1-EDREV2');
+    expect(revised).toBe('EDU-MATH-G07-P1-EDREV2');
   });
 
   it('does NOT change when the book is taught in a different academic year', () => {
@@ -63,7 +63,7 @@ describe('textbookKey — identified by printed edition', () => {
 
   it('accepts a year span as an edition', () => {
     expect(unwrap(textbookKey({ ...coords, edition: '2026-2027' }))).toBe(
-      'EDU-MATH-G07-T1-ED2026-2027',
+      'EDU-MATH-G07-P1-ED2026-2027',
     );
   });
 
@@ -97,10 +97,10 @@ describe('textbookKey — identified by printed edition', () => {
 
 describe('hierarchy keys — slug-based, never positional', () => {
   it('builds the canonical chain', () => {
-    expect(unit()).toBe('EDU-MATH-G07-T1-ED2026-U-SETS-RELATIONS');
-    expect(lesson()).toBe('EDU-MATH-G07-T1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT');
+    expect(unit()).toBe('EDU-MATH-G07-P1-ED2026-U-SETS-RELATIONS');
+    expect(lesson()).toBe('EDU-MATH-G07-P1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT');
     expect(unwrap(conceptKey(lesson(), 'SET-UNION'))).toBe(
-      'EDU-MATH-G07-T1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT-C-SET-UNION',
+      'EDU-MATH-G07-P1-ED2026-U-SETS-RELATIONS-L-SET-AND-ELEMENT-C-SET-UNION',
     );
   });
 
