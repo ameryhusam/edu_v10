@@ -407,7 +407,7 @@ class LessonSegmenter:
                 "key": textbook_key,
                 "subjectKey": subject,
                 "gradeKey": grade,
-                "termKey": term,
+                "part": part,
                 "title": title,
                 "edition": edition,
                 "status": "DRAFT",
