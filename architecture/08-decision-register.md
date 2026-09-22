@@ -29,6 +29,7 @@ Last reviewed: 2026-09-22
 | ADR-022 | Page filenames are stable evidence identifiers; page classification and downstream routing are stored as metadata in page_classification.json, including mixed lesson/question/assessment pages. |
 | ADR-023 | TOC/index detection, first-page analysis window, page roles, lesson types, question roles, assessment roles and AI review thresholds are configuration-driven and versioned rather than scattered hard-coded rules. |
 | ADR-024 | Workspace export/import and DB synchronization are controlled snapshot/reconciliation operations; no uncontrolled filesystem watcher or live bidirectional mirror. |
+| ADR-025 | Raw PDF import is identity-first: analyze source identity before preparation; declared identity remains supported, mismatches require explicit confirmation, and missing textbooks are created through the canonical authoring service. |
 
 ## Conflict rule
 If a proposal conflicts with an ADR, do not implement it as if approved. Inspect schema/code, propose a superseding decision, and update this register and affected documents only after adoption.
