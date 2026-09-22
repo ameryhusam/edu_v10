@@ -37,11 +37,10 @@ ALTER TABLE "textbook_adoptions" ADD COLUMN "termId" UUID;
 
 UPDATE "textbook_adoptions" AS a
 SET "termId" = term."id"
-FROM "textbooks" AS t
-JOIN "terms" AS term
-  ON term."academicYearId" = a."academicYearId"
- AND term."ordinal" = CASE WHEN t."part" = 'PART_1' THEN 1 ELSE 2 END
-WHERE t."id" = a."textbookId";
+FROM "textbooks" AS t, "terms" AS term
+WHERE t."id" = a."textbookId"
+  AND term."academicYearId" = a."academicYearId"
+  AND term."ordinal" = CASE WHEN t."part" = 'PART_1' THEN 1 ELSE 2 END;
 
 DO $$
 BEGIN
