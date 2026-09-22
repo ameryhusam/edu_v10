@@ -129,29 +129,68 @@ def transform(path: str, text: str) -> str:
 """, path)
 
     elif path.endswith("authoring.service.ts"):
-        out = one(out,
-"""      subjectKey: string;
+        old_sig = """      subjectKey: string;
       gradeKey: string;
       termKey: string;
       title: string;
-      edition: string;
-""",
-"""      subjectKey: string;
+      edition: string;"""
+        if old_sig not in out:
+            stop(path + ": expected createTextbook signature not found")
+        out = out.replace(old_sig, """      subjectKey: string;
       gradeKey: string;
       part: 'PART_1' | 'PART_2' | 'BOTH';
       title: string;
-      edition: string;
-""", path)
-        old_create_call = """    const resolved = await this.repo.resolveTextbookCoordinates({
+      edition: string;""")
+
+        old_resolve = """    const resolved = await this.repo.resolveTextbookCoordinates({
       subjectKey: input.subjectKey,
       gradeKey: input.gradeKey,
       termKey: input.termKey,
     });"""
-        if old_create_call in out:
-            stop(path + ": createTextbook still requires academic term; physical creation must be rewritten explicitly")
-        out = out.replace("term: term.ordinal,", "part: input.part,")
-        out = out.replace("term ordinal and", "physical part and")
+        if old_resolve not in out:
+            stop(path + ": expected academic-term resolver block not found")
+        out = out.replace(old_resolve, """    const resolved = await this.repo.resolveTextbookPlacement({
+      subjectKey: input.subjectKey,
+      gradeKey: input.gradeKey,
+    });""")
 
+        old_missing = """  if (!resolved.subject) missing.push('subjectKey');
+  if (!resolved.grade) missing.push('gradeKey');
+  if (!resolved.term) missing.push('termKey');"""
+        if old_missing not in out:
+            stop(path + ": expected missing-reference block not found")
+        out = out.replace(old_missing, """  if (!resolved.subject) missing.push('subjectKey');
+  if (!resolved.grade) missing.push('gradeKey');""")
+
+        out = out.replace("""        termKey: input.termKey,
+      },""", """      },""", 1)
+        out = out.replace("  const term = resolved.term!;\n", "")
+
+        old_check = """  const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
+    gradeName: grade.name,
+    termName: term.name,
+  });"""
+        if old_check not in out:
+            stop(path + ": expected title placement check not found")
+        out = out.replace(old_check, """  const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
+    gradeName: grade.name,
+    part: input.part,
+  });""")
+
+        old_part = """  const part =
+    term.ordinal === 1
+      ? 'PART_1'
+      : term.ordinal === 2
+        ? 'PART_2'
+        : 'BOTH';
+
+"""
+        if old_part in out:
+            out = out.replace(old_part, "")
+        if "part: input.part" not in out:
+            stop(path + ": explicit physical part was not wired into authoring")
+        out = out.replace("termId: term.id,", "part: input.part,")
+        out = out.replace("termId: resolved.term.id,", "part: input.part,")
     elif path.endswith("domain/authoring.ts"):
         old_sig = """export function checkTitleDoesNotRepeatPlacement(
   title: string,
@@ -267,9 +306,61 @@ def transform(path: str, text: str) -> str:
                   "        part: input.part,\n", path)
 
     elif path.endswith("textbook-administration.repository.ts"):
-        if re.search(r"textbook:\s*\{[^}]*term", out, re.S):
-            stop(path + ": Textbook/Term relation found; explicit physical-part rewrite required")
+        # The API may still accept an academic term filter. Resolve that term
+        # to physical parts at the repository boundary; Textbook itself has no term relation.
+        old_filter = """      ...(query.termKey ? { term: { key: query.termKey } } : {}),"""
+        if old_filter in out:
+            old_where = """    const where = {
+      ...(search ? { title: { contains: search, mode: 'insensitive' as const } } : {}),
+      ...(query.subjectKey ? { subject: { key: query.subjectKey } } : {}),
+      ...(query.gradeKey ? { grade: { key: query.gradeKey } } : {}),
+      ...(query.termKey ? { term: { key: query.termKey } } : {}),
+      ...(query.status ? { status: query.status as never } : {}),
+    };"""
+            if old_where not in out:
+                stop(path + ": textbook list where-clause changed; refusing unsafe semantic rewrite")
+            new_where = """    const academicTerm = query.termKey
+      ? await this.db.term.findUnique({
+          where: { key: query.termKey },
+          select: { ordinal: true },
+        })
+      : null;
+    if (query.termKey && !academicTerm) {
+      return { total: 0, rows: [] };
+    }
+    const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> = academicTerm
+      ? academicTerm.ordinal === 1
+        ? ['PART_1', 'BOTH']
+        : academicTerm.ordinal === 2
+          ? ['PART_2', 'BOTH']
+          : ['BOTH']
+      : ['PART_1', 'PART_2', 'BOTH'];
 
+    const where = {
+      ...(search ? { title: { contains: search, mode: 'insensitive' as const } } : {}),
+      ...(query.subjectKey ? { subject: { key: query.subjectKey } } : {}),
+      ...(query.gradeKey ? { grade: { key: query.gradeKey } } : {}),
+      part: { in: physicalParts },
+      ...(query.status ? { status: query.status as never } : {}),
+    };"""
+            out=out.replace(old_where,new_where)
+        # Physical selects and coordinate lookups.
+        out=out.replace("        term: { select: { key: true, name: true } },",
+                        "        part: true,")
+        out=out.replace("        termKey: row.term.key,\n        termName: row.term.name,",
+                        "        part: String(row.part),")
+        old_coord = """        term: { key: input.termKey },
+        edition: input.edition,"""
+        if old_coord in out:
+            out=out.replace(old_coord, """        part: { in: input.termKey === 'T1' ? ['PART_1', 'BOTH'] : ['PART_2', 'BOTH'] },
+        edition: input.edition,""")
+            # This literal T1/T2 conversion is not acceptable for academic term keys;
+            # stop so the caller is forced through a real term lookup.
+            stop(path + ": coordinate lookup requires academic-term ordinal resolution; refusing literal T1/T2 mapping")
+        if re.search(r"\bterm:\s*\{\s*key:\s*input\.termKey\s*\}", out):
+            stop(path + ": physical coordinate lookup still uses Textbook.term")
+        if re.search(r"\bterm:\s*\{\s*select:", out):
+            stop(path + ": physical Textbook read still selects the removed term relation")
     elif "edu7-content-engine" in path and path.endswith(".py"):
         out = out.replace(
             "def textbook_key(subject: str, grade: int, term: int, edition: str)",
