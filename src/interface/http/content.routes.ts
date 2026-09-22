@@ -701,7 +701,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   );
 
   const uploadTextbookSourceInput = z.object({
-    term: z.string().min(1),
+    part: z.enum(['PART_1', 'PART_2', 'BOTH']),
     grade: z.string().min(1),
     subject: z.string().min(1),
     edition: z.string().optional(),
@@ -800,7 +800,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
           return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
         }
         const query = z.object({
-          term: z.string().min(1),
+          part: z.enum(['PART_1', 'PART_2', 'BOTH']),
           grade: z.string().min(1),
           subject: z.string().min(1),
           edition: z.string().optional(),
@@ -816,7 +816,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
           return Err(Errors.validation('content.empty_pdf', 'The uploaded PDF is empty.'));
         }
         const result = await deps.workspaceImporter.prepareWorkspace({
-          term: query.data.term,
+          part: query.data.part,
           grade: query.data.grade,
           subject: query.data.subject,
           edition: query.data.edition,
@@ -843,7 +843,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         }
         const buffer = Buffer.from(input.pdfBase64, 'base64');
         const res = await deps.contentAsset.uploadTextbookSource({
-          term: input.term,
+          part: input.part,
           grade: input.grade,
           subject: input.subject,
           edition: input.edition,
@@ -915,7 +915,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   });
 
   const workspacePrepareInput = z.object({
-    term: z.string().min(1),
+    part: z.enum(['PART_1', 'PART_2', 'BOTH']),
     grade: z.string().min(1),
     subject: z.string().min(1),
     edition: z.string().optional(),
@@ -943,7 +943,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         }
         const pdfBuffer = input.pdfBase64 ? Buffer.from(input.pdfBase64, 'base64') : undefined;
         const res = await deps.workspaceImporter.prepareWorkspace({
-          term: input.term,
+          part: input.part,
           grade: input.grade,
           subject: input.subject,
           edition: input.edition,
