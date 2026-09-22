@@ -12,6 +12,7 @@
 import { useState, type ReactNode } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Input } from '../../design-system/ui/input';
+import { Badge } from '../../design-system/ui/badge';
 import { Button } from '../../design-system/ui/button';
 import { EmptyState, ErrorState, LoadingState } from '../../design-system/patterns/data-states';
 import { PageHeader } from '../../design-system/patterns/page-header';
@@ -19,7 +20,7 @@ import { Pager } from '../../design-system/patterns/pager';
 import { DataTable, type Column } from '../../design-system/patterns/data-table';
 import { RecordEditor, type FieldSpec } from '../../design-system/patterns/record-editor';
 import { UserDetailDrawer } from '../../features/people/user-detail-drawer';
-import { adminApi, type EducatorRow } from '../../features/people/people.api';
+import { adminApi, type EducatorRow, type DirectoryUser, type UserDetail } from '../../features/people/people.api';
 import { schoolsApi } from '../../features/schools/schools.api';
 import { administrationApi } from '../../features/administration/administration.api';
 import { queryKeys } from '../../shared/api/query-keys';
@@ -39,6 +40,8 @@ export function TeachersPage(): ReactNode {
   const [offset, setOffset] = useState(0);
   const [openUser, setOpenUser] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [teacherSearch, setTeacherSearch] = useState('');
+  const [selectedTeacherUser, setSelectedTeacherUser] = useState<UserDetail | null>(null);
   const [linking, setLinking] = useState<EducatorRow | null>(null);
   const [specialising, setSpecialising] = useState<EducatorRow | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -58,24 +61,24 @@ export function TeachersPage(): ReactNode {
     await queryClient.invalidateQueries({ queryKey: queryKeys.administration.all });
   };
 
-  /** Hire: user + TEACHER grant at a school + staff profile, one act. */
+  /** Existing user -> TEACHER role/profile -> school scope and specialties. */
   const create = useMutation({
-    mutationFn: (values: Record<string, string>) =>
-      administrationApi.educators.create({
-        username: values.username!,
-        fullName: values.fullName!,
-        password: values.password!,
-        email: values.email || null,
-        phone: values.phone || null,
-        schoolKey: values.schoolKey!,
+    mutationFn: async (values: Record<string, string>) => {
+      if (!selectedTeacherUser) throw new Error('No user selected');
+      const schoolKey = values.schoolKey!;
+      const user = selectedTeacherUser.educatorKey
+        ? selectedTeacherUser
+        : await adminApi.grantRole({ userKey: selectedTeacherUser.key, role: 'TEACHER', schoolKey });
+      return administrationApi.educators.update({
+        userKey: user.key,
+        schoolKey,
         employeeCode: values.employeeCode || null,
         specialty: values.specialty || null,
         subjectKeys: splitKeys(values.subjectKeys),
-      }),
+      });
+    },
     onSuccess: async () => {
-      await refresh();
-      setCreating(false);
-      setFailure(null);
+      await refresh(); setCreating(false); setSelectedTeacherUser(null); setTeacherSearch(''); setFailure(null);
     },
     onError: () => setFailure(t('teachers.createFailed')),
   });
@@ -251,58 +254,25 @@ export function TeachersPage(): ReactNode {
       ) : null}
 
       {creating ? (
-        <RecordEditor
-          title={t('teachers.add')}
-          fields={[
-            { id: 'fullName', label: t('userForm.fullName'), kind: 'text', required: true },
-            { id: 'username', label: t('userForm.username'), kind: 'text', required: true },
-            {
-              id: 'password',
-              label: t('userForm.password'),
-              kind: 'password',
-              required: true,
-              hint: t('userForm.passwordHint'),
-            },
-            { id: 'email', label: t('userForm.email'), kind: 'text' },
-            { id: 'phone', label: t('userForm.phone'), kind: 'text' },
-            {
-              id: 'schoolKey',
-              label: t('userForm.school'),
-              kind: 'select',
-              required: true,
-              options: (schools.data ?? []).map((school) => ({ value: school.key, label: school.name })),
-            },
-            { id: 'employeeCode', label: t('teachers.employeeCode'), kind: 'text' },
-            {
-              id: 'subjectKeys',
-              label: t('teachers.subjectSpecialties'),
-              kind: 'multiselect',
-              required: true,
-              options: subjectOptions,
-              hint: t('teachers.subjectSpecialtiesHint'),
-            },
-            { id: 'specialty', label: t('teachers.specialtyNote'), kind: 'text' },
-          ] satisfies readonly FieldSpec[]}
-          initial={{
-            fullName: '',
-            username: '',
-            password: '',
-            email: '',
-            phone: '',
-            schoolKey: schools.data?.[0]?.key ?? '',
-            employeeCode: '',
-            subjectKeys: subjectOptions[0]?.value ?? '',
-            specialty: '',
-          }}
-          isNew
-          saving={create.isPending}
-          errorText={failure}
-          onSave={(values) => create.mutate(values)}
-          onClose={() => {
-            setCreating(false);
-            setFailure(null);
-          }}
-        />
+        <div className="space-y-4 rounded-2xl border border-accent/30 bg-surface p-4 sm:p-5">
+          <div><h2 className="text-sm font-extrabold text-text">{t('teachers.add')}</h2><p className="mt-1 text-xs text-text-muted">{t('teachers.selectExistingUserHint')}</p></div>
+          <label className="block space-y-1.5"><span className="block text-xs font-medium text-text-muted">{t('admin.search')}</span><Input value={teacherSearch} onChange={(event) => { setTeacherSearch(event.target.value); setSelectedTeacherUser(null); }} placeholder={t('teachers.searchPlaceholder')} /></label>
+          {teacherSearch.trim().length >= 2 ? <TeacherUserResults search={teacherSearch} selected={selectedTeacherUser} onSelect={setSelectedTeacherUser} onError={(cause) => setFailure(cause instanceof Error ? cause.message : t('teachers.createFailed'))} /> : null}
+          {selectedTeacherUser ? <div className="rounded-xl border border-border bg-surface-raised p-3"><p className="text-sm font-bold text-text">{selectedTeacherUser.fullName}</p><p className="text-xs text-text-muted">@{selectedTeacherUser.username}</p><p className="mt-2 text-xs text-text-muted">{selectedTeacherUser.educatorKey ? t('teachers.profileReady') : t('teachers.profileProvisionRequired')}</p></div> : null}
+          {selectedTeacherUser ? <RecordEditor
+            title={t('teachers.staffDetails')}
+            fields={[
+              { id: 'schoolKey', label: t('userForm.school'), kind: 'select', required: true, options: (schools.data ?? []).map((school) => ({ value: school.key, label: school.name })) },
+              { id: 'employeeCode', label: t('teachers.employeeCode'), kind: 'text' },
+              { id: 'subjectKeys', label: t('teachers.subjectSpecialties'), kind: 'multiselect', required: true, options: subjectOptions, hint: t('teachers.subjectSpecialtiesHint') },
+              { id: 'specialty', label: t('teachers.specialtyNote'), kind: 'text' },
+            ] satisfies readonly FieldSpec[]}
+            initial={{ schoolKey: schools.data?.[0]?.key ?? '', employeeCode: '', subjectKeys: subjectOptions[0]?.value ?? '', specialty: '' }}
+            isNew={false} saving={create.isPending} errorText={failure}
+            onSave={(values) => create.mutate(values)}
+            onClose={() => { setCreating(false); setSelectedTeacherUser(null); setTeacherSearch(''); setFailure(null); }}
+          /> : null}
+        </div>
       ) : null}
 
       {linking ? (
@@ -361,4 +331,38 @@ export function TeachersPage(): ReactNode {
       ) : null}
     </div>
   );
+
+function TeacherUserResults({
+  search,
+  selected,
+  onSelect,
+  onError,
+}: {
+  readonly search: string;
+  readonly selected: UserDetail | null;
+  readonly onSelect: (user: UserDetail) => void;
+  readonly onError: (cause: unknown) => void;
+}): ReactNode {
+  const { t } = useI18n();
+  const users = useQuery({
+    queryKey: queryKeys.provisioning.users({ search: search.trim(), limit: 20, offset: 0 }),
+    queryFn: () => adminApi.users({ search: search.trim(), limit: 20, offset: 0 }),
+    enabled: search.trim().length >= 2,
+  });
+  if (users.isPending) return <LoadingState />;
+  if (users.isError) return <ErrorState error={users.error} onRetry={() => users.refetch()} />;
+  if (selected || users.data.rows.length === 0) return null;
+  return (
+    <div className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-surface-raised">
+      {users.data.rows.map((user: DirectoryUser) => (
+        <button key={user.key} type="button" className="flex min-h-12 w-full items-center justify-between gap-3 px-3 text-start hover:bg-surface-subtle"
+          onClick={() => adminApi.user(user.key).then(onSelect).catch(onError)}>
+          <span><span className="block text-sm font-semibold text-text">{user.fullName}</span><span className="block text-xs text-text-muted">@{user.username}</span></span>
+          <Badge tone="neutral">{user.roles.map((role) => t(('role.' + role) as never)).join(', ')}</Badge>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 }
