@@ -96,8 +96,6 @@ export function readTextbookSpec(file: string): TextbookSpec {
 }
 
 export interface TextbookSeedContext {
-  termId: string;
-  termKey: string;
   academicYearId: string;
   schoolId: string;
 }
@@ -120,25 +118,6 @@ export async function seedTextbookFromSpec(
   ctx: TextbookSeedContext,
   spec: TextbookSpec,
 ): Promise<TextbookSeedReport> {
-  const termMatch = ctx.termKey.match(/-T0([12])$/);
-  if (!termMatch) {
-    throw new Error(
-      `seeding term ${ctx.termKey} is not a supported academic term for textbook part selection`,
-    );
-  }
-
-  const academicTermOrdinal = Number(termMatch[1]);
-  const allowedParts =
-    academicTermOrdinal === 1
-      ? ['PART_1', 'BOTH']
-      : ['PART_2', 'BOTH'];
-
-  if (!allowedParts.includes(spec.part)) {
-    throw new Error(
-      `textbook part ${spec.part} is not compatible with academic term ${ctx.termKey}`,
-    );
-  }
-
   const grade = await prisma.grade.findUniqueOrThrow({ where: { key: spec.gradeKey } });
   const subject = await prisma.subject.findUniqueOrThrow({ where: { key: spec.subjectKey } });
   const tbKey = unwrap(
