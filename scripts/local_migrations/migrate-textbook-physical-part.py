@@ -52,6 +52,7 @@ TARGETS = [
     "edu7-content-engine/src/edu7_content/workspace_layout.py",
     "edu7-content-engine/src/edu7_content/export/json_exporter.py",
     "edu7-content-engine/src/edu7_content/pdf/segmentation.py",
+    "web/src/features/content/content.api.ts",
     "web/src/features/content/textbook-workspace-modal.tsx",
     "web/src/features/content/textbook-pdf-modal.tsx",
     "web/src/features/content/textbook-create-modal.tsx",
@@ -409,6 +410,24 @@ def transform(path: str, text: str) -> str:
     elif path.endswith("workspace-importer.service.ts"):
         out = out.replace("term: pkg.textbook.termKey,", "part: pkg.textbook.part,")
         out = out.replace("pkg.textbook.termKey", "pkg.textbook.part")
+        old = """  async prepareWorkspace(input: {
+    term: string;
+    grade: string;
+    subject: string;
+    edition?: string;"""
+        if old not in out:
+            stop(path + ": expected workspace prepare signature not found")
+        out = out.replace(old, """  async prepareWorkspace(input: {
+    part: 'PART_1' | 'PART_2' | 'BOTH';
+    grade: string;
+    subject: string;
+    edition?: string;""", 1)
+        out = out.replace("const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };",
+                          "const coords = { part: input.part, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };", 1)
+        out = out.replace("this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject })",
+                          "this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject })", 1)
+        out = out.replace("        term: input.term,\n        edition,",
+                          "        part: input.part,\n        edition,", 1)
 
     elif path.endswith("workspace-archive.service.ts"):
         out = out.replace("term: pkg.textbook.termKey,", "part: pkg.textbook.part,")
@@ -574,15 +593,77 @@ def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
             out=out.replace('"term": term', '"part": part')
             out=out.replace('"termKey": term', '"part": part')
             out=out.replace('-T1-ED', '-P1-ED')
+    elif path.endswith("content.routes.ts"):
+        # Workspace/source-upload coordinates are physical textbook identity.
+        out = out.replace("  const uploadTextbookSourceInput = z.object({\n    term: z.string().min(1),",
+                          "  const uploadTextbookSourceInput = z.object({\n    part: z.enum(['PART_1', 'PART_2', 'BOTH']),", 1)
+        out = out.replace("          term: z.string().min(1),\n          grade: z.string().min(1),\n          subject: z.string().min(1),",
+                          "          part: z.enum(['PART_1', 'PART_2', 'BOTH']),\n          grade: z.string().min(1),\n          subject: z.string().min(1),", 1)
+        out = out.replace("          term: query.data.term,\n          grade: query.data.grade,",
+                          "          part: query.data.part,\n          grade: query.data.grade,", 1)
+        out = out.replace("          term: input.term,\n          grade: input.grade,\n          subject: input.subject,\n          edition: input.edition,\n          title: input.title,\n          buffer,",
+                          "          part: input.part,\n          grade: input.grade,\n          subject: input.subject,\n          edition: input.edition,\n          title: input.title,\n          buffer,", 1)
+        out = out.replace("  const workspacePrepareInput = z.object({\n    term: z.string().min(1),",
+                          "  const workspacePrepareInput = z.object({\n    part: z.enum(['PART_1', 'PART_2', 'BOTH']),", 1)
+        out = out.replace("          term: input.term,\n          grade: input.grade,\n          subject: input.subject,",
+                          "          part: input.part,\n          grade: input.grade,\n          subject: input.subject,", 1)
+
+    elif path.endswith("content.api.ts"):
+        # Physical textbook/workspace contracts expose part. Academic term
+        # remains only in adoption/enrollment contracts.
+        out = out.replace("  readonly termKey: string;\n  readonly termName: string;\n  readonly edition: string;",
+                          "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';\n  readonly edition: string;", 1)
+        out = out.replace("  readonly subjectKey: string;\n  readonly gradeKey: string;\n  readonly termKey: string;\n  readonly title: string;",
+                          "  readonly subjectKey: string;\n  readonly gradeKey: string;\n  readonly part: 'PART_1' | 'PART_2' | 'BOTH';\n  readonly title: string;", 1)
+        out = out.replace("    termKey: string;\n    edition: string;",
+                          "    part: 'PART_1' | 'PART_2' | 'BOTH';\n    edition: string;", 1)
+        out = out.replace("    term?: string | undefined;\n    status?: PublicationStatus;",
+                          "    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;\n    status?: PublicationStatus;", 1)
+        out = out.replace("    term: string;\n    grade: string;\n    subject: string;\n    edition?: string;",
+                          "    part: 'PART_1' | 'PART_2' | 'BOTH';\n    grade: string;\n    subject: string;\n    edition?: string;", 1)
+        out = out.replace("      term: input.term,\n      grade: input.grade,",
+                          "      part: input.part,\n      grade: input.grade,", 1)
+        out = out.replace("    term: string;\n    grade: string;\n    subject: string;\n    edition?: string;",
+                          "    part: 'PART_1' | 'PART_2' | 'BOTH';\n    grade: string;\n    subject: string;\n    edition?: string;", 1)
+        out = out.replace("      term: input.term,\n      grade: input.grade,",
+                          "      part: input.part,\n      grade: input.grade,", 1)
+
     elif path.endswith(("textbook-workspace-modal.tsx",
                         "textbook-pdf-modal.tsx",
                         "textbook-create-modal.tsx",
                         "textbook-create-panel.tsx")):
-        out = out.replace("termKey: textbook.termKey", "part: textbook.part")
-        out = out.replace("term: textbook.termKey", "part: textbook.part")
-        out = out.replace("term: manifest.term", "part: manifest.part")
-        out = out.replace("termKey: manifest.term", "part: manifest.part")
-        out = out.replace("term: T01", "part: P1")
+        if path.endswith("textbook-workspace-modal.tsx"):
+            out = out.replace("    term?: string | undefined;\n    grade?: string | undefined;",
+                              "    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;\n    grade?: string | undefined;", 1)
+            out = out.replace("  const [term, setTerm] = useState(initialCoordinates?.term || 'T01');",
+                              "  const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH'>(initialCoordinates?.part || 'PART_1');", 1)
+            out = out.replace("        term: string;\n        grade: string;",
+                              "        part: 'PART_1' | 'PART_2' | 'BOTH';\n        grade: string;", 1)
+            out = out.replace("        term: term.trim(),\n        grade: grade.trim(),",
+                              "        part,\n        grade: grade.trim(),", 1)
+            out = out.replace("        term: payload.term,\n        grade: payload.grade,",
+                              "        part: payload.part,\n        grade: payload.grade,", 1)
+            out = out.replace("                        setTerm(ws.manifest?.term || 'T01');",
+                              "                        setPart(ws.manifest?.part || 'PART_1');", 1)
+            out = out.replace("{ws.manifest?.workspaceId || ws.manifest?.term}",
+                              "{ws.manifest?.workspaceId || ws.manifest?.part}", 1)
+            out = out.replace("                  <label className=\"text-xs font-medium text-text-muted\">الفصل الدراسي (Term)</label>",
+                              "                  <label className=\"text-xs font-medium text-text-muted\">الجزء الفيزيائي (Part)</label>", 1)
+            out = out.replace("                    value={term}", "                    value={part}", 1)
+            out = out.replace("                    onChange={(e) => setTerm(e.target.value.toUpperCase())}",
+                              "                    onChange={(e) => setPart(e.target.value.toUpperCase() as 'PART_1' | 'PART_2' | 'BOTH')}", 1)
+            out = out.replace("                    placeholder=\"T01\"", "                    placeholder=\"PART_1\"", 1)
+            out = out.replace("                    disabled={prepareMutation.isPending || !subject || !grade || !term}",
+                              "                    disabled={prepareMutation.isPending || !subject || !grade || !part}", 1)
+            out = out.replace("كتاب الرياضيات - الصف السابع - الفصل الأول",
+                              "كتاب الرياضيات - الصف السابع - الجزء الأول", 1)
+        else:
+            out = out.replace("termKey: textbook.termKey", "part: textbook.part")
+            out = out.replace("term: textbook.termKey", "part: textbook.part")
+            out = out.replace("term: manifest.term", "part: manifest.part")
+            out = out.replace("termKey: manifest.term", "part: manifest.part")
+            out = out.replace("term: T01", "part: PART_1")
+
 
     else:
         out = re.sub(
@@ -641,11 +722,10 @@ def collect_physical_part_issues(files: dict[str, tuple[str, str]]) -> list[str]
     }
 
     workspace_patterns = [
-        ("T01_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T01(?![A-Z0-9])")),
-        ("T02_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T02(?![A-Z0-9])")),
-        ("T1_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T1(?![A-Z0-9])")),
-        ("T2_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T2(?![A-Z0-9])")),
         ("LEGACY_PHYSICAL_KEY", re.compile(r"EDU-[A-Z0-9]+-G\\d{2}-T[12]-ED[A-Z0-9-]+", re.I)),
+        ("LEGACY_PHYSICAL_PATH", re.compile(r"(?:/|\\\\)T(?:01|02|1|2)(?:/|\\\\)G\\d{2}(?:/|\\\\)[A-Z0-9_-]+", re.I)),
+        ("LEGACY_PHYSICAL_COORDINATE", re.compile(r"\\b(?:term|termKey)\\s*[:=]\\s*['\\\"]T(?:01|02|1|2)['\\\"]")),
+        ("LEGACY_PHYSICAL_MANIFEST", re.compile(r"['\\\"](?:term|termKey)['\\\"]\\s*:\\s*['\\\"]T(?:01|02|1|2)['\\\"]")),
     ]
 
     for path, text in workspace_files.items():
