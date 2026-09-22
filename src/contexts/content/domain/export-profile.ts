@@ -57,7 +57,7 @@ export interface ExportMeta {
 /**
  * The textbook header.
  *
- * `subjectKey`/`gradeKey`/`termKey` are the same business codes
+ * `subjectKey`/`gradeKey`/`part` are the same physical textbook coordinates
  * `createTextbook` accepts, so a package round-trips through the canonical
  * write path with no translation table.
  *
@@ -69,7 +69,7 @@ export interface TextbookExport {
   readonly key: string;
   readonly subjectKey: string;
   readonly gradeKey: string;
-  readonly termKey: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly title: string;
   readonly edition: string;
   readonly description: string | null;
