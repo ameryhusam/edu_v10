@@ -19,7 +19,7 @@ const DATA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), 'data', 'exter
 interface YemenTextbookSource {
   readonly gradeKey: string;
   readonly subjectKey: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly coverage: 'TERM' | 'FULL_YEAR';
   readonly role: 'TEXTBOOK' | 'WORKBOOK' | 'ACTIVITY_BOOK' | 'HANDWRITING' | 'REFERENCE';
   readonly title: string;
