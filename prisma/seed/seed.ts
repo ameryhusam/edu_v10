@@ -502,7 +502,7 @@ async function main(): Promise<void> {
     textbookKey({
       subject: SUBJECT,
       grade: 3,
-      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
+      part,
       edition: EDITION,
     }),
   );
@@ -511,7 +511,7 @@ async function main(): Promise<void> {
     where: { key: juniorTbKey },
     create: {
       key: juniorTbKey,
-      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
+      part,
       gradeId: juniorGrade.id,
       subjectId: subject.id,
       edition: EDITION,
