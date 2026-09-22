@@ -235,7 +235,6 @@ export class TextbookAdministrationService {
     ctx: AdminContext,
     input: {
       gradeKey: string;
-      termKey?: string | undefined;
       textbookKey?: string | undefined;
       schoolKey: string;
       academicYearKey: string;
@@ -277,14 +276,13 @@ export class TextbookAdministrationService {
     } else {
       const candidates = await this.repo.textbooksForGrade({
         gradeKey: input.gradeKey,
-        part: input.part,
       });
       if (candidates.length === 0) {
         return Err(
           Errors.validation(
             'content.grade_has_no_textbooks',
             'This grade has no textbooks to accredit yet.',
-            { gradeKey: input.gradeKey, termKey: input.termKey ?? null },
+            { gradeKey: input.gradeKey },
           ),
         );
       }
