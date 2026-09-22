@@ -154,7 +154,7 @@ describe('learner textbook entitlement', () => {
     const [book] = await new PrismaLearnerEntitlementReader(db).textbooksFor('lrn_x');
 
     expect(book).toEqual({
-      key: 'EDU-MATH-G07-T1-ED2026',
+      key: 'EDU-MATH-G07-P1-ED2026',
       title: 'الرياضيات',
       subjectKey: 'MATH',
       subjectName: 'الرياضيات',
