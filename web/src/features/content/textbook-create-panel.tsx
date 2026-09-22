@@ -32,18 +32,18 @@ export function TextbookCreatePanel(): ReactNode {
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const   const academicYears = useQuery({
+  const academicYears = useQuery({
     queryKey: queryKeys.administration.catalogue('academicYears'),
     queryFn: () => administrationApi.academicYears.list(),
   });
 
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState('');
-  const [part, setPart] = useState('');
+  const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>('');
   const [title, setTitle] = useState('');
   const [edition, setEdition] = useState(String(new Date().getFullYear()));
   const [bulkGradeKey, setBulkGradeKey] = useState('');
-  const [bulkPart, setBulkPart] = useState('');
+  const [bulkPart, setBulkPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>('');
   const [bulkEdition, setBulkEdition] = useState(String(new Date().getFullYear()));
   const [adoptBulk, setAdoptBulk] = useState(true);
   const [lastResult, setLastResult] = useState<string | null>(null);
