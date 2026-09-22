@@ -1,5 +1,9 @@
 # Edu_v10 Documentation System
 
+## Primary Architecture Reference
+
+The durable architectural source is `architecture/README.md` and the numbered documents under `architecture/`. Read them before making architectural or cross-cutting changes. `Docs_v10/` contains the detailed capability contracts, algorithms, roadmap and current-state evidence.
+
 **Status:** Canonical documentation set  
 **Repository:** ameryhusam/edu_v10  
 **Branch:** 03_build_algorithm_and_new_Docs  
