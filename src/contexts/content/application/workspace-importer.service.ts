@@ -16,7 +16,8 @@ import type { ContentAssetService } from './content-asset.service.js';
 import type { WorkspacePort } from './workspace.ports.js';
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
-import type { AuthorContext } from './authoring.service.js';
+import type { AuthorContext, ContentAuthoringService } from './authoring.service.js';
+import { textbookKey as buildTextbookKey } from '../../../shared/kernel/identifiers.js';
 import type { ContentEnginePort } from './content-engine.port.js';
 
 export interface WorkspaceImportOptions {
@@ -42,6 +43,7 @@ export class WorkspaceImporterService {
     private readonly assetService: ContentAssetService,
     private readonly contentEngine: ContentEnginePort,
     private readonly engineTimeoutMs: number,
+    private readonly authoring: ContentAuthoringService,
   ) {}
 
   /**
@@ -259,6 +261,86 @@ export class WorkspaceImporterService {
   }
 
   /**
+   * Analyzes a raw PDF first, reconciles its physical identity, and only then
+   * creates/resolves the canonical textbook and prepares Workspace content.
+   *
+   * A declared identity is supported for the existing admin flow. A mismatch
+   * never mutates a frozen Textbook identity; it returns CONFIRM_REQUIRED so
+   * the caller can explicitly accept the detected identity or cancel.
+   */
+  async prepareBookImport(input: {
+    pdfBuffer: Buffer;
+    declared?: {
+      subjectKey?: string;
+      gradeKey?: string;
+      part?: 'PART_1' | 'PART_2';
+      edition?: string;
+      title?: string;
+    };
+    confirmDetectedIdentity?: boolean;
+  }) {
+    const proposal = await this.contentEngine.identify({ pdf: input.pdfBuffer, analysisPages: 15, dpi: 150 });
+    const detected = proposal.identity;
+    const conflicts: Array<{ field: string; declared: string | null; detected: string | null }> = [];
+    const compare = (field: 'subjectKey' | 'gradeKey' | 'part' | 'edition') => {
+      const declared = input.declared?.[field] ?? null;
+      const value = detected[field] ?? null;
+      if (declared && value && declared.toUpperCase() !== value.toUpperCase()) conflicts.push({ field, declared, detected: value });
+    };
+    compare('subjectKey'); compare('gradeKey'); compare('part'); compare('edition');
+
+    if (proposal.status === 'NEEDS_REVIEW' || !detected.subjectKey || !detected.gradeKey || !detected.part || (detected.part !== 'BOTH' && !detected.edition)) {
+      return { status: 'NEEDS_REVIEW' as const, proposal, conflicts };
+    }
+    if (conflicts.length > 0 && !input.confirmDetectedIdentity) {
+      return { status: 'CONFIRM_REQUIRED' as const, proposal, conflicts };
+    }
+
+    const parts: Array<'PART_1' | 'PART_2'> = detected.part === 'BOTH' ? ['PART_1', 'PART_2'] : [detected.part];
+    const textbooks: Array<{ key: string; created: boolean; part: 'PART_1' | 'PART_2' }> = [];
+    for (const part of parts) {
+      const edition = detected.edition!;
+      const title = (detected.title || input.declared?.title || `${detected.subjectKey} ${detected.gradeKey} ${part}`).trim();
+      const created = await this.authoring.createTextbook(
+        { actorKey: 'SYSTEM_CONTENT_IMPORT' },
+        {
+          subjectKey: detected.subjectKey,
+          gradeKey: detected.gradeKey,
+          part,
+          title,
+          edition,
+          issuer: detected.issuer ?? null,
+          publishYear: detected.publicationYear ?? null,
+        },
+      );
+      if (created.ok) {
+        textbooks.push({ key: created.value.key, created: true, part });
+      } else if (created.error.code === 'content.textbook_exists') {
+        const built = buildTextbookKey({ subject: detected.subjectKey, grade: Number(String(detected.gradeKey).replace(/^G/i, '')), part, edition });
+        if (!built.ok) throw new DomainErrorException(built.error);
+        textbooks.push({ key: built.value, created: false, part });
+      } else {
+        throw new DomainErrorException(created.error);
+      }
+    }
+
+    const workspaceRoot = detected.part === 'BOTH'
+      ? path.resolve(this.workspaceManager.getWorkspaceDir({ part: 'PART_1', grade: detected.gradeKey, subject: detected.subjectKey, edition: detected.edition }), '../../../../')
+      : this.workspaceManager.getWorkspaceDir({ part: parts[0]!, grade: detected.gradeKey, subject: detected.subjectKey, edition: detected.edition });
+    const prepared = await this.prepareWorkspace({
+      part: detected.part === 'BOTH' ? 'BOTH' as any : parts[0]!,
+      grade: detected.gradeKey,
+      subject: detected.subjectKey,
+      edition: detected.edition,
+      title: detected.title ?? input.declared?.title,
+      pdfBuffer: input.pdfBuffer,
+      autoSegment: true,
+      workspaceRootOverride: workspaceRoot,
+    });
+    return { status: 'PREPARED' as const, proposal, conflicts, textbooks, prepared };
+  }
+
+  /**
    * Prepares and stores a textbook source PDF into workspace
    */
   async prepareWorkspace(input: {
@@ -270,12 +352,13 @@ export class WorkspaceImporterService {
     pdfBuffer?: Buffer;
     autoSegment?: boolean;
     units?: Array<any>;
+    workspaceRootOverride?: string;
   }) {
     const edition = input.edition;
     const coords = { part: input.part, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
-    const wsDir = edition
+    const wsDir = input.workspaceRootOverride ?? (edition
       ? this.workspaceManager.getWorkspaceDir(coords)
-      : this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject });
+      : this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject }));
 
     if (input.pdfBuffer && input.pdfBuffer.length > 0) {
       if (input.autoSegment === false) {
