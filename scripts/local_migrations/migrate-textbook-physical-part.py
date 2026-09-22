@@ -26,6 +26,7 @@ TARGETS = [
     "prisma/schema.prisma",
     "src/shared/kernel/identifiers.ts",
     "src/contexts/content/application/ports.ts",
+    "src/contexts/content/application/textbook-administration.service.ts",
     "src/contexts/content/application/authoring.service.ts",
     "src/contexts/content/domain/authoring.ts",
     "src/contexts/content/application/content-asset.service.ts",
@@ -218,6 +219,14 @@ def transform(path: str, text: str) -> str:
             stop(path + ": explicit physical part was not wired into authoring")
         out = out.replace("termId: term.id,", "part: input.part,")
         out = out.replace("termId: resolved.term.id,", "part: input.part,")
+    elif path.endswith("textbook-administration.service.ts"):
+        # Physical part is explicit; academic term is never converted to part.
+        out = out.replace("termKey?: string | undefined;", "part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;", 1)
+        out = out.replace("...(query.termKey ? { termKey: query.termKey } : {}),", "...(query.part ? { part: query.part } : {}),")
+        out = out.replace("termKey: input.termKey,", "part: input.part,")
+        out = out.replace("termKey?: string | undefined", "part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined")
+        if "termKey: input.termKey" in out:
+            stop(path + ": textbook administration still derives physical identity from academic term")
     elif path.endswith("domain/authoring.ts"):
         old_sig = """export function checkTitleDoesNotRepeatPlacement(
   title: string,
