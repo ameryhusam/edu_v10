@@ -579,17 +579,15 @@ def textbook_key(subject: str, grade: int, part: str, edition: str) -> str:
     return f"EDU-{subject}-G{grade:02d}-{part_key}-{edition_key}"
 
 
-def book_workspace(subject: str, grade: int, term: int, part: str, edition: str) -> Path:
+def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
     _, grade_key = normalize_grade(grade)
-    _, term_key = normalize_term(term)
     part_key = normalize_part(part)
     edition_segment = "ED" + re.sub(
         r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
     )
     if edition_segment == "ED":
         raise ValueError("Printed edition is required.")
-    subject_segment = f"{normalize_subject(subject)}_{part_key}"
-    return workspace_root() / term_key / grade_key / subject_segment / edition_segment
+    return workspace_root() / part_key / grade_key / normalize_subject(subject) / edition_segment
 '''
             out=out.replace(old,new)
 
