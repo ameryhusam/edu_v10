@@ -73,13 +73,16 @@ class LessonSegmenter:
 
         subject = coords.get("subject", raw_meta.get("subject", "GENERAL"))
         grade = coords.get("grade", "G07")
-        term = coords.get("term", "T1")
+        part = coords.get("part", "PART_1")
         edition = str(coords.get("edition", "")).strip()
         if not edition:
             raise ValueError("Printed edition is required; it must be supplied or extracted before segmentation.")
         title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
 
-        textbook_key = f"EDU-{subject}-G{int(str(grade).replace('G', '')):02d}-T{int(str(term).replace('T', ''))}-ED{edition}"
+        part_code = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}.get(str(part).upper())
+        if not part_code:
+            raise ValueError("Physical part must be PART_1, PART_2, or BOTH.")
+        textbook_key = f"EDU-{subject}-G{int(str(grade).replace('G', '')):02d}-{part_code}-ED{edition}"
 
         # 1. Record source provenance only. The original book PDF is temporary
         # input and is never copied into workspace. Lesson PDFs are the only
@@ -93,7 +96,7 @@ class LessonSegmenter:
             "textbookKey": textbook_key,
             "subject": subject,
             "grade": grade,
-            "term": term,
+            "part": part,
             "edition": edition,
             "title": title,
             "totalPages": self.reader.page_count,
@@ -364,7 +367,7 @@ class LessonSegmenter:
                 "title": title,
                 "subjectKey": subject,
                 "gradeKey": grade,
-                "termKey": term,
+                "part": part,
                 "edition": edition,
                 "totalPages": self.reader.page_count,
             },
