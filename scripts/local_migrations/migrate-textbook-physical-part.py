@@ -269,6 +269,7 @@ def transform(path: str, text: str) -> str:
                   "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';\n", path)
 
     elif path.endswith("content-import.service.ts"):
+        out = out.replace("EDU-CUSTOM-G01-T1-ED2026", "EDU-CUSTOM-G01-P1-ED2026")
         out = out.replace("termKey: pkg.textbook.termKey,", "part: pkg.textbook.part,")
         out = out.replace("pkg.textbook.termKey", "pkg.textbook.part")
 
