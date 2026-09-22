@@ -47,6 +47,11 @@ export function TextbookWorkspaceModal({
 
   // Wizard Step: 1 = Setup/Upload, 2 = Slicing/Structure, 3 = Dry-Run & Sync
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [importMode, setImportMode] = useState<'PREPARE_BOOK' | 'IMPORT_PACKAGE'>('PREPARE_BOOK');
+  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [zipTextbookKey, setZipTextbookKey] = useState('');
+  const [zipDryRunResult, setZipDryRunResult] = useState<any | null>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
 
   // Form coordinates
   const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH'>(initialCoordinates?.part || 'PART_1');
@@ -80,6 +85,29 @@ export function TextbookWorkspaceModal({
     queryKey: ['admin-workspace-inspect', selectedWorkspaceDir],
     queryFn: () => (selectedWorkspaceDir ? textbookAdministrationApi.workspaceInspect(selectedWorkspaceDir) : Promise.resolve(null)),
     enabled: open && !!selectedWorkspaceDir,
+  });
+
+  const zipImportMutation = useMutation({
+    mutationFn: async (dryRun: boolean) => {
+      if (!zipFile) throw new Error('يرجى اختيار حزمة Workspace بصيغة ZIP');
+      return textbookAdministrationApi.workspaceImportZip({
+        file: zipFile,
+        textbookKey: zipTextbookKey.trim() || undefined,
+        dryRun,
+      });
+    },
+    onSuccess: (data: any, dryRun: boolean) => {
+      if (dryRun) {
+        setZipDryRunResult(data);
+        setActionSuccess('تم فحص حزمة Workspace المكتملة دون تعديل قاعدة البيانات.');
+      } else {
+        setImportResult(data);
+        setActionSuccess('تم استيراد حزمة Workspace المكتملة إلى قاعدة البيانات بنجاح.');
+        queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
+        if (onImportSuccess && data?.textbookKey) onImportSuccess(data.textbookKey);
+      }
+    },
+    onError: (err: any) => setActionError(err?.message || 'فشل استيراد حزمة Workspace'),
   });
 
   // Handle File Selection
@@ -194,6 +222,88 @@ export function TextbookWorkspaceModal({
       subtitle="رفع الكتاب الرقمي، التقطيع الآلي للوحدات والدروس، ومعاينة النواتج قبل الحفظ في قاعدة البيانات"
     >
       <div className="space-y-6">
+        {/* Import mode: a complete package and an unprepared book are different contracts. */}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setImportMode('PREPARE_BOOK')}
+            className={`rounded-lg border p-3 text-start ${importMode === 'PREPARE_BOOK' ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
+            <div className="font-semibold">كتاب PDF يحتاج تجهيز</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              يمر عبر محرك Python والذكاء لاكتشاف البنية، الصفحات، الدروس والجزء الفيزيائي.
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setImportMode('IMPORT_PACKAGE')}
+            className={`rounded-lg border p-3 text-start ${importMode === 'IMPORT_PACKAGE' ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
+            <div className="font-semibold">حزمة Workspace مكتملة ZIP</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              استيراد حزمة جاهزة للتحقق والحفظ؛ لا تعاد معالجتها عبر محرك Python.
+            </div>
+          </button>
+        </div>
+
+        {importMode === 'IMPORT_PACKAGE' ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-border p-4 space-y-3">
+              <div className="font-semibold">استيراد الحزمة المكتملة</div>
+              <p className="text-sm text-muted-foreground">
+                يجب أن تحتوي الحزمة على manifest والـ content package والأصول المطلوبة وفق عقد Workspace.
+              </p>
+              <input
+                ref={zipInputRef}
+                type="file"
+                accept=".zip,application/zip"
+                className="block w-full text-sm"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setZipFile(file && file.name.toLowerCase().endsWith('.zip') ? file : null);
+                  setZipDryRunResult(null);
+                  setActionError(null);
+                }}
+              />
+              <input
+                value={zipTextbookKey}
+                onChange={(e) => setZipTextbookKey(e.target.value)}
+                placeholder="Textbook key اختياري لتحديد الكتاب المستهدف"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+              {zipFile && <div className="text-xs text-muted-foreground">{zipFile.name}</div>}
+            </div>
+
+            {zipDryRunResult && (
+              <div className="rounded-lg border border-border p-4 text-sm">
+                <div className="font-semibold">نتيجة الفحص</div>
+                <pre className="mt-2 max-h-56 overflow-auto whitespace-pre-wrap text-xs">
+                  {JSON.stringify(zipDryRunResult, null, 2)}
+                </pre>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!zipFile || zipImportMutation.isPending}
+                onClick={() => zipImportMutation.mutate(true)}
+                className="rounded-md border border-border px-4 py-2 text-sm disabled:opacity-50"
+              >
+                {zipImportMutation.isPending ? 'جارٍ الفحص…' : 'فحص الحزمة (Dry Run)'}
+              </button>
+              <button
+                type="button"
+                disabled={!zipFile || zipImportMutation.isPending || !zipDryRunResult}
+                onClick={() => zipImportMutation.mutate(false)}
+                className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
+              >
+                {zipImportMutation.isPending ? 'جارٍ الاستيراد…' : 'اعتماد واستيراد الحزمة'}
+              </button>
+            </div>
+          </div>
+        ) : (
+        <>
         {/* Navigation Tabs */}
         <div className="flex border-b border-border/60 pb-2 gap-2 text-sm font-medium">
           <button
@@ -305,6 +415,8 @@ export function TextbookWorkspaceModal({
             onSync={() => syncMutation.mutate()}
             onBack={() => setCurrentStep(2)}
           />
+        )}
+        </>
         )}
       </div>
     </ActionModal>
