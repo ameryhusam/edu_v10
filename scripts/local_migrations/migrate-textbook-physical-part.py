@@ -389,6 +389,8 @@ def transform(path: str, text: str) -> str:
       part: { in: physicalParts },
       ...(query.status ? { status: query.status as never } : {}),
     };"""
+        new_where = re.sub(r'(?s)    const academicTerm = query\\.termKey.*?    const where = \\{', '    const where = {', new_where)
+        new_where = new_where.replace("      part: { in: physicalParts },", "      ...(query.part ? { part: query.part } : {}),")
         out=out.replace(old_where,new_where)
         out=out.replace("        term: { select: { key: true, name: true } },", "        part: true,")
         out=out.replace("        termKey: row.term.key,\n        termName: row.term.name,", "        part: String(row.part),")
