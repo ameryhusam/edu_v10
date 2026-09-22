@@ -17,6 +17,11 @@ BRANCH = "03_build_algorithm_and_new_Docs"
 MODE = os.environ.get("MODE", "audit").strip().lower()
 BACKUPS = ROOT / ".local-migration-backups"
 
+class MigrationIssue(Exception):
+    """A migration/audit issue that can be collected without aborting the full audit."""
+
+AUDIT_ISSUES: list[str] = []
+
 TARGETS = [
     "prisma/schema.prisma",
     "src/shared/kernel/identifiers.ts",
@@ -54,8 +59,7 @@ OLD_KEY = re.compile(r"EDU-[A-Z0-9]+-G\d{2}-T[12]-ED[A-Z0-9-]+", re.I)
 ISBN = re.compile(r"\bisbn\b", re.I)
 
 def stop(message: str) -> None:
-    raise SystemExit("\nMIGRATION STOPPED\n" + "=" * 72 + "\n" +
-                     message + "\nNO FILES WERE WRITTEN.\n")
+    raise MigrationIssue(message)
 
 def cmd(*args: str) -> str:
     p = subprocess.run(args, cwd=ROOT, text=True, stdout=subprocess.PIPE,
@@ -119,15 +123,6 @@ def transform(path: str, text: str) -> str:
     gradeId: string;
     part: 'PART_1' | 'PART_2' | 'BOTH';
 """, path)
-        out = one(out,
-"""    termKey: string;
-    title: string;
-""",
-"""    part: 'PART_1' | 'PART_2' | 'BOTH';
-    title: string;
-""", path)
-
-    elif path.endswith("application/ports.ts"):
         # Academic coordinate resolution and academic filters keep termKey.
         # Physical textbook payloads expose part instead.
         export_anchor = """  readonly textbook: {
@@ -149,7 +144,6 @@ def transform(path: str, text: str) -> str:
             out = out.replace(summary_anchor, """  readonly gradeName: string;
   readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly edition: string;""")
-        # Creation contract.
         placement_marker = """  resolveTextbookCoordinates(input: {"""
         if placement_marker in out and "resolveTextbookPlacement(input:" not in out:
             out = out.replace(placement_marker, """  resolveTextbookPlacement(input: {
@@ -161,19 +155,6 @@ def transform(path: str, text: str) -> str:
   }>;
 
   resolveTextbookCoordinates(input: {""")
-        create_anchor = """  createTextbook(input: {
-    key: string;
-    subjectId: string;
-    gradeId: string;
-    termId: string;"""
-        if create_anchor in out:
-            out = out.replace(create_anchor, """  createTextbook(input: {
-    key: string;
-    subjectId: string;
-    gradeId: string;
-    part: 'PART_1' | 'PART_2' | 'BOTH';""")
-        elif "createTextbook(input: {" in out and "part: 'PART_1' | 'PART_2' | 'BOTH';" not in out:
-            stop(path + ": createTextbook contract anchor not found")
     elif path.endswith("authoring.service.ts"):
         old_sig = """      subjectKey: string;
       gradeKey: string;
@@ -292,8 +273,11 @@ def transform(path: str, text: str) -> str:
                   "        '--part',\n        input.part,\n", path)
 
     elif path.endswith("workspace.ports.ts"):
-        out = one(out, "  readonly term: string;\n",
-                  "  readonly part: string;\n", path)
+        term_fields = out.count("  readonly term: string;\n")
+        if term_fields != 2:
+            stop(path + f": expected two physical workspace term fields, found {term_fields}")
+        out = out.replace("  readonly term: string;\n",
+                          "  readonly part: string;\n")
 
     elif path.endswith("workspace-manager.ts"):
         out = one(out, "  readonly term: string;\n",
@@ -544,14 +528,53 @@ def main() -> None:
     print("Mode:      ", MODE)
     preflight()
     original = {p: read(p) for p in TARGETS}
-    proposed = {p: (before, transform(p, before)) for p, before in original.items()}
-    validate(proposed)
-    show_diff(proposed)
+    proposed: dict[str, tuple[str, str]] = {}
+
+    # Audit mode is deliberately non-blocking: inspect every target and collect
+    # all migration blockers before presenting the final evaluation. Apply mode
+    # remains fail-closed and is only reached after a clean audit.
+    for path, before in original.items():
+        try:
+            proposed[path] = (before, transform(path, before))
+        except MigrationIssue as exc:
+            AUDIT_ISSUES.append(f"{path}: {exc}")
+            proposed[path] = (before, before)
+        except Exception as exc:
+            AUDIT_ISSUES.append(f"{path}: unexpected migration error: {exc}")
+            proposed[path] = (before, before)
+
     if MODE == "audit":
-        print("\nAUDIT PASS")
+        if not AUDIT_ISSUES:
+            try:
+                validate(proposed)
+            except MigrationIssue as exc:
+                AUDIT_ISSUES.append(str(exc))
+            except Exception as exc:
+                AUDIT_ISSUES.append("validation: unexpected error: " + str(exc))
+        show_diff(proposed)
+        print("\n" + "=" * 72)
+        print("FINAL AUDIT EVALUATION")
+        print("=" * 72)
+        if AUDIT_ISSUES:
+            print("STATUS: BLOCKED")
+            print(f"Blockers found: {len(AUDIT_ISSUES)}")
+            for i, issue in enumerate(AUDIT_ISSUES, 1):
+                print(f"\n[{i}] {issue}")
+            print("\nNo files were written.")
+            print("Fix the migration script blockers, then rerun audit.")
+            return
+        print("STATUS: PASS")
+        print("All targets transformed and cross-file validation passed.")
         print("No files were written.")
         print("The local migration script itself was ignored by preflight.")
         return
+
+    # Apply is fail-closed: never apply a partially audited migration.
+    if AUDIT_ISSUES:
+        stop("Apply refused because audit blockers were collected:\n" +
+             "\n".join(AUDIT_ISSUES))
+    validate(proposed)
+    show_diff(proposed)
     apply(proposed)
 
 if __name__ == "__main__":
