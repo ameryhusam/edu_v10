@@ -31,7 +31,7 @@
       "resourceTitle": "القراءة — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/reading_part1_1th.pdf",
-      "sourceRef": "MOE-YE-G01-ARAB-T01-READING"
+      "sourceRef": "MOE-YE-G01-ARAB-P01-READING"
     },
     {
       "gradeKey": "G01",
@@ -43,7 +43,7 @@
       "resourceTitle": "التربية الإسلامية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/islamic_1st.pdf",
-      "sourceRef": "MOE-YE-G01-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G01-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G01",
@@ -55,7 +55,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/mathematics_part1_1th.pdf",
-      "sourceRef": "MOE-YE-G01-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G01-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G01",
@@ -67,7 +67,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/mathematics_part2_1th.pdf",
-      "sourceRef": "MOE-YE-G01-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G01-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G01",
@@ -79,7 +79,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/quran_1st.pdf",
-      "sourceRef": "MOE-YE-G01-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G01-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G01",
@@ -91,7 +91,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/science_part1_1th.pdf",
-      "sourceRef": "MOE-YE-G01-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G01-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G01",
@@ -103,7 +103,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassOne.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_1/science_part2_1th.pdf",
-      "sourceRef": "MOE-YE-G01-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G01-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G02",
@@ -115,7 +115,7 @@
       "resourceTitle": "القراءة — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_2/reading_part1_2th.pdf",
-      "sourceRef": "MOE-YE-G02-ARAB-T01-READING"
+      "sourceRef": "MOE-YE-G02-ARAB-P01-READING"
     },
     {
       "gradeKey": "G02",
@@ -127,7 +127,7 @@
       "resourceTitle": "القراءة — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_2/reading_part2_2th.pdf",
-      "sourceRef": "MOE-YE-G02-ARAB-T02-READING"
+      "sourceRef": "MOE-YE-G02-ARAB-P02-READING"
     },
     {
       "gradeKey": "G02",
@@ -139,7 +139,7 @@
       "resourceTitle": "التربية الإسلامية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_2/islamic_2nd.pdf",
-      "sourceRef": "MOE-YE-G02-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G02-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G02",
@@ -151,7 +151,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_2/mathematics_part2_2th.pdf",
-      "sourceRef": "MOE-YE-G02-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G02-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G02",
@@ -163,7 +163,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_2/quran_2nd.pdf",
-      "sourceRef": "MOE-YE-G02-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G02-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G02",
@@ -175,7 +175,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_2/science_part1_2th.pdf",
-      "sourceRef": "MOE-YE-G02-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G02-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G02",
@@ -187,7 +187,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassTwo.php",
       "downloadUrl": "http://e-learning-moe.edu.ye/adel/android_1/book_2/science_part2_2th%20%E2%80%AB%E2%80%AC.pdf",
-      "sourceRef": "MOE-YE-G02-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G02-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G03",
@@ -199,7 +199,7 @@
       "resourceTitle": "القراءة — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/reading_part1_3th.pdf",
-      "sourceRef": "MOE-YE-G03-ARAB-T01-READING"
+      "sourceRef": "MOE-YE-G03-ARAB-P01-READING"
     },
     {
       "gradeKey": "G03",
@@ -211,7 +211,7 @@
       "resourceTitle": "القراءة — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/reading_part2_3th.pdf",
-      "sourceRef": "MOE-YE-G03-ARAB-T02-READING"
+      "sourceRef": "MOE-YE-G03-ARAB-P02-READING"
     },
     {
       "gradeKey": "G03",
@@ -223,7 +223,7 @@
       "resourceTitle": "التربية الاجتماعية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/social_studies_3th.pdf",
-      "sourceRef": "MOE-YE-G03-CIV-T01-SOCIAL"
+      "sourceRef": "MOE-YE-G03-CIV-P01-SOCIAL"
     },
     {
       "gradeKey": "G03",
@@ -235,7 +235,7 @@
       "resourceTitle": "التربية الإسلامية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/islamic_3th.pdf",
-      "sourceRef": "MOE-YE-G03-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G03-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G03",
@@ -247,7 +247,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/mathematics_part1_3th.pdf",
-      "sourceRef": "MOE-YE-G03-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G03-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G03",
@@ -259,7 +259,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/mathematics_part2_3th.pdf",
-      "sourceRef": "MOE-YE-G03-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G03-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G03",
@@ -271,7 +271,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/quran_3th.pdf",
-      "sourceRef": "MOE-YE-G03-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G03-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G03",
@@ -283,7 +283,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_3/science_part1_3th.pdf",
-      "sourceRef": "MOE-YE-G03-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G03-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G03",
@@ -295,7 +295,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassThree.php",
       "downloadUrl": "http://e-learning-moe.edu.ye/adel/android_1/book_3/science_part2_3th.pdf",
-      "sourceRef": "MOE-YE-G03-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G03-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -307,7 +307,7 @@
       "resourceTitle": "لغتي العربية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/arabic_part1_4th.pdf",
-      "sourceRef": "MOE-YE-G04-ARAB-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-ARAB-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -319,7 +319,7 @@
       "resourceTitle": "لغتي العربية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/arabic_part2_4th.pdf",
-      "sourceRef": "MOE-YE-G04-ARAB-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-ARAB-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -331,7 +331,7 @@
       "resourceTitle": "التربية الاجتماعية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/social_studies_4th.pdf",
-      "sourceRef": "MOE-YE-G04-CIV-T01-SOCIAL"
+      "sourceRef": "MOE-YE-G04-CIV-P01-SOCIAL"
     },
     {
       "gradeKey": "G04",
@@ -343,7 +343,7 @@
       "resourceTitle": "التربية الإسلامية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/islamic_4th%20.pdf",
-      "sourceRef": "MOE-YE-G04-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -355,7 +355,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/mathematics_part1_4th.pdf",
-      "sourceRef": "MOE-YE-G04-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -367,7 +367,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/mathematics_part2_4th.pdf",
-      "sourceRef": "MOE-YE-G04-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -379,7 +379,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/quran_4th.pdf",
-      "sourceRef": "MOE-YE-G04-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -391,7 +391,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/science_part1_4th.pdf",
-      "sourceRef": "MOE-YE-G04-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G04",
@@ -403,7 +403,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFour.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_4/science_part2_4th.pdf",
-      "sourceRef": "MOE-YE-G04-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G04-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -415,7 +415,7 @@
       "resourceTitle": "لغتي العربية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/arabic_part1_5th.pdf",
-      "sourceRef": "MOE-YE-G05-ARAB-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-ARAB-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -427,7 +427,7 @@
       "resourceTitle": "لغتي العربية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/arabic_part2_5th.pdf",
-      "sourceRef": "MOE-YE-G05-ARAB-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-ARAB-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -439,7 +439,7 @@
       "resourceTitle": "التربية الوطنية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/national_education_5th.pdf",
-      "sourceRef": "MOE-YE-G05-CIV-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-CIV-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -451,7 +451,7 @@
       "resourceTitle": "الجغرافيا — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/geographic_5th.pdf",
-      "sourceRef": "MOE-YE-G05-GEO-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-GEO-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -463,7 +463,7 @@
       "resourceTitle": "التاريخ — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/history_5th.pdf",
-      "sourceRef": "MOE-YE-G05-HIST-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-HIST-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -475,7 +475,7 @@
       "resourceTitle": "التربية الإسلامية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/islamic_5th.pdf",
-      "sourceRef": "MOE-YE-G05-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -487,7 +487,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/mathematics_part1_5th.pdf",
-      "sourceRef": "MOE-YE-G05-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -499,7 +499,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/mathematics_part2_5th.pdf",
-      "sourceRef": "MOE-YE-G05-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -511,7 +511,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/quran_5th.pdf",
-      "sourceRef": "MOE-YE-G05-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -523,7 +523,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/science_part1_5th.pdf",
-      "sourceRef": "MOE-YE-G05-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G05",
@@ -535,7 +535,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassFive.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_5/science_part2_5th.pdf",
-      "sourceRef": "MOE-YE-G05-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G05-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -547,7 +547,7 @@
       "resourceTitle": "لغتي العربية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/arabic_part1_6th.pdf",
-      "sourceRef": "MOE-YE-G06-ARAB-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-ARAB-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -559,7 +559,7 @@
       "resourceTitle": "لغتي العربية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/arabic_part2_6th.pdf",
-      "sourceRef": "MOE-YE-G06-ARAB-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-ARAB-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -571,7 +571,7 @@
       "resourceTitle": "التربية الوطنية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/national_education_6th.pdf",
-      "sourceRef": "MOE-YE-G06-CIV-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-CIV-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -583,7 +583,7 @@
       "resourceTitle": "الجغرافيا — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/geographic_6th.pdf",
-      "sourceRef": "MOE-YE-G06-GEO-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-GEO-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -595,7 +595,7 @@
       "resourceTitle": "التاريخ — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/history_6th.pdf",
-      "sourceRef": "MOE-YE-G06-HIST-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-HIST-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -607,7 +607,7 @@
       "resourceTitle": "التربية الإسلامية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/islamic_6th.pdf",
-      "sourceRef": "MOE-YE-G06-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -619,7 +619,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/%e2%80%abmathematics_part1_6th.pdf",
-      "sourceRef": "MOE-YE-G06-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -631,7 +631,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/mathematics_part2_6th.pdf",
-      "sourceRef": "MOE-YE-G06-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -643,7 +643,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/quran_6th.pdf",
-      "sourceRef": "MOE-YE-G06-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -655,7 +655,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/science_part1_6th.pdf",
-      "sourceRef": "MOE-YE-G06-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G06",
@@ -667,7 +667,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSix.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_6/science_part2_6th.pdf",
-      "sourceRef": "MOE-YE-G06-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G06-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -679,7 +679,7 @@
       "resourceTitle": "لغتي العربية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/Arabic_part1_7th_.pdf",
-      "sourceRef": "MOE-YE-G07-ARAB-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-ARAB-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -691,7 +691,7 @@
       "resourceTitle": "لغتي العربية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/Arabic_part2_7th_.pdf",
-      "sourceRef": "MOE-YE-G07-ARAB-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-ARAB-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -703,7 +703,7 @@
       "resourceTitle": "التربية الوطنية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/social_edu_7th.pdf",
-      "sourceRef": "MOE-YE-G07-CIV-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-CIV-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -715,7 +715,7 @@
       "resourceTitle": "اللغة الإنجليزية — Crescent handwriting",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/english_%20Crescent%20handwriting%20_7th.pdf",
-      "sourceRef": "MOE-YE-G07-ENG-T01-HANDWRITING"
+      "sourceRef": "MOE-YE-G07-ENG-P01-HANDWRITING"
     },
     {
       "gradeKey": "G07",
@@ -727,7 +727,7 @@
       "resourceTitle": "اللغة الإنجليزية — الكتاب المدرسي",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/english_pubils_7th.pdf",
-      "sourceRef": "MOE-YE-G07-ENG-T01-PUPIL"
+      "sourceRef": "MOE-YE-G07-ENG-P01-PUPIL"
     },
     {
       "gradeKey": "G07",
@@ -739,7 +739,7 @@
       "resourceTitle": "اللغة الإنجليزية — كتاب التمارين",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/english_work_7th.pdf",
-      "sourceRef": "MOE-YE-G07-ENG-T01-WORKBOOK"
+      "sourceRef": "MOE-YE-G07-ENG-P01-WORKBOOK"
     },
     {
       "gradeKey": "G07",
@@ -751,7 +751,7 @@
       "resourceTitle": "الجغرافيا — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/geographic_7th.pdf",
-      "sourceRef": "MOE-YE-G07-GEO-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-GEO-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -763,7 +763,7 @@
       "resourceTitle": "التاريخ — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/history_part1_7th.pdf",
-      "sourceRef": "MOE-YE-G07-HIST-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-HIST-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -775,7 +775,7 @@
       "resourceTitle": "التاريخ — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/history_part2_7th.pdf",
-      "sourceRef": "MOE-YE-G07-HIST-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-HIST-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -787,7 +787,7 @@
       "resourceTitle": "التربية الإسلامية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/Islamic_part1_7th.pdf",
-      "sourceRef": "MOE-YE-G07-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -799,7 +799,7 @@
       "resourceTitle": "التربية الإسلامية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/Islamic_part2_7th.pdf",
-      "sourceRef": "MOE-YE-G07-ISL-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-ISL-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -811,7 +811,7 @@
       "resourceTitle": "الرياضيات — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/mathematic_7th.pdf",
-      "sourceRef": "MOE-YE-G07-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -823,7 +823,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/quran_7th.pdf",
-      "sourceRef": "MOE-YE-G07-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -835,7 +835,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/science_7th.pdf",
-      "sourceRef": "MOE-YE-G07-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G07",
@@ -847,7 +847,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassSeven.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_7/science_part2_7th.pdf",
-      "sourceRef": "MOE-YE-G07-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G07-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -859,7 +859,7 @@
       "resourceTitle": "التربية الوطنية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/national_education_8th.pdf",
-      "sourceRef": "MOE-YE-G08-CIV-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-CIV-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -871,7 +871,7 @@
       "resourceTitle": "الجغرافيا — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/geographic_8th.pdf",
-      "sourceRef": "MOE-YE-G08-GEO-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-GEO-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -883,7 +883,7 @@
       "resourceTitle": "التاريخ — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/history_part1_8th.pdf",
-      "sourceRef": "MOE-YE-G08-HIST-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-HIST-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -895,7 +895,7 @@
       "resourceTitle": "التاريخ — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/history_part2_8th.pdf",
-      "sourceRef": "MOE-YE-G08-HIST-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-HIST-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -907,7 +907,7 @@
       "resourceTitle": "التربية الإسلامية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/islamic_part1_8th.pdf",
-      "sourceRef": "MOE-YE-G08-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -919,7 +919,7 @@
       "resourceTitle": "التربية الإسلامية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/islamic_part2_8th.pdf",
-      "sourceRef": "MOE-YE-G08-ISL-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-ISL-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -931,7 +931,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/mathematics_part1_8th.pdf",
-      "sourceRef": "MOE-YE-G08-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -943,7 +943,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/mathematics_part2_8th.pdf",
-      "sourceRef": "MOE-YE-G08-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -955,7 +955,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/quran_8th.pdf",
-      "sourceRef": "MOE-YE-G08-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -967,7 +967,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/science_part1_8th.pdf",
-      "sourceRef": "MOE-YE-G08-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G08",
@@ -979,7 +979,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassEight.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_8/science_part2_8th.pdf",
-      "sourceRef": "MOE-YE-G08-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G08-SCI-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -991,7 +991,7 @@
       "resourceTitle": "لغتي العربية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/arabic_part1_9th.pdf",
-      "sourceRef": "MOE-YE-G09-ARAB-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-ARAB-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1003,7 +1003,7 @@
       "resourceTitle": "لغتي العربية — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/arabic_part2_9th.pdf",
-      "sourceRef": "MOE-YE-G09-ARAB-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-ARAB-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1015,7 +1015,7 @@
       "resourceTitle": "التربية الوطنية — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/national_education_9th.pdf",
-      "sourceRef": "MOE-YE-G09-CIV-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-CIV-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1027,7 +1027,7 @@
       "resourceTitle": "الجغرافيا — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/geographic_9th.pdf",
-      "sourceRef": "MOE-YE-G09-GEO-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-GEO-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1039,7 +1039,7 @@
       "resourceTitle": "التاريخ — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/history_part1_9th.pdf",
-      "sourceRef": "MOE-YE-G09-HIST-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-HIST-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1051,7 +1051,7 @@
       "resourceTitle": "التربية الإسلامية — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/islamic_part1_9th.pdf",
-      "sourceRef": "MOE-YE-G09-ISL-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-ISL-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1063,7 +1063,7 @@
       "resourceTitle": "الرياضيات — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/mathematics_part1_9th.pdf",
-      "sourceRef": "MOE-YE-G09-MATH-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-MATH-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1075,7 +1075,7 @@
       "resourceTitle": "الرياضيات — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/mathematics_part2_9th.pdf",
-      "sourceRef": "MOE-YE-G09-MATH-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-MATH-P02-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1087,7 +1087,7 @@
       "resourceTitle": "القرآن الكريم — كتاب",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/quran_9th.pdf",
-      "sourceRef": "MOE-YE-G09-QURAN-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-QURAN-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1099,7 +1099,7 @@
       "resourceTitle": "العلوم — الجزء الأول",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/science_part1_9th.pdf",
-      "sourceRef": "MOE-YE-G09-SCI-T01-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-SCI-P01-TEXTBOOK"
     },
     {
       "gradeKey": "G09",
@@ -1111,7 +1111,7 @@
       "resourceTitle": "العلوم — الجزء الثاني",
       "landingPage": "http://e-learning-moe.edu.ye/ClassNine.php",
       "downloadUrl": "https://e-learning-moe.edu.ye/adel/android_1/book_9/science_part2_9th.pdf",
-      "sourceRef": "MOE-YE-G09-SCI-T02-TEXTBOOK"
+      "sourceRef": "MOE-YE-G09-SCI-P02-TEXTBOOK"
     }
   ]
 }
