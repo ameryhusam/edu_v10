@@ -31,6 +31,7 @@ import {
 import {
   lessonKey as buildLessonKey,
   unitKey as buildUnitKey,
+  textbookKey as buildTextbookKey,
   normalizeSlug,
   type TextbookKey,
   type UnitKey,
