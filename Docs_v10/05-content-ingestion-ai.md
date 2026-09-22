@@ -106,13 +106,13 @@ READY additionally requires successful canonical reconciliation and learner-deli
 
 Canonical workspace:
 
-    workspace/T01/G04/SCI/ED2026/
+    workspace/P1/G04/SCI/ED2026/
 
 Canonical textbook key:
 
-    EDU-SCI-G04-T1-ED2026
+    EDU-SCI-G04-P1-ED2026
 
-Identity derives from subject + grade + term + printed edition.
+Identity derives from subject + grade + physical part + printed edition. Academic term is not a Workspace coordinate..
 
 For every upload:
 
@@ -165,7 +165,7 @@ Temporary source input may be deleted after successful verification/reconciliati
     textbookKey
     subjectKey
     gradeKey
-    termKey
+    part
     printedEdition
     title
     issuer when applicable
