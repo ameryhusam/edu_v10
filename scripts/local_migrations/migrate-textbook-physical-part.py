@@ -370,46 +370,55 @@ def transform(path: str, text: str) -> str:
                           "  readonly part: string;\n")
 
     elif path.endswith("workspace-manager.ts"):
-        term_fields = out.count("  readonly term: string;\n")
-        if term_fields != 2:
-            stop(path + f": expected two workspace term fields, found {term_fields}")
-        out = out.replace("  readonly term: string;\n", "  readonly part: string;\n")
-        out = out.replace("<term>/", "<part>/")
-        out = out.replace("workspaces/T01/G07/MATH", "workspaces/P1/G07/MATH")
-        out = one(out,
-"""    const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        # Workspace remains academic-term based:
+        # Workspace/<term>/<grade>/<subject_part>/<edition>
+        # Example: Workspace/T01/G07/SCI_P1/ED2026
+        out = out.replace("  readonly term: string;\n  readonly grade: string;\n  readonly subject: string;\n  readonly edition?: string | undefined;",
+                          "  readonly term: string;\n  readonly grade: string;\n  readonly subject: string;\n  readonly part?: 'PART_1' | 'PART_2' | 'BOTH';\n  readonly edition?: string | undefined;", 1)
+        const_old = """    const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);
-""",
-"""    const partNorm = coords.part.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const canonicalPart =
+    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);"""
+        if const_old not in out:
+            stop(path + ": expected workspace path block not found")
+        out = out.replace(const_old, """    const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const partNorm = coords.part
+      ? coords.part.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
+      : '';
+    const partSegment =
       partNorm === 'PART_1' ? 'P1' :
       partNorm === 'PART_2' ? 'P2' :
       partNorm === 'BOTH' ? 'PB' :
-      partNorm;
-    if (!['P1', 'P2', 'PB'].includes(canonicalPart)) {
-      throw new Error('Invalid physical textbook part: ' + coords.part);
-    }
-    const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const base = path.join(this.workspaceBaseDir, canonicalPart, gradeNorm, subjectNorm);
-""", path)
-        out = one(out,
-            'const match = /^EDU-(.+?)-G(\\d+)-T(\\d+)-ED(.+)$/i.exec(textbookKey.trim());',
-            'const match = /^EDU-(.+?)-G(\\d+)-(P1|P2|PB)-ED(.+)$/i.exec(textbookKey.trim());',
-            path)
+      '';
+    const subjectSegment = partSegment ? subjectNorm + '_' + partSegment : subjectNorm;
+    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectSegment);""", 1)
+        const_old_key = 'const match = /^EDU-(.+?)-G\\d+?-T(\\d+)-ED(.+)$/i.exec(textbookKey.trim());'
+        if const_old_key not in out:
+            # accept the actual migration-script spelling
+            const_old_key = 'const match = /^EDU-(.+?)-G(\\d+)-T(\\d+)-ED(.+)$/i.exec(textbookKey.trim());'
+        if const_old_key not in out:
+            stop(path + ": legacy textbook key resolver anchor not found")
+        out = out.replace(const_old_key,
+                          'const match = /^EDU-(.+?)-G(\\d+)-(P1|P2|PB)-ED(.+)$/i.exec(textbookKey.trim());', 1)
         out = out.replace("const [, subject, grade, term, edition] = match;",
-                          "const [, subject, grade, part, edition] = match;")
-        out = out.replace("!term || !edition", "!part || !edition")
-        out = re.sub(r"term:\s*\x60T\$\{term\}\x60,", "part: part,", out)
-        out = re.sub(r"workspaceId:\s*\x60[^\n]+\x60",
-                      "workspaceId: coords.part + '-' + coords.grade + '-' + coords.subject", out)
-        out = out.replace("term: coords.term,", "part: coords.part,")
+                          "const [, subject, grade, part, edition] = match;", 1)
+        out = out.replace("!term || !edition", "!part || !edition", 1)
+        const return_old = """    return this.getWorkspaceDir({
+      subject,
+      grade: `G${grade}`,
+      term: `T${term}`,
+      edition,
+    });"""
+        if return_old not in out:
+            stop(path + ": textbook-key workspace return anchor not found")
+        out = out.replace(return_old, """    throw new Error(
+      'A textbook key does not contain academic term; use getWorkspaceDir with explicit term and physical part.',
+    );""", 1)
+
 
     elif path.endswith("workspace-importer.service.ts"):
-        out = out.replace("term: pkg.textbook.termKey,", "part: pkg.textbook.part,")
-        out = out.replace("pkg.textbook.termKey", "pkg.textbook.part")
         old = """  async prepareWorkspace(input: {
     term: string;
     grade: string;
@@ -418,16 +427,18 @@ def transform(path: str, text: str) -> str:
         if old not in out:
             stop(path + ": expected workspace prepare signature not found")
         out = out.replace(old, """  async prepareWorkspace(input: {
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    term: string;
     grade: string;
     subject: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     edition?: string;""", 1)
-        out = out.replace("const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };",
-                          "const coords = { part: input.part, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };", 1)
-        out = out.replace("this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject })",
-                          "this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject })", 1)
-        out = out.replace("        term: input.term,\n        edition,",
-                          "        part: input.part,\n        edition,", 1)
+        out = out.replace(
+            "const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };",
+            "const coords = { term: input.term, grade: input.grade, subject: input.subject, part: input.part, ...(edition ? { edition } : {}) };", 1)
+        out = out.replace(
+            "this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject })",
+            "this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject, part: input.part })", 1)
+
 
     elif path.endswith("workspace-archive.service.ts"):
         out = out.replace("term: pkg.textbook.termKey,", "part: pkg.textbook.part,")
@@ -543,9 +554,7 @@ def transform(path: str, text: str) -> str:
             stop(path + ": physical textbook identity still depends on academic term")
     elif "edu7-content-engine" in path and path.endswith(".py"):
         if path.endswith("workspace_layout.py"):
-            # Replace the complete identity/workspace functions so no academic
-            # term normalization survives in the Python canonical layout.
-            old = out[out.find("def textbook_key("):out.find("\ndef _rewrite_json")]
+            old = out[out.find("def normalize_part"):out.find("\ndef _rewrite_json")]
             if not old:
                 stop(path + ": workspace_layout identity functions not found")
             new = '''def normalize_part(raw: str) -> str:
@@ -571,17 +580,20 @@ def textbook_key(subject: str, grade: int, part: str, edition: str) -> str:
     return f"EDU-{subject}-G{grade:02d}-{part_key}-{edition_key}"
 
 
-def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
+def book_workspace(subject: str, grade: int, term: int, part: str, edition: str) -> Path:
     _, grade_key = normalize_grade(grade)
+    _, term_key = normalize_term(term)
     part_key = normalize_part(part)
     edition_segment = "ED" + re.sub(
         r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
     )
     if edition_segment == "ED":
         raise ValueError("Printed edition is required.")
-    return workspace_root() / part_key / grade_key / normalize_subject(subject) / edition_segment
+    subject_segment = f"{normalize_subject(subject)}_{part_key}"
+    return workspace_root() / term_key / grade_key / subject_segment / edition_segment
 '''
             out=out.replace(old,new)
+
         elif path.endswith("export/json_exporter.py"):
             out=out.replace('        term = metadata.get("termKey", metadata.get("term", "2026-2027-T01"))',
                             '        part = metadata.get("part", "P1")')
@@ -678,29 +690,16 @@ def collect_physical_part_issues(files: dict[str, tuple[str, str]]) -> list[str]
     issues: list[str] = []
 
     checks = [
-        (
-            "PHYSICAL_PART_DERIVED_FROM_TERM_ORDINAL",
-            re.compile(r"term\\.ordinal\\s*===\\s*[12][\\s\\S]{0,180}?PART_(?:1|2|BOTH)"),
-        ),
-        (
-            "PHYSICAL_PART_DERIVED_FROM_TERMORDINAL",
-            re.compile(r"(?:source\\.)?termOrdinal\\s*===\\s*[12][\\s\\S]{0,180}?PART_(?:1|2|BOTH)"),
-        ),
-        (
-            "PHYSICAL_PART_FROM_TERM_CONDITIONAL",
-            re.compile(r"(?:termOrdinal|term\\.ordinal)[\\s\\S]{0,220}(?:PART_1|PART_2|PART_3|BOTH)"),
-        ),
-        (
-            "OLD_PHYSICAL_T1_T2_KEY",
-            re.compile(r"EDU-[A-Z0-9]+-G\\d{2}-T[12]-ED[A-Z0-9-]+", re.I),
-        ),
-        ("TERM_KEY_PHYSICAL_RESIDUE", re.compile(r"\\btermKey\\b")),
-        ("TERM_ID_PHYSICAL_RESIDUE", re.compile(r"\\btermId\\b")),
-        ("TERM_BY_ORDINAL_PHYSICAL_RESIDUE", re.compile(r"\\btermByOrdinal\\b")),
-        (
-            "PHYSICAL_CREATE_RESOLVES_ACADEMIC_TERM",
-            re.compile(r"createTextbook[\\s\\S]{0,3000}?resolveTextbookCoordinates"),
-        ),
+        ("PHYSICAL_PART_DERIVED_FROM_TERM_ORDINAL",
+         re.compile(r"term\\.ordinal\\s*===\\s*[12][\\s\\S]{0,180}?PART_(?:1|2|BOTH)")),
+        ("PHYSICAL_PART_DERIVED_FROM_TERMORDINAL",
+         re.compile(r"(?:source\\.)?termOrdinal\\s*===\\s*[12][\\s\\S]{0,180}?PART_(?:1|2|BOTH)")),
+        ("PHYSICAL_PART_FROM_TERM_CONDITIONAL",
+         re.compile(r"(?:termOrdinal|term\\.ordinal)[\\s\\S]{0,220}(?:PART_1|PART_2|PART_3|BOTH)")),
+        ("OLD_PHYSICAL_T1_T2_KEY",
+         re.compile(r"EDU-[A-Z0-9]+-G\\d{2}-T[12]-ED[A-Z0-9-]+", re.I)),
+        ("PHYSICAL_CREATE_RESOLVES_ACADEMIC_TERM",
+         re.compile(r"createTextbook[\\s\\S]{0,3000}?resolveTextbookCoordinates")),
     ]
 
     for path, (_, after) in files.items():
@@ -723,9 +722,6 @@ def collect_physical_part_issues(files: dict[str, tuple[str, str]]) -> list[str]
 
     workspace_patterns = [
         ("LEGACY_PHYSICAL_KEY", re.compile(r"EDU-[A-Z0-9]+-G\\d{2}-T[12]-ED[A-Z0-9-]+", re.I)),
-        ("LEGACY_PHYSICAL_PATH", re.compile(r"(?:/|\\\\)T(?:01|02|1|2)(?:/|\\\\)G\\d{2}(?:/|\\\\)[A-Z0-9_-]+", re.I)),
-        ("LEGACY_PHYSICAL_COORDINATE", re.compile(r"\\b(?:term|termKey)\\s*[:=]\\s*['\\\"]T(?:01|02|1|2)['\\\"]")),
-        ("LEGACY_PHYSICAL_MANIFEST", re.compile(r"['\\\"](?:term|termKey)['\\\"]\\s*:\\s*['\\\"]T(?:01|02|1|2)['\\\"]")),
     ]
 
     for path, text in workspace_files.items():
