@@ -21,12 +21,12 @@ export function TextbookBulkGradeModal({
   open,
   onClose,
   initialGradeKey,
-  initialTermKey,
+  initialPart,
 }: {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly initialGradeKey?: string | null | undefined;
-  readonly initialTermKey?: string | null | undefined;
+  readonly initialPart?: 'PART_1' | 'PART_2' | 'BOTH' | null | undefined;
 }): ReactNode {
   const { t } = useI18n();
   const { schoolIds } = useSession();
@@ -36,11 +36,7 @@ export function TextbookBulkGradeModal({
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const terms = useQuery({
-    queryKey: queryKeys.administration.catalogue('terms'),
-    queryFn: () => administrationApi.terms.list(),
-  });
-  const academicYears = useQuery({
+  const   const academicYears = useQuery({
     queryKey: queryKeys.administration.catalogue('academicYears'),
     queryFn: () => administrationApi.academicYears.list(),
   });
@@ -50,7 +46,7 @@ export function TextbookBulkGradeModal({
   });
 
   const [bulkGradeKey, setBulkGradeKey] = useState(initialGradeKey ?? '');
-  const [bulkTermKey, setBulkTermKey] = useState(initialTermKey ?? '');
+  const [bulkPart, setBulkPart] = useState(initialPart ?? '');
   const [bulkEdition, setBulkEdition] = useState(String(new Date().getFullYear()));
   const [selectedSchoolKey, setSelectedSchoolKey] = useState(schoolIds[0] ?? '');
   const [adoptBulk, setAdoptBulk] = useState(false);
@@ -63,7 +59,7 @@ export function TextbookBulkGradeModal({
     mutationFn: () =>
       textbookAdministrationApi.ensureForGrade({
         gradeKey: bulkGradeKey,
-        termKey: bulkTermKey,
+        termKey: bulkPart,
         edition: bulkEdition,
         adopt:
           adoptBulk && selectedSchoolKey && currentAcademicYearKey
@@ -136,19 +132,17 @@ export function TextbookBulkGradeModal({
           </label>
 
           <label className="space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('collection.terms')} *</span>
+            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')} *</span>
             <select
-              value={bulkTermKey}
-              onChange={(e) => setBulkTermKey(e.target.value)}
+              value={bulkPart}
+              onChange={(e) => setBulkPart(e.target.value)}
               className={selectClass}
               required
             >
               <option value="">—</option>
-              {(terms.data ?? []).map((term) => (
-                <option key={term.key} value={term.key}>
-                  {term.name}
-                </option>
-              ))}
+              {<option value="PART_1">الجزء الأول</option>
+              <option value="PART_2">الجزء الثاني</option>
+              <option value="BOTH">الجزآن</option>}
             </select>
           </label>
         </div>
@@ -215,7 +209,7 @@ export function TextbookBulkGradeModal({
             variant="primary"
             size="sm"
             type="submit"
-            disabled={ensure.isPending || !bulkGradeKey || !bulkTermKey}
+            disabled={ensure.isPending || !bulkGradeKey || !bulkPart}
           >
             {ensure.isPending ? t('common.working') : t('textbookAdmin.ensureForGrade')}
           </Button>
