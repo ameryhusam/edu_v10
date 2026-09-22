@@ -6,7 +6,7 @@ The content workspace keeps the physical book pages as first-class, immutable-is
 
 ## Canonical workspace
 
-workspace/T01/G04/SCI/ED2026/
+workspace/P1/G04/SCI/ED2026/ (or `workspace/P2/G04/SCI/ED2026/` for the second physical part). Academic term is resolved through `TextbookAdoption`, not Workspace identity.
 
 ```text
 ED2026/
