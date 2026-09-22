@@ -3,6 +3,7 @@
 PDF reading/rendering is deterministic preprocessing. Generative interpretation
 is delegated to the single ContentAIService.
 """
+import re
 from typing import List, Optional, Dict, Any
 
 
@@ -117,8 +118,6 @@ def extract_book_front_matter(
 
     AI never becomes the canonical source of truth.
     """
-
-    import re
 
     max_pages = min(max(1, max_pages), 10)
 
