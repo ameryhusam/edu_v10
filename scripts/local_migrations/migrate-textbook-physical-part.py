@@ -405,7 +405,7 @@ def transform(path: str, text: str) -> str:
         out = out.replace("const [, subject, grade, term, edition] = match;",
                           "const [, subject, grade, part, edition] = match;", 1)
         out = out.replace("!term || !edition", "!part || !edition", 1)
-        const return_old = """    return this.getWorkspaceDir({
+        return_old = """    return this.getWorkspaceDir({
       subject,
       grade: `G${grade}`,
       term: `T${term}`,
