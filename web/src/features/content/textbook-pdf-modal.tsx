@@ -86,7 +86,7 @@ export function TextbookPdfModal({
         if (!selectedFile) throw new Error('يرجى اختيار ملف PDF');
         const prepared = await textbookAdministrationApi.workspacePrepareUpload({
           file: selectedFile,
-          term: textbook.termKey,
+          part: textbook.part,
           grade: textbook.gradeKey,
           subject: textbook.subjectKey,
           edition: textbook.edition,
