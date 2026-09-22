@@ -244,7 +244,7 @@ export interface ExportableTextbook {
     key: string;
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     title: string;
     edition: string;
     description: string | null;
