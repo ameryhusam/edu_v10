@@ -101,9 +101,9 @@ Canonical identity:
 
 Example:
 
-    T01/G04/SCI/ED2026
+    P1/G04/SCI/ED2026
               ↓
-    EDU-SCI-G04-T1-ED2026
+    EDU-SCI-G04-P1-ED2026
 
 Academic year of school use is not part of printed-book identity.
 
@@ -485,8 +485,8 @@ A full workspace export is named <Textbook.key>.zip.
 
 Archive root equals the textbook key:
 
-EDU-SCI-G04-T1-ED2026.zip
-└── EDU-SCI-G04-T1-ED2026/
+EDU-SCI-G04-P1-ED2026.zip
+└── EDU-SCI-G04-P1-ED2026/
     ├── index.json
     ├── edu7-content-package.json
     ├── cover/
