@@ -799,12 +799,13 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
           return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
         }
         const query = z.object({
-          part: z.enum(['PART_1', 'PART_2']),
-          grade: z.string().min(1),
-          subject: z.string().min(1),
+          part: z.enum(['PART_1', 'PART_2']).optional(),
+          grade: z.string().min(1).optional(),
+          subject: z.string().min(1).optional(),
           edition: z.string().optional(),
           title: z.string().optional(),
           autoSegment: z.coerce.boolean().optional(),
+          confirmDetectedIdentity: z.coerce.boolean().optional(),
         }).safeParse(req.query);
         if (!query.success) {
           return Err(Errors.validation('request.invalid_input', 'Book coordinates are invalid.', {
@@ -814,15 +815,27 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         if (input.length === 0) {
           return Err(Errors.validation('content.empty_pdf', 'The uploaded PDF is empty.'));
         }
-        const result = await deps.workspaceImporter.prepareWorkspace({
-          part: query.data.part,
-          grade: query.data.grade,
-          subject: query.data.subject,
-          edition: query.data.edition,
-          title: query.data.title,
-          pdfBuffer: input,
-          autoSegment: query.data.autoSegment,
-        });
+        const hasDeclaredCoordinates = Boolean(query.data.part && query.data.grade && query.data.subject);
+        const result = hasDeclaredCoordinates
+          ? await deps.workspaceImporter.prepareBookImport({
+              pdfBuffer: input,
+              declared: {
+                part: query.data.part,
+                gradeKey: query.data.grade,
+                subjectKey: query.data.subject,
+                edition: query.data.edition,
+                title: query.data.title,
+              },
+              confirmDetectedIdentity: query.data.confirmDetectedIdentity === true,
+            })
+          : await deps.workspaceImporter.prepareBookImport({
+              pdfBuffer: input,
+              declared: {
+                edition: query.data.edition,
+                title: query.data.title,
+              },
+              confirmDetectedIdentity: query.data.confirmDetectedIdentity === true,
+            });
         return Ok(result);
       },
     }),
