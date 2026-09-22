@@ -151,7 +151,7 @@ function requireAdoptionAdmin(
 const createTextbookInput = z.object({
   subjectKey: z.string().min(1),
   gradeKey: z.string().min(1),
-  part: z.enum(['PART_1', 'PART_2', 'BOTH']),
+  part: z.enum(['PART_1', 'PART_2']),
   title: z.string().min(1).max(300),
   edition: z.string().min(1).max(40),
   description: z.string().max(4000).nullish(),
@@ -229,7 +229,7 @@ const textbookKeyInput = z.object({ textbookKey: z.string().min(1) });
 
 const ensureTextbooksInput = z.object({
   gradeKey: z.string().min(1).max(8),
-  part: z.enum(['PART_1', 'PART_2', 'BOTH']),
+  part: z.enum(['PART_1', 'PART_2']),
   edition: z.string().min(1).max(40),
   issuer: z.string().max(200).nullish(),
   publishYear: z.number().int().min(1900).max(2200).nullish(),
@@ -245,7 +245,7 @@ const textbookListInput = z.object({
   search: z.string().trim().min(1).max(120).optional(),
   subjectKey: z.string().min(1).max(24).optional(),
   gradeKey: z.string().min(1).max(8).optional(),
-  part: z.enum(['PART_1', 'PART_2', 'BOTH']).optional(),
+  part: z.enum(['PART_1', 'PART_2']).optional(),
   status: z.enum(PUBLICATION_STATES).optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
@@ -700,7 +700,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   );
 
   const uploadTextbookSourceInput = z.object({
-    part: z.enum(['PART_1', 'PART_2', 'BOTH']),
+    part: z.enum(['PART_1', 'PART_2']),
     grade: z.string().min(1),
     subject: z.string().min(1),
     edition: z.string().optional(),
@@ -799,7 +799,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
           return Err(Errors.internal('workspace.importer_unavailable', 'Workspace importer is not enabled.'));
         }
         const query = z.object({
-          part: z.enum(['PART_1', 'PART_2', 'BOTH']),
+          part: z.enum(['PART_1', 'PART_2']),
           grade: z.string().min(1),
           subject: z.string().min(1),
           edition: z.string().optional(),
@@ -914,7 +914,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
   });
 
   const workspacePrepareInput = z.object({
-    part: z.enum(['PART_1', 'PART_2', 'BOTH']),
+    part: z.enum(['PART_1', 'PART_2']),
     grade: z.string().min(1),
     subject: z.string().min(1),
     edition: z.string().optional(),
