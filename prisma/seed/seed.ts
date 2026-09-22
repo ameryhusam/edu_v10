@@ -127,11 +127,12 @@ async function main(): Promise<void> {
   const school = await prisma.school.findUniqueOrThrow({ where: { key: 'sch_demo' } });
 
   // ── Content: one textbook, one unit, one lesson, three chained concepts ──
+  const part = TERM === 1 ? 'PART_1' : 'PART_2';
   const tbKey = unwrap(
     textbookKey({
       subject: SUBJECT,
       grade: GRADE,
-      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
+      part,
       edition: EDITION,
     }),
   );
@@ -140,7 +141,7 @@ async function main(): Promise<void> {
     where: { key: tbKey },
     create: {
       key: tbKey,
-      part: TERM === 1 ? 'PART_1' : TERM === 2 ? 'PART_2' : 'BOTH',
+      part,
       gradeId: grade.id,
       subjectId: subject.id,
       edition: EDITION,
@@ -162,7 +163,7 @@ async function main(): Promise<void> {
         academicYearId: year.id,
       },
     },
-    create: { textbookId: textbook.id, schoolId: school.id, academicYearId: year.id },
+    create: { textbookId: textbook.id, schoolId: school.id, academicYearId: year.id, termId: term.id },
     update: {},
   });
 
