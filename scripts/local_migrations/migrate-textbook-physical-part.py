@@ -263,7 +263,7 @@ def transform(path: str, text: str) -> str:
 
         out = out.replace("""        termKey: input.termKey,
       },""", """      },""", 1)
-        out = out.replace("  const term = resolved.term!;\n", "")
+        out = out.replace("    const term = resolved.term!;\n", "")
 
         old_check = """    const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
       gradeName: grade.name,
