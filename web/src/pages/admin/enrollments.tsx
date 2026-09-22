@@ -51,7 +51,7 @@ export function EnrollmentsPage(): ReactNode {
   const schools = useQuery({ queryKey: queryKeys.administration.schools(), queryFn: () => schoolsApi.list() });
   const years = useQuery({ queryKey: queryKeys.administration.catalogue('academicYears'), queryFn: () => administrationApi.academicYears.list() });
   const terms = useQuery({
-    queryKey: ['administration', 'catalogue', 'terms', academicYearKey],
+    queryKey: queryKeys.administration.catalogue('terms', academicYearKey),
     queryFn: () => administrationApi.terms.list(academicYearKey || undefined),
     enabled: Boolean(academicYearKey),
   });
