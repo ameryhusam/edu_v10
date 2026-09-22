@@ -69,7 +69,7 @@ export interface TextbookExport {
   readonly key: string;
   readonly subjectKey: string;
   readonly gradeKey: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly title: string;
   readonly edition: string;
   readonly description: string | null;
