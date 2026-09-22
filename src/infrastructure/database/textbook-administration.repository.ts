@@ -373,6 +373,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         textbook: { select: { key: true, title: true, status: true } },
         school: { select: { key: true, name: true } },
         academicYear: { select: { key: true } },
+        term: { select: { key: true } },
       },
     });
 
@@ -407,6 +408,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         textbook: { select: { key: true, title: true, status: true } },
         school: { select: { key: true, name: true } },
         academicYear: { select: { key: true } },
+        term: { select: { key: true } },
       },
     });
     if (!row) return null;
@@ -439,6 +441,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         textbook: { select: { key: true, title: true, status: true } },
         school: { select: { key: true, name: true } },
         academicYear: { select: { key: true } },
+        term: { select: { key: true } },
       },
     });
     return {
@@ -448,6 +451,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       schoolKey: created.school.key,
       schoolName: created.school.name,
       academicYearKey: created.academicYear.key,
+      termKey: created.term.key,
       adoptedAt: created.adoptedAt,
     };
   }
