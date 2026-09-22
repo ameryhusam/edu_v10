@@ -213,10 +213,10 @@ def transform(path: str, text: str) -> str:
       },""", """      },""", 1)
         out = out.replace("  const term = resolved.term!;\n", "")
 
-        old_check = """  const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
-    gradeName: grade.name,
-    termName: term.name,
-  });"""
+        old_check = """    const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
+      gradeName: grade.name,
+      termName: term.name,
+    });"""
         if old_check not in out:
             stop(path + ": expected title placement check not found")
         out = out.replace(old_check, """  const placementCheck = checkTitleDoesNotRepeatPlacement(title, {
