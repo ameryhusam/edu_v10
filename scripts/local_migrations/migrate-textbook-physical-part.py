@@ -18,6 +18,7 @@ MODE = os.environ.get("MODE", "audit").strip().lower()
 BACKUPS = ROOT / ".local-migration-backups"
 
 TARGETS = [
+    "prisma/schema.prisma",
     "src/shared/kernel/identifiers.ts",
     "src/contexts/content/application/ports.ts",
     "src/contexts/content/application/authoring.service.ts",
@@ -140,6 +141,13 @@ def transform(path: str, text: str) -> str:
       title: string;
       edition: string;
 """, path)
+        const oldCreateCall = """    const resolved = await this.repo.resolveTextbookCoordinates({
+      subjectKey: input.subjectKey,
+      gradeKey: input.gradeKey,
+      termKey: input.termKey,
+    });"""
+        if oldCreateCall in out:
+            stop(path + ": createTextbook still requires academic term; direct physical contract must be rewritten explicitly")
         if re.search(r"term\.ordinal.*PART_|PART_.*term\.ordinal", out):
             stop(path + ": forbidden part/academic-term derivation found")
         out = out.replace("term: term.ordinal,", "part: input.part,")
@@ -292,6 +300,10 @@ def validate(files: dict[str, tuple[str, str]]) -> None:
         stop("A physical textbook key is still built from term")
     if re.search(r"EDU-[^\n]*-T[12]-ED", combined, re.I):
         stop("A T1/T2 physical-key compatibility path remains")
+    if re.search(r"createTextbook[\s\S]{0,2500}?input\.termKey", combined):
+        stop("createTextbook still consumes academic term as physical identity")
+    if re.search(r"createTextbook[\s\S]{0,2500}?resolveTextbookCoordinates", combined):
+        stop("physical createTextbook still resolves academic term")
     for path, (before, after) in files.items():
         guard_isbn(before, after, path)
 
