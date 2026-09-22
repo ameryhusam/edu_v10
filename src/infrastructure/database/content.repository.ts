@@ -162,7 +162,7 @@ export class PrismaContentRepository implements ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
     description?: string | null;
