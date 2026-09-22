@@ -22,10 +22,10 @@ edu_v10/
 ├── books_input/                         # temporary source inputs
 │   └── <uploaded-book>.pdf
 ├── workspace/                           # persisted preparation state
-│   └── T01/
+│   └── P1/
 │       └── G04/
 │           └── SCI/                     # exact Prisma Subject.key
-│               └── EDU-SCI-G04-T1-ED2026/
+│               └── EDU-SCI-G04-P1-ED2026/
 │                   ├── book-manifest.json
 │                   ├── book-source-manifest.json
 │                   ├── index.json
@@ -78,10 +78,10 @@ The AI never writes directly to the canonical database.
 
 Filesystem coordinates:
 
-1. `T01` = term coordinate.
+1. `P1` = physical textbook part coordinate.
 2. `G04` = grade coordinate.
 3. `SCI` = exact Prisma `Subject.key`.
-4. `EDU-SCI-G04-T1-ED2026` = exact `Textbook.key`.
+4. `EDU-SCI-G04-P1-ED2026` = exact `Textbook.key`.
 5. Lesson identity is carried by stable manifest fields and stable lesson slug/key, not by the source filename.
 
 The source filename is never canonical identity.
@@ -125,17 +125,17 @@ Examples:
 ```bash
 # one lesson
 PYTHONPATH=src python -m edu7_content.cli.main rebuild \
-  workspace/T01/G04/SCI/ED2026 \
+  workspace/P1/G04/SCI/ED2026 \
   --scope lesson --ref lesson-01-name --out /tmp/lesson.pdf
 
 # complete unit
 PYTHONPATH=src python -m edu7_content.cli.main rebuild \
-  workspace/T01/G04/SCI/ED2026 \
+  workspace/P1/G04/SCI/ED2026 \
   --scope unit --ref unit-01-name --out /tmp/unit.pdf
 
 # complete prepared content book
 PYTHONPATH=src python -m edu7_content.cli.main rebuild \
-  workspace/T01/G04/SCI/ED2026 \
+  workspace/P1/G04/SCI/ED2026 \
   --scope book --out /tmp/book-reconstructed.pdf
 ```
 
@@ -264,10 +264,12 @@ AI output is a proposal and must include confidence/evidence. It never directly 
 
 Before creating directories or resolving database identity, normalize:
 
-    T1/T01 → T01 filesystem term coordinate
+    PART_1 → P1 filesystem physical-part coordinate
+    PART_2 → P2 filesystem physical-part coordinate
+    BOTH → PB filesystem physical-part coordinate
     G4/G04 → G04 canonical grade coordinate
 
-The business textbook key continues to use T1, for example EDU-SCI-G04-T1-ED2026. Alias normalization must occur before uniqueness checks so G4 cannot create a second Grade row and T01 cannot create a second textbook identity.
+The business textbook key continues to use T1, for example EDU-SCI-G04-P1-ED2026. Alias normalization must occur before uniqueness checks so G4 cannot create a second Grade row and T01 cannot create a second textbook identity.
 
 ## 14. Storage and synchronization boundary
 
