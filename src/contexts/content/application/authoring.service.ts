@@ -134,7 +134,7 @@ export class ContentAuthoringService {
     input: {
       subjectKey: string;
       gradeKey: string;
-      part: 'PART_1' | 'PART_2' | 'BOTH';
+      part: 'PART_1' | 'PART_2';
       title: string;
       edition: string;
       description?: string | null;
