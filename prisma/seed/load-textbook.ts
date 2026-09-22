@@ -92,7 +92,13 @@ export interface TextbookSpec {
 }
 
 export function readTextbookSpec(file: string): TextbookSpec {
-  return JSON.parse(readFileSync(resolve(DATA_DIR, file), 'utf8')) as TextbookSpec;
+  const spec = JSON.parse(readFileSync(resolve(DATA_DIR, file), 'utf8')) as any;
+  if (!spec.part && spec.term) {
+    spec.part = spec.term === 1 || spec.term === '1' || spec.term === 'PART_1' || spec.term === 'P1'
+      ? 'PART_1'
+      : 'PART_2';
+  }
+  return spec as TextbookSpec;
 }
 
 export interface TextbookSeedContext {
