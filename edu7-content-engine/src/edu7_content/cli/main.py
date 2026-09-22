@@ -16,10 +16,10 @@ Usage examples:
   python -m edu7_content.cli.main prepare books_input/book1.pdf --model gemini
 
   # Analyze a lesson with Gemini:
-  python -m edu7_content.cli.main analyze workspace/T01/G07/MATH/<textbookKey>/unit_01_<slug>/lesson_01_<slug> --model gemini
+  python -m edu7_content.cli.main analyze workspace/P1/G07/MATH/<textbookKey>/unit_01_<slug>/lesson_01_<slug> --model gemini
 
   # Export workspace:
-  python -m edu7_content.cli.main export workspace/T01/G07/MATH/<textbookKey> --format all
+  python -m edu7_content.cli.main export workspace/P1/G07/MATH/<textbookKey> --format all
 """
 import sys
 import os
