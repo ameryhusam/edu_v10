@@ -147,6 +147,7 @@ describe('learner textbook entitlement', () => {
           totalPages: 180,
           subject: { key: 'MATH', name: 'الرياضيات' },
           grade: { key: 'G07', name: 'الصف السابع' },
+          term: { key: '2026-2027-T01', name: 'الفصل الأول' },
         },
       ],
     });
