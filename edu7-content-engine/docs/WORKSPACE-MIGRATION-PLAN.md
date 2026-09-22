@@ -132,15 +132,17 @@ Required commands:
 ```bash
 PYTHONPATH=src python -m edu7_content.cli.main prepare \
   books_input/<book>.pdf \
-  --subject SCI --grade G04 --term T01 --edition 2026 \
+  --subject SCI --grade G04 --part PART_1 --edition 2026 \
   --model gemini-3.6-flash --no-ollama
 ```
 
-Expected root:
+Expected root for a single physical part:
 
 ```
-workspace/T01/G04/SCI/ED2026/
+workspace/P1/G04/SCI/ED2026/
 ```
+
+For a combined source, `--part BOTH` is source-input mode only. The engine detects the boundary and emits `P1/...` and `P2/...`; it never emits a `PB` Workspace identity.
 
 Validation gates:
 
