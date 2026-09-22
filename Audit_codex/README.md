@@ -1,43 +1,70 @@
 # Audit_codex
 
-Guardrail for changes made by Codex, ChatGPT, or normal Git commits.
+هذه الأداة هي بوابة feedback قبل الاستمرار في تعديلات Codex/ChatGPT.
 
-## Purpose
+## التشغيل المعتاد
 
-Compare the latest two commits and produce a short report containing:
+من جذر المشروع:
 
-- old/new line counts per changed file
-- added/deleted line counts
-- files that are additions-only
-- likely deleted function signatures
-- likely added function signatures
-- a simple decision signal:
-  - `LOW_RISK_SIGNAL`: additions-only at line level
-  - `REVIEW_REQUIRED`: deletions exist or function signatures disappeared
-  - `NO_CHANGE`: no textual changes
+    cd ~/edu_v10
+    python Audit_codex/audit_commit_changes.py
 
-## Run from the repository root
+في الوضع الافتراضي لا يتم أخذ HEAD~1 بشكل أعمى.
 
-```bash
-python Audit_codex/audit_commit_changes.py
-```
+الأداة تبحث من HEAD إلى الخلف عن آخر commit غيّر ملفات المشروع خارج Audit_codex/report/، ثم تقارن ذلك الـcommit مع أول parent مباشر له.
 
-By default it compares `HEAD~1` with `HEAD`.
+لذلك إذا تم حفظ تقرير جديد في commit لاحق، فلن يصبح ذلك التقرير هو التغيير الجديد الذي يتم تدقيقه.
 
-To compare explicit commits:
+## ملف feedback
 
-```bash
-python Audit_codex/audit_commit_changes.py <old-commit> <new-commit>
-```
+يتم حفظ آخر تقرير في:
 
-## Important limitation
+    Audit_codex/report/latest_commit_feedback.txt
 
-This is a safety/monitoring guardrail, not a proof that the code is correct. It detects common TypeScript/JavaScript/Python function signatures, but a function can be renamed, moved, declared across multiple lines, or changed semantically without its signature disappearing.
+يتم استبدال الملف عند كل تشغيل، ويحتوي على:
 
-Recommended workflow:
+- commit الذي يمثل آخر تغيير فعلي في المشروع.
+- الـparent الذي تمت المقارنة معه.
+- عدد الأسطر القديمة والجديدة.
+- إجمالي + و -.
+- الملفات التي أضيفت أو حُذفت أو عُدلت.
+- الدوال التي يُحتمل أنها حُذفت.
+- الدوال التي يُحتمل أنها أضيفت.
+- DECISION SIGNAL.
+- تعليمات واضحة للنموذج حول ما إذا كان التقرير هو feedback المعتمد للتغيير الأخير.
 
-1. Let Codex/ChatGPT make the change.
-2. Commit the change.
-3. Run this audit.
-4. If a function deletion is reported, inspect the diff before continuing.
-5. Run the project's normal build/tests after the audit passes review.
+## قاعدة مهمة للنموذج
+
+عند التشغيل بدون معاملات، Audit_codex/report/latest_commit_feedback.txt هو feedback الخاص بآخر commit فعلي للمشروع، ويمكن استخدامه لاتخاذ قرار هل يجب الاستمرار أم التوقف للمراجعة.
+
+أما عند تمرير commitين يدوياً:
+
+    python Audit_codex/audit_commit_changes.py <old-commit> <new-commit>
+
+فإن التقرير يصنف نفسه HISTORICAL_ONLY، ومعناه أن هذه مقارنة تاريخية مطلوبة صراحة، ولا يجوز استخدامها كمصدر القرار الخاص بآخر تغيير في المشروع.
+
+## إشارات القرار
+
+- LOW_RISK_SIGNAL: لا توجد أسطر محذوفة على مستوى النص؛ هذا ليس إثباتاً لصحة التنفيذ.
+- REVIEW_REQUIRED: توجد عمليات حذف أو اختفاء محتمل لدوال؛ يجب فحص diff قبل متابعة التغيير التالي.
+- HISTORICAL_ONLY: مقارنة تاريخية؛ لا تستخدم لاتخاذ قرار بشأن آخر تغيير.
+- NO_CHANGE: لا توجد تغييرات نصية.
+
+## مثال workflow
+
+1. دع Codex/ChatGPT ينفذ التغيير.
+2. تأكد من إنشاء commit للتغيير.
+3. شغّل:
+
+    python Audit_codex/audit_commit_changes.py
+
+4. افتح:
+
+    Audit_codex/report/latest_commit_feedback.txt
+
+5. إذا ظهر REVIEW_REQUIRED، توقف وافحص diff والدوال المتأثرة قبل إعطاء النموذج مهمة جديدة.
+6. بعد قبول التغيير، شغّل build/tests المناسبة للمشروع.
+
+## ملاحظة
+
+الأداة Guardrail وليست إثباتاً للصحة. كشف حذف الدوال يعتمد حالياً على signatures بسيطة لـ TypeScript/JavaScript/Python، وقد تحتاج عمليات rename/move أو declarations متعددة الأسطر أو التغييرات الدلالية إلى مراجعة واختبارات إضافية.
