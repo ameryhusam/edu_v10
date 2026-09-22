@@ -13,7 +13,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from '../design-system/layout/app-shell';
-import { LoadingState } from '../design-system/patterns/data-states';
+import { ForbiddenState, LoadingState } from '../design-system/patterns/data-states';
 import { useSession } from '../shared/auth/session';
 import { useI18n } from '../shared/i18n/i18n';
 import { SignInPage } from '../pages/sign-in';
@@ -184,7 +184,7 @@ function RequireRole({
   const { user, hasRole } = useSession();
 
   if (learnerOnly && !user?.learnerKey) return <PlaceholderRoute area="student" />;
-  if (roles && !hasRole(...roles)) return <PlaceholderRoute area="forbidden" />;
+  if (roles && !hasRole(...roles)) return <ForbiddenState />;
 
   return <>{children}</>;
 }
