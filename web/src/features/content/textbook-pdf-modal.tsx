@@ -52,6 +52,7 @@ export function TextbookPdfModal({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [retireTarget, setRetireTarget] = useState<ResourceRecord | null>(null);
+  const [identityConfirmation, setIdentityConfirmation] = useState<any | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch current resources for this textbook
@@ -90,7 +91,14 @@ export function TextbookPdfModal({
           edition: textbook.edition,
           title: finalTitle,
           autoSegment: true,
+          confirmDetectedIdentity: false,
         });
+        if (prepared?.status === 'CONFIRM_REQUIRED') {
+          return { state: 'CONFIRM_REQUIRED', result: prepared };
+        }
+        if (prepared?.status === 'NEEDS_REVIEW') {
+          throw new Error('تعذر التحقق من هوية الكتاب. راجع بيانات الصف والمادة والجزء والطبعة قبل الاستيراد.');
+        }
         await textbookAdministrationApi.workspaceImport({
           workspaceDir: prepared.workspaceDir,
           dryRun: true,
@@ -124,6 +132,7 @@ export function TextbookPdfModal({
       }
     },
     onSuccess: async () => {
+      if (result?.state === 'CONFIRM_REQUIRED') return;
       setSuccessMsg(t('textbookAdmin.pdfSaveSuccess'));
       setErrorMsg(null);
       setPdfUrl('');
@@ -132,6 +141,13 @@ export function TextbookPdfModal({
       setSelectedFileName(null);
       setSelectedFileSize(null);
       await refetch();
+      if (result?.state === 'CONFIRM_REQUIRED') {
+        setIdentityConfirmation(result.result);
+        setErrorMsg(null);
+        setSuccessMsg(null);
+        return;
+      }
+      setIdentityConfirmation(null);
       await queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
       onSaved?.();
     },
@@ -211,6 +227,54 @@ export function TextbookPdfModal({
             <div className="flex items-center gap-2 rounded-xl border border-danger/30 bg-danger-subtle p-3 text-xs font-semibold text-danger">
               <AlertCircle className="size-4 shrink-0" />
               <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {identityConfirmation && (
+            <div className="space-y-3 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-sm">
+              <div className="font-semibold text-text">بيانات PDF مختلفة عن الكتاب المحدد</div>
+              <div className="text-xs text-text-muted">
+                تم التعرف على هوية مختلفة. لن يتم تعديل هوية الكتاب الحالية؛ سيُستخدم الكتاب المكتشف فقط بعد تأكيدك.
+              </div>
+              <div className="grid gap-2 text-xs">
+                {(identityConfirmation.conflicts ?? []).map((item: any) => (
+                  <div key={item.field} className="rounded-lg border border-border bg-surface p-2">
+                    <span className="font-semibold">{item.field}: </span>
+                    <span>{item.declared ?? '—'} → {item.detected ?? '—'}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="primary"
+                  onClick={async () => {
+                    if (!selectedFile || !textbook) return;
+                    const prepared = await textbookAdministrationApi.workspacePrepareUpload({
+                      file: selectedFile,
+                      part: textbook.part,
+                      grade: textbook.gradeKey,
+                      subject: textbook.subjectKey,
+                      edition: textbook.edition,
+                      title: pdfTitle.trim() || textbook.title,
+                      autoSegment: true,
+                      confirmDetectedIdentity: true,
+                    });
+                    if (prepared?.status !== 'PREPARED') throw new Error('تعذر تجهيز الكتاب بعد التأكيد.');
+                    await textbookAdministrationApi.workspaceImport({ workspaceDir: prepared.workspaceDir, dryRun: true, syncAssets: true });
+                    await textbookAdministrationApi.workspaceImport({ workspaceDir: prepared.workspaceDir, dryRun: false, syncAssets: true });
+                    setIdentityConfirmation(null);
+                    setSuccessMsg(t('textbookAdmin.pdfSaveSuccess'));
+                    await refetch();
+                    await queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
+                    onSaved?.();
+                  }}
+                >
+                  متابعة بالبيانات المكتشفة
+                </Button>
+                <Button variant="ghost" onClick={() => setIdentityConfirmation(null)}>
+                  إلغاء الاستيراد
+                </Button>
+              </div>
             </div>
           )}
 
