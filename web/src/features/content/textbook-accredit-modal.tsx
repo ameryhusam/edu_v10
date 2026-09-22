@@ -36,7 +36,6 @@ export function TextbookAccreditModal({
   const [selectedAcademicYearKey, setSelectedAcademicYearKey] = useState('');
   const [selectedTextbookKey, setSelectedTextbookKey] = useState(initialTextbookKey ?? '');
   const [selectedGradeKey, setSelectedGradeKey] = useState('');
-  const [selectedTermKey, setSelectedTermKey] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const schools = useQuery({
@@ -67,9 +66,6 @@ export function TextbookAccreditModal({
   });
 
   const terms = useQuery({
-    queryKey: queryKeys.administration.catalogue('terms'),
-    queryFn: () => administrationApi.terms.list(),
-  });
 
   const adoptMutation = useMutation({
     mutationFn: async () => {
@@ -85,7 +81,6 @@ export function TextbookAccreditModal({
           schoolKey: selectedSchoolKey,
           academicYearKey: selectedAcademicYearKey,
           gradeKey: selectedGradeKey,
-          termKey: selectedTermKey ? selectedTermKey : undefined,
         });
         return {
           message: t('textbookAdmin.accreditGradeSummary', {
