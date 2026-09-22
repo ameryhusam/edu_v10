@@ -1,5 +1,5 @@
 /**
- * Frontend architecture rules — the FE1–FE12 set.
+ * Frontend architecture rules — FE1–FE23.
  *
  * The backend's boundaries held because a script failed the build when they
  * were crossed, not because a document asked nicely. The frontend gets the
@@ -577,6 +577,95 @@ const RULES: readonly Rule[] = [
         problems.push('reads session or evaluates roles — role composition belongs in pages/ or features/');
       }
       return problems;
+    },
+  },
+
+  {
+    id: 'FE20',
+    description: 'education/ has explicit domain ownership: admin is forbidden and every file must belong to a declared education domain.',
+    applies: (p) => p.endsWith('.ts') || p.endsWith('.tsx'),
+    check: (p, _content) => {
+      if (!inDir(p, 'education')) return [];
+      const parts = p.split(sep);
+      if (parts[0] !== 'education') return [];
+      if (parts[1] === 'admin') {
+        return ['education/admin is forbidden — place the capability in features/ or the appropriate presentation domain'];
+      }
+      if (parts.length < 3) {
+        return ['education/ files must belong to a named domain directory; do not create catch-all files at education root'];
+      }
+      const domain = parts[1]!;
+      if (!UNMIGRATED_LEGACY_EDUCATION_DOMAINS.has(domain)) {
+        return [`education/${domain} is not a declared education domain`];
+      }
+      return [];
+    },
+  },
+
+  {
+    id: 'FE21',
+    description: 'Role-specific routes must have an explicit presentation guard.',
+    applies: (p) => p === join('app', 'router.tsx'),
+    check: (_p, content) => {
+      const problems: string[] = [];
+      if (!/function\s+RequireRole\s*\(/.test(content)) {
+        problems.push('router.tsx has no RequireRole presentation boundary');
+        return problems;
+      }
+
+      const protectedRoutes: ReadonlyArray<readonly [string, string]> = [
+        ['/teacher', 'TEACHER'],
+        ['/parent', 'PARENT'],
+        ['/author', 'CONTENT_AUTHOR'],
+        ['/admin', 'SYSTEM_ADMIN'],
+      ];
+      for (const [prefix, role] of protectedRoutes) {
+        const first = content.indexOf(`path="${prefix}"`);
+        if (first === -1) {
+          problems.push(`missing protected route family ${prefix}`);
+          continue;
+        }
+        const family = content.slice(Math.max(0, first - 80), first + 5000);
+        if (!family.includes('RequireRole')) {
+          problems.push(`${prefix} route family is not wrapped by RequireRole (${role})`);
+        }
+      }
+      if (!/learnerOnly/.test(content)) {
+        problems.push('learner routes have no learnerOnly presentation boundary');
+      }
+      return problems;
+    },
+  },
+
+  {
+    id: 'FE22',
+    description: 'Entity selection UI must use named records, never a text box for learner/material/database identifiers.',
+    applies: (p) => p.endsWith('.tsx'),
+    check: (_p, content) => {
+      const code = stripComments(content);
+      const problems: string[] = [];
+      const identifier = '(?:learnerKey|learnerId|studentId|studentKey|materialId|textbookId|subjectId|schoolId|gradeId|termId)';
+      if (new RegExp(`(?:id|name)\\s*[:=]\\s*['"]${identifier}['"]\\s*,?\\s*(?:\\n|.){0,180}?kind\\s*[:=]\\s*['"]text['"]`, 'i').test(code)) {
+        problems.push('uses a text field for a learner/material/entity identifier — render a named option list and keep the key internal');
+      }
+      if (new RegExp(`<(?:Input|input)[\\s\\S]{0,240}?(?:name|id)=['"]${identifier}['"]`, 'i').test(code)) {
+        problems.push('renders an identifier as a free-text input — use a named entity picker');
+      }
+      return problems;
+    },
+  },
+
+  {
+    id: 'FE23',
+    description: 'Learner profiles are created through the people/provisioning capability, not ad-hoc frontend records.',
+    applies: (p) => p.endsWith('.tsx'),
+    check: (p, content) => {
+      if (!(inDir(p, 'pages', 'admin') || inDir(p, 'features', 'auth'))) return [];
+      const code = stripCommentsAndStrings(content);
+      if (/createLearnerProfile|learner_profiles|LearnerProfile/.test(code)) {
+        return ['creates or reaches a learner profile directly — use the canonical people/provisioning API; profiles follow user creation'];
+      }
+      return [];
     },
   },
 
