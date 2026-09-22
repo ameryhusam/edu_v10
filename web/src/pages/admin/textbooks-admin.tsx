@@ -25,11 +25,6 @@ import {
 } from '../../features/administration/administration.api';
 import { queryKeys } from '../../shared/api/query-keys';
 
-function getAutoActiveTermOrdinal(): 1 | 2 {
-  const currentMonth = new Date().getMonth() + 1;
-  return currentMonth >= 2 && currentMonth <= 6 ? 2 : 1;
-}
-
 export function TextbooksAdminPage(): ReactNode {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -70,7 +65,7 @@ export function TextbooksAdminPage(): ReactNode {
 
   if (gradesQuery.isLoading || subjectsQuery.isLoading || textbooksQuery.isLoading) return <LoadingState />;
   if (gradesQuery.isError || subjectsQuery.isError || textbooksQuery.isError) {
-    return <ErrorState error={gradesQuery.error || termsQuery.error || subjectsQuery.error || textbooksQuery.error || new Error('Failed to load textbook administration data')} />;
+    return <ErrorState error={gradesQuery.error || subjectsQuery.error || textbooksQuery.error || new Error('Failed to load textbook administration data')} />;
   }
 
   const activePart = selectedPartOrdinal === 1 ? 'PART_1' : 'PART_2';
