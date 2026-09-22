@@ -8,9 +8,9 @@
 Collect:
 - subjectKey, for example SCI
 - gradeKey, for example G04
-- part, one of `PART_1`, `PART_2`, `BOTH`
+- part, one of `PART_1`, `PART_2`
 - printedEdition, for example ED2026
-- derived textbookKey, for example EDU-SCI-G04-T1-ED2026
+- derived textbookKey, for example EDU-SCI-G04-P1-ED2026
 - packageMode: FULL or PARTIAL
 - source SHA-256
 - academic-year adoption only when assigning the book to a school/year
@@ -153,21 +153,17 @@ ZIP
 
 Reject path traversal, duplicate entries, suspicious archive structures, excessive file counts/sizes and invalid manifests.
 
-## 9. T01/T1 and G04/G4
+## 9. P1/PART_1 and G04/G4
 
 Normalize before identity lookup.
 
-T1/T01 are term identity aliases where applicable; they are not Workspace part coordinates.
-P1 → PART_1, P2 → PART_2, PB → BOTH.
-G4 → G04 canonical grade
-G04 → G04 canonical grade
+P1 → PART_1, P2 → PART_2.
+T01/T02 are academic-term coordinates only and never textbook identity components.
+G4 → G04 canonical grade.
 
-Do not create:
-EDU-SCI-G4-T1-ED2026
-EDU-SCI-G04-T01-ED2026
-
-when the canonical identity is:
-EDU-SCI-G04-T1-ED2026
+Do not create aliases that differ only in grade/part spelling. Canonical examples are:
+EDU-SCI-G04-P1-ED2026
+EDU-SCI-G04-P2-ED2026.
 
 ## 10. What PostgreSQL stores
 
@@ -250,7 +246,8 @@ After validation:
 
     PART_1 → Workspace/P1/<grade>/<subject>/<edition>/
     PART_2 → Workspace/P2/<grade>/<subject>/<edition>/
-    BOTH/shared → Workspace/PB/<grade>/<subject>/<edition>/
+
+A combined source is split before Workspace emission. PB is not a Workspace package.
 
 The same printed page must not be assigned to both P1 and P2 unless the manifest explicitly declares shared content.
 
