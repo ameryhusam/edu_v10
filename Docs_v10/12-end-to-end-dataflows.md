@@ -643,11 +643,12 @@ A MIXED page is split into blocks; the whole page is never assumed to be one Que
 Before any path or database lookup:
 
     input grade G4/G04 → canonical G04
-    input term T1/T01  → canonical filesystem coordinate T01
+    input part P1/PART_1 → canonical PART_1
+    input part P2/PART_2 → canonical PART_2
 
-For textbook business identity the canonical term token remains T1, producing keys such as EDU-SCI-G04-T1-ED2026.
+Textbook identity never contains academic term. Canonical examples are EDU-SCI-G04-P1-ED2026 and EDU-SCI-G04-P2-ED2026.
 
-Normalization must happen before uniqueness checks so an import using G4 cannot create a second Grade row and an import using T01 cannot create a second textbook identity merely because the input spelling differs.
+Normalization must happen before uniqueness checks so an import using G4 cannot create a second Grade row or an alias spelling can create a second physical-part identity.
 
 ## 24. Page classification JSON contract
 
@@ -660,6 +661,8 @@ Minimum structure:
     {
       "schemaVersion": "1",
       "lessonKey": "...",
+      "textbookKey": "EDU-SCI-G07-P1-ED2026",
+      "part": "P1",
       "pages": [
         {
           "pageNumber": 1,
