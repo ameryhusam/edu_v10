@@ -4,6 +4,7 @@
 from __future__ import annotations
 import datetime as dt
 import difflib
+import json
 import hashlib
 import os
 import re
@@ -44,6 +45,7 @@ TARGETS = [
     "prisma/seed/load-textbook.ts",
     "prisma/seed/seed.ts",
     "prisma/seed/source-catalog.ts",
+    "prisma/seed/data/external/yemen-moe-textbook-sources.json",
     "scripts/seed-helpers.mjs",
     "scripts/convert-legacy-curriculum.mjs",
     "scripts/extract_textbook_toc.py",
@@ -156,6 +158,57 @@ def transform(path: str, text: str) -> str:
   }>;
 
   resolveTextbookCoordinates(input: {""")
+    elif path.endswith("source-catalog.ts"):
+        # Source catalogue identity is physical. It must carry an explicit part;
+        # academic Term.ordinal must never be converted into Textbook.part.
+        out = out.replace("  readonly termOrdinal: number;\n", "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';\n")
+        out = out.replace("""  const terms = await prisma.term.findMany({
+    where: { academicYear: { key: ctx.academicYearKey } },
+    select: { id: true, ordinal: true },
+  });
+
+""", "")
+        out = out.replace("  const termByOrdinal = new Map(terms.map((term) => [term.ordinal, term]));\n", "")
+        out = out.replace("    const term = termByOrdinal.get(source.termOrdinal);\n    if (!grade || !subject || !term) {",
+                          "    if (!grade || !subject) {")
+        old_part = """    const part =
+      source.termOrdinal === 1
+        ? 'PART_1'
+        : source.termOrdinal === 2
+          ? 'PART_2'
+          : 'BOTH';
+
+"""
+        out = out.replace(old_part, "")
+        out = out.replace("source.termOrdinal * 100 + base",
+                          "source.part === 'PART_1' ? 100 + base : source.part === 'PART_2' ? 200 + base : 300 + base")
+        if "source.termOrdinal" in out or "termByOrdinal" in out or "term.ordinal" in out:
+            stop(path + ": source catalogue still derives physical part from academic term")
+
+    elif path.endswith("yemen-moe-textbook-sources.json"):
+        try:
+            data = json.loads(out)
+        except json.JSONDecodeError as exc:
+            stop(path + ": invalid JSON: " + str(exc))
+        sources = data.get("TextbookSource")
+        if not isinstance(sources, list):
+            stop(path + ": TextbookSource array missing")
+        for item in sources:
+            if not isinstance(item, dict):
+                stop(path + ": invalid TextbookSource entry")
+            if "termOrdinal" not in item:
+                stop(path + ": TextbookSource entry missing termOrdinal")
+            ordinal = item.pop("termOrdinal")
+            if ordinal == 1:
+                item["part"] = "PART_1"
+            elif ordinal == 2:
+                item["part"] = "PART_2"
+            else:
+                item["part"] = "BOTH"
+        out = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+        if '"termOrdinal"' in out:
+            stop(path + ": physical source catalogue still contains termOrdinal")
+
     elif path.endswith("authoring.service.ts"):
         old_sig = """      subjectKey: string;
       gradeKey: string;
