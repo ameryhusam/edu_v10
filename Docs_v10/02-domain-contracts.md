@@ -24,11 +24,9 @@ Every business entity normally has:
 
 `Textbook` represents a printed book/edition.
 
-Identity is based on subject + grade + term + printed edition.
+Identity is based on subject + grade + physical part + printed edition.
 
-Academic year of use belongs to `TextbookAdoption`, not the physical textbook identity.
-
-The physical textbook identity is subject + grade + part + printed edition.
+Academic year and academic term of use belong to `TextbookAdoption`, not the physical textbook identity.
 
 ## Physical textbook identity and part semantics
 
@@ -38,13 +36,14 @@ Its physical identity is:
 
 `Subject + Grade + Part + PrintedEdition`
 
-`Part` has exactly three values:
+`Part` has exactly two canonical values:
 
-- `PART_1` — the physical source represents the first part.
-- `PART_2` — the physical source represents the second part.
-- `BOTH` — one physical source contains both parts.
+- `PART_1` — first physical part.
+- `PART_2` — second physical part.
 
-`Term` is not a direct foreign key of `Textbook`.
+A source PDF containing both parts is split during preparation before canonical Workspace/Node import; `BOTH` is not a canonical textbook value.
+
+`Term` is not a direct foreign key of `Textbook`. `TextbookAdoption.termId` records the school-year term in which the part is used.
 
 The academic term is a deployment/academic-context fact and is resolved later from
 the physical part and the TOC-derived logical content split.
@@ -53,19 +52,13 @@ The preparation engine must never infer `edition` from academic year or filename
 
 `edition`, `printingYear`, `publicationYear`, and academic year are different facts.
 
-A single PDF with both parts is still one physical `Textbook` with `part = BOTH`.
-The TOC must then determine the boundary between the logical first-part and
-second-part content.
+A single PDF with both parts is a source input only. The TOC/index and structural evidence determine the boundary, after which the engine emits independent P1 and P2 packages and canonical textbook identities.
 
 Therefore:
 
-`PART_1 → logical T1 content`
+`PART_1 → Workspace P1 → textbook P1 → adoption term 1`
 
-`PART_2 → logical T2 content`
-
-`BOTH → TOC boundary → logical T1 + logical T2 content`
-
-This does not create a separate physical textbook concept for "both".
+`PART_2 → Workspace P2 → textbook P2 → adoption term 2`
 
 
 Do not introduce a version/revision entity merely to model editorial improvement. A genuinely different printed edition is a new textbook identity.
