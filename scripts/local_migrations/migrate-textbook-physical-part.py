@@ -323,6 +323,7 @@ def transform(path: str, text: str) -> str:
 
     elif path.endswith("workspace-archive.service.ts"):
         out = out.replace("term: pkg.textbook.termKey,", "part: pkg.textbook.part,")
+        out = out.replace("pkg.textbook.termKey", "pkg.textbook.part")
         out = out.replace("term: Number(String(tb.termKey).replace(/\\D/g, '')),",
                           "part: tb.part,")
         if "tb.termKey" in out:
