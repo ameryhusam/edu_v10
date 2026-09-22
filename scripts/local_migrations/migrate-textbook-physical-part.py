@@ -22,6 +22,7 @@ TARGETS = [
     "src/shared/kernel/identifiers.ts",
     "src/contexts/content/application/ports.ts",
     "src/contexts/content/application/authoring.service.ts",
+    "src/contexts/content/domain/authoring.ts",
     "src/contexts/content/application/content-asset.service.ts",
     "src/contexts/content/application/content-engine.port.ts",
     "src/contexts/content/application/workspace.ports.ts",
@@ -141,17 +142,39 @@ def transform(path: str, text: str) -> str:
       title: string;
       edition: string;
 """, path)
-        const oldCreateCall = """    const resolved = await this.repo.resolveTextbookCoordinates({
+        old_create_call = """    const resolved = await this.repo.resolveTextbookCoordinates({
       subjectKey: input.subjectKey,
       gradeKey: input.gradeKey,
       termKey: input.termKey,
     });"""
-        if oldCreateCall in out:
-            stop(path + ": createTextbook still requires academic term; direct physical contract must be rewritten explicitly")
-        if re.search(r"term\.ordinal.*PART_|PART_.*term\.ordinal", out):
-            stop(path + ": forbidden part/academic-term derivation found")
+        if old_create_call in out:
+            stop(path + ": createTextbook still requires academic term; physical creation must be rewritten explicitly")
         out = out.replace("term: term.ordinal,", "part: input.part,")
         out = out.replace("term ordinal and", "physical part and")
+
+    elif path.endswith("domain/authoring.ts"):
+        old_sig = """export function checkTitleDoesNotRepeatPlacement(
+  title: string,
+  placement: { gradeName: string; termName: string },
+): Result<void> {"""
+        if old_sig not in out:
+            stop(path + ": expected title-placement signature not found")
+        out = out.replace(old_sig, """export function checkTitleDoesNotRepeatPlacement(
+  title: string,
+  placement: { gradeName: string; part: string },
+): Result<void> {""")
+        old_repeat = """  const repeated = [placement.gradeName, placement.termName].find(
+    (name) => name.trim().length > 0 && haystack.includes(name.trim()),
+  );"""
+        if old_repeat not in out:
+            stop(path + ": expected title-placement comparison not found")
+        out = out.replace(old_repeat, """  const repeated = [placement.gradeName, placement.part].find(
+    (name) => name.trim().length > 0 && haystack.includes(name.trim()),
+  );""")
+        out = out.replace(
+            "The grade and term are shown automatically — do not repeat them in the title.",
+            "The grade and physical part are shown automatically — do not repeat them in the title.",
+        )
 
     elif path.endswith("content-asset.service.ts"):
         out = one(out, "  readonly term: string;\n",
