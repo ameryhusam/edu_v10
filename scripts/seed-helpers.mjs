@@ -48,7 +48,7 @@ export async function createTextbook(key, edition) {
     const { subject_id, grade_id, term_id } = rows[0];
 
     await client.query(
-      `insert into textbooks (id, key, "termId", "gradeId", "subjectId", title, edition, status, "createdAt", "updatedAt")
+      `insert into textbooks (id, key, "part", "gradeId", "subjectId", title, edition, status, "createdAt", "updatedAt")
        values (gen_random_uuid(), $1, $2, $3, $4, $5, $6, 'DRAFT', now(), now())
        on conflict (key) do nothing`,
       [key, term_id, grade_id, subject_id, `Scenario ${edition}`, edition],
