@@ -8,7 +8,7 @@ Usage:
 
 Default mode is intentionally "latest project commit":
 - It ignores commits whose changes are only inside Audit_codex/report.
-- It audits the newest commit that changed project files outside Audit_codex/report.
+- It audits the newest commit that changed project files outside Audit_codex.
 - The comparison base is that commit's first parent.
 - Historical explicit comparisons are reported as historical and MUST NOT be
   treated as the decision source for the latest project change.
@@ -34,7 +34,7 @@ REPORT_FILE = REPORT_DIR / "latest_commit_feedback.txt"
 
 SOURCE_EXTENSIONS = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py"}
 IGNORED_PARTS = {"node_modules", ".git", "dist", "build", ".next", "coverage"}
-AUDIT_PREFIX = "Audit_codex/report/"
+AUDIT_PREFIX = "Audit_codex/"
 
 FUNCTION_PATTERNS = [
     re.compile(
@@ -99,7 +99,7 @@ def commit_changed_paths(commit: str) -> list[str]:
 
 def find_latest_project_commit(start: str = "HEAD") -> tuple[str, str]:
     """
-    Find the newest commit that changed something outside Audit_codex/report.
+    Find the newest commit that changed something outside Audit_codex.
 
     Returns (commit_sha, reason). The first parent of that commit is the
     authoritative comparison base.
