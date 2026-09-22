@@ -165,6 +165,30 @@ function PlaceholderRoute({ area }: { area: string }): ReactNode {
   );
 }
 
+/**
+ * Presentation boundary for role-specific surfaces.
+ *
+ * This does not authorize anything; the backend remains the security boundary.
+ * It prevents a signed-in user from navigating into another role's screen by
+ * URL and keeps the route contract aligned with the role-specific navigation.
+ */
+function RequireRole({
+  roles,
+  learnerOnly = false,
+  children,
+}: {
+  readonly roles?: readonly import('../shared/types/roles').RoleName[];
+  readonly learnerOnly?: boolean;
+  readonly children: ReactNode;
+}): ReactNode {
+  const { user, hasRole } = useSession();
+
+  if (learnerOnly && !user?.learnerKey) return <PlaceholderRoute area="student" />;
+  if (roles && !hasRole(...roles)) return <PlaceholderRoute area="forbidden" />;
+
+  return <>{children}</>;
+}
+
 export function AppRouter(): ReactNode {
   return (
     <BrowserRouter>
@@ -178,45 +202,45 @@ export function AppRouter(): ReactNode {
               <AppShell>
                 <Routes>
                   <Route path="/" element={<RoleLanding />} />
-                  <Route path="/path" element={<LearningPath />} />
-                  <Route path="/lesson" element={<LessonView />} />
-                  <Route path="/junior" element={<JuniorDashboard />} />
-                  <Route path="/review" element={<Review />} />
-                  <Route path="/diagnostic" element={<Diagnostic />} />
-                  <Route path="/exams" element={<Exams />} />
-                  <Route path="/progress" element={<Progress />} />
-                  <Route path="/subjects" element={<Subjects />} />
+                  <Route path="/path" element={<RequireRole learnerOnly><LearningPath /></RequireRole>} />
+                  <Route path="/lesson" element={<RequireRole learnerOnly><LessonView /></RequireRole>} />
+                  <Route path="/junior" element={<RequireRole learnerOnly><JuniorDashboard /></RequireRole>} />
+                  <Route path="/review" element={<RequireRole learnerOnly><Review /></RequireRole>} />
+                  <Route path="/diagnostic" element={<RequireRole learnerOnly><Diagnostic /></RequireRole>} />
+                  <Route path="/exams" element={<RequireRole learnerOnly><Exams /></RequireRole>} />
+                  <Route path="/progress" element={<RequireRole learnerOnly><Progress /></RequireRole>} />
+                  <Route path="/subjects" element={<RequireRole learnerOnly><Subjects /></RequireRole>} />
 
-                  <Route path="/teacher" element={<TeacherHome />} />
-                  <Route path="/teacher/classes" element={<PlaceholderRoute area="teacher" />} />
-                  <Route path="/teacher/assignments" element={<TeacherAssignments />} />
-                  <Route path="/teacher/results" element={<TeacherResults />} />
-                  <Route path="/teacher/interventions" element={<TeacherInterventions />} />
-                  <Route path="/teacher/grading" element={<ManualGrading />} />
-                  <Route path="/teacher/content" element={<TeacherMaterials />} />
-                  <Route path="/teacher/reports" element={<PlaceholderRoute area="teacher" />} />
+                  <Route path="/teacher" element={<RequireRole roles={['TEACHER']}><TeacherHome /></RequireRole>} />
+                  <Route path="/teacher/classes" element={<RequireRole roles={['TEACHER']}><PlaceholderRoute area="teacher" /></RequireRole>} />
+                  <Route path="/teacher/assignments" element={<RequireRole roles={['TEACHER']}><TeacherAssignments /></RequireRole>} />
+                  <Route path="/teacher/results" element={<RequireRole roles={['TEACHER']}><TeacherResults /></RequireRole>} />
+                  <Route path="/teacher/interventions" element={<RequireRole roles={['TEACHER']}><TeacherInterventions /></RequireRole>} />
+                  <Route path="/teacher/grading" element={<RequireRole roles={['TEACHER']}><ManualGrading /></RequireRole>} />
+                  <Route path="/teacher/content" element={<RequireRole roles={['TEACHER']}><TeacherMaterials /></RequireRole>} />
+                  <Route path="/teacher/reports" element={<RequireRole roles={['TEACHER']}><PlaceholderRoute area="teacher" /></RequireRole>} />
                   <Route path="/teacher/*" element={<PlaceholderRoute area="teacher" />} />
-                  <Route path="/parent" element={<ParentHome />} />
-                  <Route path="/parent/learning" element={<PlaceholderRoute area="parent" />} />
-                  <Route path="/parent/progress" element={<PlaceholderRoute area="parent" />} />
-                  <Route path="/parent/work" element={<ParentWork />} />
-                  <Route path="/parent/support" element={<PlaceholderRoute area="parent" />} />
+                  <Route path="/parent" element={<RequireRole roles={['PARENT']}><ParentHome /></RequireRole>} />
+                  <Route path="/parent/learning" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
+                  <Route path="/parent/progress" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
+                  <Route path="/parent/work" element={<RequireRole roles={['PARENT']}><ParentWork /></RequireRole>} />
+                  <Route path="/parent/support" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
                   <Route path="/parent/*" element={<PlaceholderRoute area="parent" />} />
-                  <Route path="/author" element={<Navigate to="/author/questions" replace />} />
-                  <Route path="/author/textbooks" element={<PlaceholderRoute area="author" />} />
-                  <Route path="/author/questions" element={<AuthorQuestionBank />} />
+                  <Route path="/author" element={<RequireRole roles={['CONTENT_AUTHOR']}><Navigate to="/author/questions" replace /></RequireRole>} />
+                  <Route path="/author/textbooks" element={<RequireRole roles={['CONTENT_AUTHOR']}><PlaceholderRoute area="author" /></RequireRole>} />
+                  <Route path="/author/questions" element={<RequireRole roles={['CONTENT_AUTHOR']}><AuthorQuestionBank /></RequireRole>} />
                   <Route path="/author/*" element={<PlaceholderRoute area="author" />} />
-                  <Route path="/admin" element={<AdminOverview />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/structure" element={<AcademicStructure />} />
-                  <Route path="/admin/schools" element={<Schools />} />
-                  <Route path="/admin/schools/:schoolKey" element={<SchoolDetail />} />
-                  <Route path="/admin/enrollments" element={<Enrollments />} />
-                  <Route path="/admin/teachers" element={<Teachers />} />
-                  <Route path="/admin/textbooks" element={<TextbooksAdmin />} />
-                  <Route path="/admin/content" element={<ContentSetup />} />
-                  <Route path="/admin/import" element={<ProjectImport />} />
-                  <Route path="/admin/settings" element={<Settings />} />
+                  <Route path="/admin" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AdminOverview /></RequireRole>} />
+                  <Route path="/admin/users" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AdminUsers /></RequireRole>} />
+                  <Route path="/admin/structure" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AcademicStructure /></RequireRole>} />
+                  <Route path="/admin/schools" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><Schools /></RequireRole>} />
+                  <Route path="/admin/schools/:schoolKey" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><SchoolDetail /></RequireRole>} />
+                  <Route path="/admin/enrollments" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><Enrollments /></RequireRole>} />
+                  <Route path="/admin/teachers" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><Teachers /></RequireRole>} />
+                  <Route path="/admin/textbooks" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><TextbooksAdmin /></RequireRole>} />
+                  <Route path="/admin/content" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN', 'CONTENT_AUTHOR']}><ContentSetup /></RequireRole>} />
+                  <Route path="/admin/import" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><ProjectImport /></RequireRole>} />
+                  <Route path="/admin/settings" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><Settings /></RequireRole>} />
                   <Route path="/admin/*" element={<PlaceholderRoute area="admin" />} />
 
                   <Route path="*" element={<Navigate to="/" replace />} />
