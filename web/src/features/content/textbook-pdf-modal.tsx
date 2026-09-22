@@ -131,7 +131,7 @@ export function TextbookPdfModal({
         });
       }
     },
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       if (result?.state === 'CONFIRM_REQUIRED') return;
       setSuccessMsg(t('textbookAdmin.pdfSaveSuccess'));
       setErrorMsg(null);
