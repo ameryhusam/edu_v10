@@ -25,7 +25,7 @@ def test_combined_pdf_uses_structural_part_two_marker_after_front_matter():
     assert result["confidence"] == "HIGH"
     assert result["boundaryPdfPage"] == 16
     assert result["part1"] == {"startPdfPage": 1, "endPdfPage": 15}
-    assert result["part2"] == {"startPdfPage": 12, "endPdfPage": len(texts)}
+    assert result["part2"] == {"startPdfPage": 16, "endPdfPage": len(texts)}
 
 
 def test_combined_pdf_does_not_split_on_part_two_toc_mention_only():
