@@ -269,7 +269,7 @@ The production gate remains incomplete until per-textbook operation locking/idem
 ### Phase B — canonical identifier normalization
 
 1. Normalize G4/G04 to G04 before lookup.
-2. Normalize T1/T01 to the canonical filesystem term coordinate T01.
+2. Normalize physical-part aliases P1/PART_1 and P2/PART_2 before identity lookup; T01/T02 remain academic-term coordinates only.
 3. Keep T1 as the textbook-key term token, avoiding a global rename.
 4. Resolve normalized identifiers against existing rows before creating anything.
 
