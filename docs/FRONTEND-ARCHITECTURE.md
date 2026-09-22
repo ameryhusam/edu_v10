@@ -806,7 +806,7 @@ Built in `web/`, a sibling of `src/`, with its own `package.json`.
 | Platform | `shared/platform/storage.ts` | The only `localStorage` access (FE4) |
 | Theme | `shared/theme/theme.tsx` | `data-theme`, OS default, explicit override persists |
 | Pages | `pages/sign-in.tsx`, `pages/placeholder.tsx` | Sign-in is the only real screen |
-| Guard | `scripts/check-frontend-architecture.ts` | FE1–FE12 |
+| Guard | `scripts/check-frontend-architecture.ts` | FE1–FE23 |
 
 **Answers to the §14 gates, as implemented:**
 
@@ -824,8 +824,7 @@ Built in `web/`, a sibling of `src/`, with its own `package.json`.
 ### 17.2 Verification performed
 
 - `typecheck` clean; production build succeeds (351 kB JS / 111 kB gzip).
-- **FE1–FE12 all pass, and each was individually proven to fail** on a planted
-  violation. A rule that has never failed proves nothing.
+- **FE1–FE23 are the enforced frontend boundary set.** The newer rules explicitly forbid `education/admin`, require declared education-domain ownership, require role-scoped presentation routes, forbid free-text learner/entity identifiers, and require learner profiles to flow through provisioning. A rule that has never failed proves nothing.
 - 23 focused tests. The single-flight refresh test is mutation-proven:
   removing the guard yields four concurrent refreshes instead of one.
 - **Live against the running API through the Vite proxy:** sign-in returns real
