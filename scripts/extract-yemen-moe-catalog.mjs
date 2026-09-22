@@ -78,10 +78,10 @@ function subjectFor(title) {
   return null;
 }
 
-function termFor(title) {
-  if (/الجزء\s+الثاني|part2|_2_|الثاني/i.test(title)) return { termOrdinal: 2, coverage: 'TERM' };
-  if (/الجزء\s+الأول|الجزء\s+الاول|part1|_1_|الأول|الاول/i.test(title)) return { termOrdinal: 1, coverage: 'TERM' };
-  return { termOrdinal: 1, coverage: 'FULL_YEAR' };
+function partFor(title) {
+  if (/الجزء\s+الثاني|part2|_2_|الثاني/i.test(title)) return { part: 'PART_2', coverage: 'TERM' };
+  if (/الجزء\s+الأول|الجزء\s+الاول|part1|_1_|الأول|الاول/i.test(title)) return { part: 'PART_1', coverage: 'TERM' };
+  return { part: 'PART_1', coverage: 'FULL_YEAR' };
 }
 
 function roleFor(title) {
@@ -103,19 +103,19 @@ function parsePage(markup, gradeKey, landingPage) {
     const unique = `${resourceTitle}::${downloadUrl}`;
     if (seen.has(unique)) return;
     seen.add(unique);
-    const { termOrdinal, coverage } = termFor(resourceTitle);
+    const { part, coverage } = partFor(resourceTitle);
     const role = roleFor(resourceTitle);
     rows.push({
       gradeKey,
       subjectKey: mapped.subjectKey,
-      termOrdinal,
+      part,
       coverage,
       role,
       title: mapped.title,
       resourceTitle: resourceTitle.replace(/\s+كتاب$/u, ' — كتاب'),
       landingPage,
       downloadUrl,
-      sourceRef: `MOE-YE-${gradeKey}-${mapped.subjectKey}-T${String(termOrdinal).padStart(2, '0')}-${role}-${rows.length + 1}`,
+      sourceRef: `MOE-YE-${gradeKey}-${mapped.subjectKey}-${part === 'PART_1' ? 'P01' : 'P02'}-${role}-${rows.length + 1}`,
     });
   }
 
@@ -173,8 +173,8 @@ async function main() {
       { kind: 'moe-fallback', url: MOE_INDEX, label: 'الإدارة العامة للتعليم الإلكتروني — المناهج اليمنية' },
     ],
     TextbookSource: sources.sort((a, b) =>
-      `${a.gradeKey}:${a.subjectKey}:${a.termOrdinal}:${a.resourceTitle}`.localeCompare(
-        `${b.gradeKey}:${b.subjectKey}:${b.termOrdinal}:${b.resourceTitle}`,
+      `${a.gradeKey}:${a.subjectKey}:${a.part}:${a.resourceTitle}`.localeCompare(
+        `${b.gradeKey}:${b.subjectKey}:${b.part}:${b.resourceTitle}`,
         'en',
       ),
     ),
@@ -202,4 +202,4 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   });
 }
 
-export { parsePage, subjectFor, termFor, roleFor };
+export { parsePage, subjectFor, partFor, roleFor };
