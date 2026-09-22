@@ -46,7 +46,7 @@ export function TextbookBulkGradeModal({
   });
 
   const [bulkGradeKey, setBulkGradeKey] = useState(initialGradeKey ?? '');
-  const [bulkPart, setBulkPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>(initialPart ?? '');
+  const [bulkPart, setBulkPart] = useState<'PART_1' | 'PART_2' | ''>(initialPart ?? '');
   const [bulkEdition, setBulkEdition] = useState(String(new Date().getFullYear()));
   const [selectedSchoolKey, setSelectedSchoolKey] = useState(schoolIds[0] ?? '');
   const [adoptBulk, setAdoptBulk] = useState(false);
