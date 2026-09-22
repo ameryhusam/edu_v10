@@ -60,6 +60,16 @@ def main():
     )
     sub = parser.add_subparsers(dest="command")
 
+    # ── identify ─────────────────────────────────────────────────────────────
+    p_ident = sub.add_parser("identify", help="Analyze a PDF and propose canonical textbook identity")
+    p_ident.add_argument("pdf_path", help="Path to PDF")
+    p_ident.add_argument("--out", required=True, help="Output JSON proposal path")
+    p_ident.add_argument("--analysis-pages", type=int, default=15,
+                         help="Initial PDF analysis window (default: 15)")
+    p_ident.add_argument("--dpi", type=int, default=150)
+    p_ident.add_argument("--model", default=None)
+    p_ident.add_argument("--no-gemini", action="store_true")
+
     # ── prepare ──────────────────────────────────────────────────────────────
     p_prep = sub.add_parser("prepare", help="Ingest PDF: detect TOC, map pages, segment lessons")
     p_prep.add_argument("pdf_path", nargs="?", default=None,
@@ -137,6 +147,9 @@ def main():
     if args.command == "info":
         _cmd_info()
 
+    elif args.command == "identify":
+        _cmd_identify(args)
+
     elif args.command == "prepare":
         _cmd_prepare(args)
 
@@ -160,6 +173,56 @@ def main():
 # ─────────────────────────────────────────────────────────────────────────────
 #  Command implementations
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _cmd_identify(args):
+    """Analyze source identity only; never creates Workspace or database state."""
+    target_pdf = _resolve_pdf(args)
+    output = Path(args.out).expanduser().resolve()
+    reader = PdfReader(str(target_pdf))
+    analysis_pages = max(1, min(int(args.analysis_pages), reader.page_count))
+
+    front_matter = extract_book_front_matter(
+        reader,
+        model_name=getattr(args, "model", None),
+        use_gemini=not getattr(args, "no_gemini", False),
+        max_pages=analysis_pages,
+        dpi=getattr(args, "dpi", 150),
+    )
+    identity = dict(front_matter.get("identity") or {})
+    evidence = list(front_matter.get("evidence") or [])
+    conflicts = list(front_matter.get("conflicts") or [])
+
+    # Deterministic physical-part evidence is authoritative for BOTH detection.
+    # AI remains a proposal for semantic identity facts.
+    try:
+        boundary = detect_combined_part_boundary(reader, analysis_pages=analysis_pages)
+    except Exception as err:
+        boundary = {"status": "REVIEW", "confidence": 0.0, "error": str(err)}
+    if boundary.get("status") == "DETECTED":
+        identity["part"] = "BOTH"
+        evidence.append({"type": "combined_part_boundary", "value": boundary})
+    elif identity.get("part") == "BOTH":
+        conflicts.append("AI proposed BOTH but deterministic boundary evidence did not establish a combined source.")
+        identity["part"] = None
+
+    result = {
+        "schemaVersion": "1.0",
+        "status": "NEEDS_REVIEW" if front_matter.get("needsReview") or conflicts else "PROPOSED",
+        "source": {
+            "fileName": target_pdf.name,
+            "sha256": compute_sha256(target_pdf),
+            "pageCount": reader.page_count,
+            "analysisPages": analysis_pages,
+        },
+        "identity": identity,
+        "evidence": evidence,
+        "conflicts": conflicts,
+        "toc": front_matter.get("toc") or {},
+    }
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps(result, ensure_ascii=False))
+
 
 def _cmd_ai_task(args):
     import json
