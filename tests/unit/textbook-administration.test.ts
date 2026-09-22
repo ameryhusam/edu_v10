@@ -108,11 +108,16 @@ class FakeRepo implements TextbookAdministrationRepository {
   async textbookExists(): Promise<boolean> {
     return this.exists.textbook;
   }
-  textbookCoordinates = {
+  textbookCoordinates: {
+    key: string;
+    title: string;
+    gradeKey: string;
+    part: 'PART_1' | 'PART_2';
+  } = {
     key: TRIPLE.textbookKey,
     title: 'Maths G7',
     gradeKey: 'G07',
-    part: 'PART_1' as const,
+    part: 'PART_1',
   };
   async textbookForAdoption(): Promise<typeof this.textbookCoordinates | null> {
     return this.exists.textbook ? this.textbookCoordinates : null;
