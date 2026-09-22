@@ -337,7 +337,7 @@ export class WorkspaceImporterService {
       autoSegment: true,
       workspaceRootOverride: workspaceRoot,
     });
-    return { status: 'PREPARED' as const, proposal, conflicts, textbooks, prepared };
+    return { status: 'PREPARED' as const, proposal, conflicts, textbooks, ...prepared };
   }
 
   /**
