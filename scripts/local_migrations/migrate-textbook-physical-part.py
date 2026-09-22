@@ -372,25 +372,13 @@ def transform(path: str, text: str) -> str:
     };"""
         if old_where not in out:
             stop(path + ": textbook list where-clause changed; refusing unsafe semantic rewrite")
-        new_where = """    const academicTerm = query.termKey
-      ? await this.db.term.findUnique({ where: { key: query.termKey }, select: { ordinal: true } })
-      : null;
-    if (query.termKey && !academicTerm) return { total: 0, rows: [] };
-    const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> = academicTerm
-      ? academicTerm.ordinal === 1 ? ['PART_1', 'BOTH']
-        : academicTerm.ordinal === 2 ? ['PART_2', 'BOTH']
-        : ['BOTH']
-      : ['PART_1', 'PART_2', 'BOTH'];
-
-    const where = {
+        new_where = """    const where = {
       ...(search ? { title: { contains: search, mode: 'insensitive' as const } } : {}),
       ...(query.subjectKey ? { subject: { key: query.subjectKey } } : {}),
       ...(query.gradeKey ? { grade: { key: query.gradeKey } } : {}),
-      part: { in: physicalParts },
+      ...(query.part ? { part: query.part } : {}),
       ...(query.status ? { status: query.status as never } : {}),
     };"""
-        new_where = re.sub(r'(?s)    const academicTerm = query\\.termKey.*?    const where = \\{', '    const where = {', new_where)
-        new_where = new_where.replace("      part: { in: physicalParts },", "      ...(query.part ? { part: query.part } : {}),")
         out=out.replace(old_where,new_where)
         out=out.replace("        term: { select: { key: true, name: true } },", "        part: true,")
         out=out.replace("        termKey: row.term.key,\n        termName: row.term.name,", "        part: String(row.part),")
@@ -415,27 +403,17 @@ def transform(path: str, text: str) -> str:
         new_method="""  async findTextbookByCoordinates(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     edition: string;
   }) {
-    const academicTerm = await this.db.term.findUnique({
-      where: { key: input.termKey },
-      select: { ordinal: true },
-    });
-    if (!academicTerm) return null;
-    const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> =
-      academicTerm.ordinal === 1 ? ['PART_1', 'BOTH'] :
-      academicTerm.ordinal === 2 ? ['PART_2', 'BOTH'] :
-      ['BOTH'];
     return this.db.textbook.findFirst({
       where: {
         subject: { key: input.subjectKey },
         grade: { key: input.gradeKey },
-        part: { in: physicalParts },
+        part: input.part,
         edition: input.edition,
       },
       select: { key: true, title: true, edition: true },
-      orderBy: { part: 'asc' },
     });
   }"""
         if old_method not in out: stop(path + ": academic coordinate lookup anchor not found")
@@ -457,19 +435,10 @@ def transform(path: str, text: str) -> str:
   }"""
         new_grade="""  async textbooksForGrade(input: {
     gradeKey: string;
-    termKey?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
   }): Promise<TextbookCoordinateMatch[]> {
-    const academicTerm = input.termKey
-      ? await this.db.term.findUnique({ where: { key: input.termKey }, select: { ordinal: true } })
-      : null;
-    if (input.termKey && !academicTerm) return [];
-    const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> = academicTerm
-      ? academicTerm.ordinal === 1 ? ['PART_1', 'BOTH']
-        : academicTerm.ordinal === 2 ? ['PART_2', 'BOTH']
-        : ['BOTH']
-      : ['PART_1', 'PART_2', 'BOTH'];
     return this.db.textbook.findMany({
-      where: { grade: { key: input.gradeKey }, part: { in: physicalParts } },
+      where: { grade: { key: input.gradeKey }, ...(input.part ? { part: input.part } : {}) },
       select: { key: true, title: true, edition: true },
       orderBy: { key: 'asc' },
     });
