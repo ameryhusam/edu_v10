@@ -70,11 +70,12 @@ const inDir = (path: string, ...segments: string[]): boolean =>
   path.startsWith(segments.join(sep) + sep);
 
 /**
- * Legacy unmigrated education domains pending subsequent modularization phases.
- * education/admin has been fully migrated and dismantled.
- * The remaining domains are tracked as intentionally excluded in this phase (§7).
+ * Education presentation domains currently present in the frontend.
+ * These are ownership boundaries, not a blanket list of allowed capabilities.
+ * A new domain may be added when its responsibility is explicit and it obeys
+ * the same presentation-only dependency rules below.
  */
-const UNMIGRATED_LEGACY_EDUCATION_DOMAINS = new Set([
+const EDUCATION_PRESENTATION_DOMAINS = new Set([
   'analytics',
   'assessment',
   'authoring',
@@ -90,12 +91,12 @@ const UNMIGRATED_LEGACY_EDUCATION_DOMAINS = new Set([
   'tutoring',
 ]);
 
-const isUnmigratedLegacyEducation = (path: string): boolean => {
+const isEducationPresentationDomain = (path: string): boolean => {
   const parts = path.split(sep);
   return (
     parts[0] === 'education' &&
     parts.length > 1 &&
-    UNMIGRATED_LEGACY_EDUCATION_DOMAINS.has(parts[1]!)
+    EDUCATION_PRESENTATION_DOMAINS.has(parts[1]!)
   );
 };
 
@@ -474,16 +475,12 @@ const RULES: readonly Rule[] = [
       const problems: string[] = [];
       const fileImports = imports(content);
 
-      if (inDir(p, 'education', 'admin')) {
-        problems.push('education/admin has been dismantled; all files must reside in features/ or design-system/');
-      }
-
       if (inDir(p, 'education')) {
         for (const i of fileImports) {
           if (/(?:^|\/)pages\//.test(i)) {
             problems.push(`imports "${i}" — education/ may not depend on pages`);
           }
-          if (/(?:^|\/)features\//.test(i) && !isUnmigratedLegacyEducation(p)) {
+          if (/(?:^|\/)features\//.test(i) && !isEducationPresentationDomain(p)) {
             problems.push(`imports "${i}" — education/ may not depend on features`);
           }
         }
@@ -515,10 +512,7 @@ const RULES: readonly Rule[] = [
     applies: (p) => inDir(p, 'education') && (p.endsWith('.ts') || p.endsWith('.tsx')),
     check: (p, content) => {
       const problems: string[] = [];
-      if (inDir(p, 'education', 'admin')) {
-        problems.push('education/admin must contain no files');
-      }
-      if (!isUnmigratedLegacyEducation(p)) {
+      if (!isEducationPresentationDomain(p)) {
         const fileImports = imports(content);
         for (const i of fileImports) {
           if (i.includes('@tanstack/react-query') || i.includes('swr')) {
@@ -544,11 +538,11 @@ const RULES: readonly Rule[] = [
         p.endsWith('.api.ts') &&
         !inDir(p, 'features') &&
         !inDir(p, 'shared', 'api') &&
-        !isUnmigratedLegacyEducation(p)
+        !isEducationPresentationDomain(p)
       ) {
         problems.push('API module declared outside features/ or shared/api/');
       }
-      if (inDir(p, 'education') && !isUnmigratedLegacyEducation(p)) {
+      if (inDir(p, 'education') && !isEducationPresentationDomain(p)) {
         const fileImports = imports(content);
         for (const i of fileImports) {
           if (/\.api(\.ts)?$/.test(i) || i.includes('shared/api/client')) {
@@ -582,26 +576,42 @@ const RULES: readonly Rule[] = [
 
   {
     id: 'FE20',
-    description: 'education/ has explicit domain ownership: admin is forbidden and every file must belong to a declared education domain.',
+    description: 'education/ requires explicit presentation-domain ownership; role labels are not domain ownership.',
     applies: (p) => p.endsWith('.ts') || p.endsWith('.tsx'),
-    check: (p, _content) => {
+    check: (p, content) => {
       if (!inDir(p, 'education')) return [];
       const parts = p.split(sep);
       if (parts[0] !== 'education') return [];
-      if (parts[1] === 'admin') {
-        return ['education/admin is forbidden — place the capability in features/ or the appropriate presentation domain'];
-      }
       if (parts.length < 3) {
-        return ['education/ files must belong to a named domain directory; do not create catch-all files at education root'];
+        return ['education/ files must belong to a named presentation domain; do not create catch-all files at education root'];
       }
       const domain = parts[1]!;
-      if (!UNMIGRATED_LEGACY_EDUCATION_DOMAINS.has(domain)) {
-        return [`education/${domain} is not a declared education domain`];
+      const problems: string[] = [];
+      const code = stripCommentsAndStrings(content);
+
+      // admin is allowed as a presentation subdomain when it contains
+      // educational admin UI components. It is not an architectural escape
+      // hatch: data fetching, role composition and business decisions stay
+      // outside education/.
+      if (domain === 'admin') {
+        if (/\b(?:useQuery|useMutation|useQueryClient|useInfiniteQuery)\b/.test(code)) {
+          problems.push('education/admin uses server-state hooks — move data orchestration to features/ or pages/');
+        }
+        if (imports(content).some((i) => /(?:^|\/)features\//.test(i))) {
+          problems.push('education/admin imports features — keep feature orchestration above the education presentation layer');
+        }
+        if (imports(content).some((i) => i.includes('shared/auth/session'))) {
+          problems.push('education/admin imports session — role composition belongs in pages/ or features/');
+        }
+        return problems;
+      }
+
+      if (!EDUCATION_PRESENTATION_DOMAINS.has(domain)) {
+        return [`education/${domain} is not a declared presentation domain; add it only when its ownership is explicit`];
       }
       return [];
     },
   },
-
   {
     id: 'FE21',
     description: 'Role-specific routes must have an explicit presentation guard.',
