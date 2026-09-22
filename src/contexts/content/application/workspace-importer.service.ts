@@ -262,7 +262,7 @@ export class WorkspaceImporterService {
    * Prepares and stores a textbook source PDF into workspace
    */
   async prepareWorkspace(input: {
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
     edition?: string;
