@@ -36,8 +36,8 @@ export class ContentEngineService implements ContentEnginePort {
         input.subject,
         '--grade',
         input.grade,
-        '--term',
-        input.term,
+        '--part',
+        input.part,
       ];
       if (input.edition) args.push('--edition', input.edition);
       if (input.title) args.push('--title', input.title);
