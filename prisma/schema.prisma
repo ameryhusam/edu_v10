@@ -570,12 +570,12 @@ model Enrollment {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Physical artifacts stored outside PostgreSQL and tracked by immutable metadata.
-enum ContentAssetType {
 enum TextbookPart {
   PART_1
   PART_2
 }
 
+enum ContentAssetType {
   TEXTBOOK_PDF
   UNIT_PDF
   LESSON_PDF
