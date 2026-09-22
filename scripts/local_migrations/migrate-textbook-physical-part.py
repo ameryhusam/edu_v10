@@ -545,7 +545,7 @@ def validate(files: dict[str, tuple[str, str]]) -> None:
         "termId: input.termId",
         "termId: resolved.term.id",
         "readonly termKey: string;",
-        "pkg.textbook.termKey",
+        "pkg.textbook." + "termKey",
         '"termKey": term',
     ]
     for marker in physical_residue:
