@@ -36,7 +36,7 @@ export function TextbookBulkGradeModal({
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const   const academicYears = useQuery({
+  const academicYears = useQuery({
     queryKey: queryKeys.administration.catalogue('academicYears'),
     queryFn: () => administrationApi.academicYears.list(),
   });
@@ -46,7 +46,7 @@ export function TextbookBulkGradeModal({
   });
 
   const [bulkGradeKey, setBulkGradeKey] = useState(initialGradeKey ?? '');
-  const [bulkPart, setBulkPart] = useState(initialPart ?? '');
+  const [bulkPart, setBulkPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>(initialPart ?? '');
   const [bulkEdition, setBulkEdition] = useState(String(new Date().getFullYear()));
   const [selectedSchoolKey, setSelectedSchoolKey] = useState(schoolIds[0] ?? '');
   const [adoptBulk, setAdoptBulk] = useState(false);
@@ -59,7 +59,7 @@ export function TextbookBulkGradeModal({
     mutationFn: () =>
       textbookAdministrationApi.ensureForGrade({
         gradeKey: bulkGradeKey,
-        termKey: bulkPart,
+        part: bulkPart,
         edition: bulkEdition,
         adopt:
           adoptBulk && selectedSchoolKey && currentAcademicYearKey
