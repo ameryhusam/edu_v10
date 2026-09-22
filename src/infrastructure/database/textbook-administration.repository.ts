@@ -3,7 +3,7 @@
  * adoption ledger.
  *
  * Reads assemble names alongside keys — an administrator triages "which book,
- * which school", not "EDU-MATH-G07-T1-ED2026 at sch_demo". Names are
+ * which school", not "EDU-MATH-G07-P1-ED2026 at sch_demo". Names are
  * presentation fields on a read model, the same shape GuardianChild uses.
  *
  * Sequential, like every other adapter: PGlite serves one connection in
