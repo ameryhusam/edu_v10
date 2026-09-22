@@ -30,7 +30,7 @@ If an adopted decision is not implemented yet, label it ADOPTED / TARGET. Never 
 07-documentation-change-control.md
 08-decision-register.md
 
-Then consult the relevant Docs_v10 document.
+Then consult the relevant Docs_v10 document. Architecture defines stable ownership and invariants; Docs_v10 owns detailed algorithms and operational procedures.
 
 ## Change rule
 A change must not silently contradict architecture/. If a proposal conflicts with an adopted decision, stop, inspect schema/code, identify the conflict, obtain the decision to supersede it, update the canonical documents, scan for stale references, and only then implement.
@@ -66,3 +66,23 @@ Source PDF → Python Content Preparation → Canonical Workspace → Node/TypeS
 - Historical learner facts are not silently rewritten or deleted.
 - Imports are validated, reconciled, deduplicated, idempotent, auditable, and safe to retry.
 - Codex implementation is followed by an independent Audit_codex checkpoint.
+
+
+## Documentation layering rule
+
+Do not duplicate the same algorithm in architecture/ and Docs_v10/.
+
+- architecture/ answers: what is authoritative, who owns the decision, what invariants cannot be violated, and the high-level flow.
+- Docs_v10 answers: exact algorithm steps, package/JSON contracts, configuration details, edge cases, implementation procedures and current gaps.
+- prisma/schema.prisma answers: what persistence actually supports today.
+- source code and executable checks answer: what is currently implemented.
+- historical sources answer: why a decision was considered or changed.
+
+For content preparation specifically:
+- architecture/02-content-workspace-ingestion.md owns the Python/Node/Workspace boundary, P1/P2/PB rule, two-part invariant, page-metadata principle and synchronization invariants.
+- architecture/03-ai-evidence-provenance.md owns AI authority and evidence/provenance invariants.
+- Docs_v10/12 owns the end-to-end operational flow.
+- Docs_v10/13 owns the detailed storage, page-classification, two-part segmentation and import algorithms.
+- Docs_v10/14 owns developer-facing execution guidance.
+
+A change to a detailed procedure does not require copying it into architecture/. A change to an architectural invariant requires updating architecture/ and then scanning affected Docs_v10/code references.
