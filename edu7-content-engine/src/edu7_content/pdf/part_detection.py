@@ -14,6 +14,7 @@ from typing import Any
 
 from .page_mapping import PageMappingEngine
 from .reader import PdfReader
+from .pdf_ocr import extract_page_text_ocr
 
 
 PART_1_PATTERNS = (
@@ -73,6 +74,13 @@ def detect_combined_part_boundary(
 
     for index in range(reader.page_count):
         text = reader.extract_page_text(index) or ""
+        # Combined scanned PDFs may have no text layer. Reuse the engine's
+        # existing offline Arabic OCR before falling back to human review.
+        if not text.strip() and getattr(reader, "backend", None) == "pymupdf":
+            try:
+                text = extract_page_text_ocr(reader.doc, index, lang="ara") or ""
+            except Exception:
+                text = ""
         p1 = _matches(text, PART_1_PATTERNS)
         p2 = _matches(text, PART_2_PATTERNS)
         if p1 or p2:
@@ -165,7 +173,8 @@ def build_local_page_mapping(
     = printed page + original_offset - source_start + 1.
     """
 
-    offset = int(original_mapper.detected_offset or 0) - int(source_start_pdf_page) + 1
+    detected = original_mapper.detected_offset
+    offset = (int(detected) - int(source_start_pdf_page) + 1) if detected is not None else 0
     local_mapper = PageMappingEngine.__new__(PageMappingEngine)
     local_mapper.reader = None
     local_mapper.mapping = {}
