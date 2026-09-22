@@ -13,7 +13,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { ContentImportService, ImportResult } from './content-import.service.js';
 import type { ContentAssetService } from './content-asset.service.js';
-import type { WorkspaceManager } from '../../../infrastructure/storage/workspace-manager.js';
+import type { WorkspacePort } from './workspace.ports.js';
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
 import type { AuthorContext } from './authoring.service.js';
@@ -37,7 +37,7 @@ export interface WorkspaceImportResult {
 
 export class WorkspaceImporterService {
   constructor(
-    private readonly workspaceManager: WorkspaceManager,
+    private readonly workspaceManager: WorkspacePort,
     private readonly contentImportService: ContentImportService,
     private readonly assetService: ContentAssetService,
     private readonly contentEngine: ContentEnginePort,
