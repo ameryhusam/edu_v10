@@ -152,7 +152,7 @@ const createTextbookInput = z.object({
   subjectKey: z.string().min(1),
   gradeKey: z.string().min(1),
   part: z.enum(['PART_1', 'PART_2', 'BOTH']),
-  title: z.string().min(1).max(300);
+  title: z.string().min(1).max(300),
   edition: z.string().min(1).max(40),
   description: z.string().max(4000).nullish(),
   issuer: z.string().max(200).nullish(),
