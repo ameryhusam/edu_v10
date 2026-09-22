@@ -78,10 +78,18 @@ def normalize_part(raw: str) -> str:
     return value
 
 
+def normalize_workspace_part(raw: str) -> str:
+    """Return a canonical Workspace physical part; BOTH/PB is source-only."""
+    value = normalize_part(raw)
+    if value == "PB":
+        raise ValueError("BOTH/PB is source-input only and cannot become a Workspace identity.")
+    return value
+
+
 def textbook_key(subject: str, grade: int, part: str, edition: str) -> str:
-    """Mirror src/shared/kernel/identifiers.ts textbookKey exactly."""
+    """Mirror the canonical textbook identity for a single physical part."""
     subject = normalize_subject(subject)
-    part_key = normalize_part(part)
+    part_key = normalize_workspace_part(part)
     edition = str(edition).strip()
     if re.fullmatch(r"\d{4}([/-]\d{4})?", edition):
         edition_key = "ED" + edition.replace("/", "-")
@@ -94,7 +102,7 @@ def textbook_key(subject: str, grade: int, part: str, edition: str) -> str:
 
 def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
     _, grade_key = normalize_grade(grade)
-    part_key = normalize_part(part)
+    part_key = normalize_workspace_part(part)
     edition_segment = "ED" + re.sub(
         r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
     )

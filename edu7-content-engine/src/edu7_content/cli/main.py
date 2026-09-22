@@ -24,6 +24,7 @@ Usage examples:
 import sys
 import os
 import argparse
+import json
 import re
 import shutil
 import tempfile
@@ -39,7 +40,7 @@ from ..pdf.vision_ocr import (
     extract_edition_from_cover,
     extract_book_front_matter,
 )
-from ..pdf.segmentation import LessonSegmenter
+from ..pdf.segmentation import LessonSegmenter, compute_sha256
 from ..ai.registry import AIProviderRegistry
 from ..ai.content_service import ContentAIService
 from ..validation.evidence_validator import EvidenceValidator
@@ -47,6 +48,7 @@ from ..export.json_exporter import Edu7JsonExporter
 from ..export.excel_exporter import Edu7ExcelExporter
 from ..ai.gemini import _load_env_file
 from ..workspace_layout import books_input_root, book_workspace, normalize_grade, normalize_subject, project_root, textbook_key, workspace_root, finalize_book_workspace
+from ..pdf.part_detection import detect_combined_part_boundary, split_combined_source, build_local_page_mapping
 from ..workspace_rebuild import rebuild_lesson, rebuild_unit, rebuild_book
 
 
@@ -69,7 +71,7 @@ def main():
     p_prep.add_argument("--part", default=None, choices=["PART_1", "PART_2", "BOTH"],
                         help="Physical textbook part: PART_1, PART_2, or BOTH")
     p_prep.add_argument("--edition", default=None,
-                        help="Printed textbook edition; if omitted, extract from first ten pages")
+                        help="Printed textbook edition; if omitted, extract from the initial analysis window")
     p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
@@ -78,8 +80,10 @@ def main():
                             "Ollama: optional future/local adapter; requires --ollama and EDU7_ENABLE_OLLAMA=true\n"
                             "Default: Gemini when configured; Ollama is never used implicitly"
                         ))
-    p_prep.add_argument("--vision-pages", type=int, default=10,
-                        help="Pages to render for vision analysis (default: 10)")
+    p_prep.add_argument("--analysis-pages", type=int, default=15,
+                        help="Initial PDF analysis window for identity/TOC and combined-part detection (default: 15)")
+    p_prep.add_argument("--vision-pages", type=int, default=15,
+                        help="Pages to render for vision analysis (default: 15)")
     p_prep.add_argument("--dpi", type=int, default=150,
                         help="Render DPI for vision analysis (default: 150, higher=better quality)")
     p_prep.add_argument("--ollama", action="store_true",
@@ -278,16 +282,130 @@ def _cmd_prepare(args):
         print(f"[invalid workspace coordinates] {err}")
         sys.exit(2)
 
-    print(f"[+] Workspace root: {workspace_root()}")
-    print(f"[+] Coordinates: {grade_key}/{subject_key}")
     if not supplied_part:
         print("[invalid workspace coordinates] Physical part is required (--part PART_1|PART_2|BOTH).")
         sys.exit(2)
 
+    print(f"[+] Workspace root: {workspace_root()}")
+    print(f"[+] Coordinates: {grade_key}/{subject_key}")
     print(f"\n[*] Reading PDF: {target_pdf}")
     reader = PdfReader(str(target_pdf))
     print(f"[+] Pages: {reader.page_count}")
 
+    # BOTH is a source-input mode only. It must be resolved before textbookKey
+    # or Workspace identity is derived; PB must never reach segmentation.
+    if supplied_part == "BOTH":
+        print("\n[*] Detecting physical textbook parts in combined PDF...")
+        boundary = detect_combined_part_boundary(
+            reader,
+            analysis_pages=getattr(args, "analysis_pages", 15),
+        )
+        print(
+            f"[+] Part detection: {boundary['status']} "
+            f"(confidence={boundary['confidence']}, "
+            f"boundary PDF page={boundary.get('boundaryPdfPage')})"
+        )
+        if boundary.get("status") != "DETECTED":
+            review_root = Path(args.workspace).expanduser().resolve() if args.workspace else workspace_root()
+            review_root.mkdir(parents=True, exist_ok=True)
+            review_path = review_root / "combined-part-review.json"
+            review_path.write_text(
+                json.dumps(
+                    {
+                        "schemaVersion": "1.0",
+                        "mode": "BOTH",
+                        "sourceFile": target_pdf.name,
+                        "sourceSha256": compute_sha256(target_pdf),
+                        "status": "NEEDS_REVIEW",
+                        "boundaryProposal": boundary,
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            print(f"[REVIEW REQUIRED] Combined PDF boundary could not be established: {review_path}")
+            sys.exit(3)
+
+        # Edition/title are shared source metadata. Resolve them once.
+        edition = supplied_edition or extract_edition_from_cover(
+            reader,
+            model_name=getattr(args, "model", None),
+            use_gemini=not getattr(args, "no_gemini", False),
+            dpi=getattr(args, "dpi", 150),
+        )
+        if not edition:
+            print("[invalid workspace coordinates] Printed edition could not be established from the cover.")
+            sys.exit(2)
+
+        metadata_title = reader.get_metadata().get("title", "")
+        book_title = args.title or metadata_title or _derive_book_title(target_pdf.stem)
+        original_mapper = PageMappingEngine(reader)
+        original_mapper.detect_mapping()
+
+        print(
+            f"[+] Combined source resolved: "
+            f"P1 PDF pages {boundary['part1']['startPdfPage']}-{boundary['part1']['endPdfPage']}; "
+            f"P2 PDF pages {boundary['part2']['startPdfPage']}-{boundary['part2']['endPdfPage']}"
+        )
+
+        # Split only into temporary processing PDFs. The source PDF is never
+        # copied into Workspace and BOTH never becomes a canonical identity.
+        part_inputs, temp_part_dir = split_combined_source(reader, boundary)
+        try:
+            for part_name, part_pdf in part_inputs:
+                part_reader = PdfReader(str(part_pdf))
+                source_start = int(
+                    boundary["part1"]["startPdfPage"]
+                    if part_name == "PART_1"
+                    else boundary["part2"]["startPdfPage"]
+                )
+                local_mapper = PageMappingEngine(part_reader)
+                local_mapper.detect_mapping()
+                if not local_mapper.mapping:
+                    local_mapper = build_local_page_mapping(
+                        original_mapper,
+                        source_start_pdf_page=source_start,
+                    )
+                part_book_key = textbook_key(subject_key, grade_number, part_name, edition)
+                if args.workspace:
+                    supplied_root = Path(args.workspace).expanduser().resolve()
+                    ws_path = (
+                        supplied_root / ("P1" if part_name == "PART_1" else "P2")
+                        / grade_key / subject_key
+                        / ("ED" + re.sub(r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")))
+                    )
+                else:
+                    ws_path = book_workspace(subject_key, grade_number, part_name, edition)
+
+                print(f"\n=== Preparing {part_name} ===")
+                print(f"[+] Workspace: {ws_path}")
+                print(f"[+] Book key: {part_book_key}")
+                _prepare_single_reader(
+                    part_reader,
+                    local_mapper,
+                    part_name,
+                    part_book_key,
+                    ws_path,
+                    subject_key,
+                    grade_number,
+                    grade_key,
+                    edition,
+                    book_title,
+                    args,
+                    source_pdf=target_pdf,
+                    source_page_range=(boundary["part1"] if part_name == "PART_1" else boundary["part2"]),
+                    source_boundary=boundary,
+                )
+                part_reader.close()
+        finally:
+            shutil.rmtree(temp_part_dir, ignore_errors=True)
+            reader.close()
+
+        print("\n[SUCCESS] Combined PDF prepared as independent P1 and P2 workspaces.")
+        return
+
+    # Single physical-part preparation retains the existing path.
     edition = supplied_edition
     if not edition:
         edition = extract_edition_from_cover(
@@ -299,66 +417,114 @@ def _cmd_prepare(args):
     if not edition:
         print("[invalid workspace coordinates] Printed edition could not be established from the cover.")
         sys.exit(2)
+
     book_key = textbook_key(subject_key, grade_number, supplied_part, edition)
     ws_path = (
         Path(args.workspace).expanduser().resolve()
         if args.workspace
         else book_workspace(subject_key, grade_number, supplied_part, edition)
     )
-    # When the Node bridge supplies the shared subject root, create the edition
-    # as the final identity segment instead of creating a duplicate textbook key.
     if args.workspace:
-        expected_edition_dir = "ED" + re.sub(r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-"))
+        expected_edition_dir = "ED" + re.sub(
+            r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
+        )
         if ws_path.name.upper() != expected_edition_dir:
             ws_path = ws_path / expected_edition_dir
+
+    metadata_title = reader.get_metadata().get("title", "")
+    book_title = args.title or metadata_title or _derive_book_title(target_pdf.stem)
+    mapper = PageMappingEngine(reader)
+    mapper.detect_mapping()
+    _prepare_single_reader(
+        reader,
+        mapper,
+        supplied_part,
+        book_key,
+        ws_path,
+        subject_key,
+        grade_number,
+        grade_key,
+        edition,
+        book_title,
+        args,
+        source_pdf=target_pdf,
+    )
+    reader.close()
+
+
+def _prepare_single_reader(
+    reader,
+    mapper,
+    part,
+    book_key,
+    ws_path,
+    subject_key,
+    grade_number,
+    grade_key,
+    edition,
+    book_title,
+    args,
+    *,
+    source_pdf,
+    source_page_range=None,
+    source_boundary=None,
+):
     print(f"[+] Edition: {edition}")
     print(f"[+] Book key: {book_key}")
 
-    # Detect PDF type
     pdf_is_image = is_image_based_pdf(reader, sample_pages=8)
     if pdf_is_image:
         print("[*] Detected: IMAGE-based PDF (scanned / no selectable Arabic text)")
     else:
         print("[*] Detected: TEXT-based PDF (has Arabic text layer)")
 
-    # Page offset mapping
     print("[*] Running Page Mapping Engine...")
-    mapper = PageMappingEngine(reader)
-    mapper.detect_mapping()
-    print(f"[+] Page offset: {mapper.detected_offset}  (PDF page = Printed page + {mapper.detected_offset})")
+    print(
+        f"[+] Page offset: {mapper.detected_offset}  "
+        f"(local PDF page = printed page + {mapper.detected_offset})"
+    )
 
-    # ── TOC Extraction: AI-assisted first, deterministic fallback ─────────────
-    # The first ten PDF pages are always the AI inspection window. The AI output
-    # is the segmentation source when it is valid; printed page numbers remain
-    # canonical and PageMappingEngine converts them to physical PDF pages.
     units = []
-    print("\n[*] Extracting Table of Contents from the first ten pages...")
+    print("\n[*] Extracting Table of Contents from the first analysis pages...")
 
     model_arg = getattr(args, "model", None)
     use_ollama = bool(getattr(args, "ollama", False)) and not getattr(args, "no_ollama", False)
     use_gemini = not getattr(args, "no_gemini", False)
-    vision_pages = min(getattr(args, "vision_pages", 10), 10)
+    analysis_pages = min(getattr(args, "analysis_pages", 15), 15)
     dpi = getattr(args, "dpi", 150)
 
     if model_arg and str(model_arg).startswith("gemini"):
         use_ollama = False
-    elif model_arg and (str(model_arg).startswith("ollama-") or str(model_arg) in {"ollama", "llava:7b", "llava:13b", "minicpm-v:8b", "qwen2.5vl:7b"}):
+    elif model_arg and (
+        str(model_arg).startswith("ollama-")
+        or str(model_arg) in {"ollama", "llava:7b", "llava:13b", "minicpm-v:8b", "qwen2.5vl:7b"}
+    ):
         use_ollama = True
         use_gemini = False
 
-    # Deterministic parsing is the default. AI is used for scanned/image
-    # books or only as a fallback when a text-layer TOC cannot be parsed.
     toc = TocExtractor(reader)
-    toc_pages = toc.find_toc_pages(max_search=10)
+    toc_pages = toc.find_toc_pages(max_search=analysis_pages)
     if toc_pages and not pdf_is_image:
         units = toc.extract_hierarchy(toc_pages)
         print(f"[+] Rule-based TOC pages: {[p + 1 for p in toc_pages]}")
-        print(f"[+] Segmentation source: deterministic TOC parser ({len(units)} units, {sum(len(u.get('lessons', [])) for u in units)} lessons).")
+        print(
+            f"[+] Segmentation source: deterministic TOC parser "
+            f"({len(units)} units, {sum(len(u.get('lessons', [])) for u in units)} lessons)."
+        )
     else:
-        print("[*] Using Gemini Vision for scanned TOC." if pdf_is_image else "[*] Deterministic TOC unavailable; using AI as fallback.")
+        print(
+            "[*] Using Gemini Vision for scanned TOC."
+            if pdf_is_image
+            else "[*] Deterministic TOC unavailable; using AI as fallback."
+        )
         ai_units = extract_toc_via_vision(
-            reader, max_pages=vision_pages, dpi=dpi, api_key=None,
-            model_name=model_arg, use_ollama=use_ollama, use_gemini=use_gemini,
+            reader,
+            max_pages=analysis_pages,
+            dpi=dpi,
+            api_key=None,
+            model_name=model_arg,
+            use_ollama=use_ollama,
+            use_gemini=use_gemini,
             force_vision=getattr(args, "force_vision", False),
         )
         if ai_units:
@@ -366,11 +532,13 @@ def _cmd_prepare(args):
             print("[+] Segmentation source: AI TOC proposal.")
         elif toc_pages:
             units = toc.extract_hierarchy(toc_pages)
-            print(f"[+] Deterministic TOC fallback: {len(units)} units, {sum(len(u.get('lessons', [])) for u in units)} lessons.")
+            print(
+                f"[+] Deterministic TOC fallback: {len(units)} units, "
+                f"{sum(len(u.get('lessons', [])) for u in units)} lessons."
+            )
 
     _finalize_toc_page_bounds(units, mapper, reader.page_count)
 
-    # Summary
     total_lessons = sum(len(u.get("lessons", [])) for u in units)
     if units:
         print(f"\n[+] Final TOC: {len(units)} units, {total_lessons} lessons")
@@ -380,24 +548,41 @@ def _cmd_prepare(args):
         print("\n[!] No TOC found. Workspace will have empty structure.")
         _print_help_tips()
 
-    # Segment
     print(f"\n[*] Segmenting into packages: {ws_path}")
     segmenter = LessonSegmenter(reader, mapper)
-    metadata_title = reader.get_metadata().get("title", "")
-    book_title = args.title or metadata_title or _derive_book_title(target_pdf.stem)
-    print(f"[+] Book title: {book_title}")
-
     coordinates = {
         "subject": subject_key,
         "grade": grade_number,
-        "part": supplied_part,
+        "part": part,
         "edition": edition,
         "title": book_title,
     }
     segmenter.segment_book(units, ws_path, coordinates=coordinates)
     finalize_book_workspace(ws_path, book_key, subject_key)
-    print(f"[SUCCESS] Book prepared at: {ws_path}\n")
 
+    # Combined-source provenance is retained in each independent workspace.
+    if source_page_range is not None:
+        import json
+        source_manifest = ws_path / "book-source-manifest.json"
+        data = json.loads(source_manifest.read_text(encoding="utf-8"))
+        original_sha256 = compute_sha256(source_pdf)
+        data["sourceInput"]["sha256"] = original_sha256
+        data["sourceInput"]["originalSourceFile"] = source_pdf.name
+        data["sourceInput"]["originalSourceSha256"] = original_sha256
+        data["sourceInput"]["combinedSource"] = True
+        data["sourceInput"]["originalPdfPageRange"] = {
+            "start": int(source_page_range["startPdfPage"]),
+            "end": int(source_page_range["endPdfPage"]),
+        }
+        data["sourceInput"]["physicalPart"] = part
+        data["sourceInput"]["boundaryStatus"] = "DETECTED"
+        data["sourceInput"]["combinedBoundaryEvidence"] = source_boundary
+        source_manifest.write_text(
+            json.dumps(data, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    print(f"[SUCCESS] {part} book prepared at: {ws_path}\n")
 
 def _finalize_toc_page_bounds(units, mapper, pdf_page_count):
     """Turn TOC start pages into deterministic printed-page ranges.

@@ -79,9 +79,12 @@ class LessonSegmenter:
             raise ValueError("Printed edition is required; it must be supplied or extracted before segmentation.")
         title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
 
-        part_code = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}.get(str(part).upper())
+        part_code = {"PART_1": "P1", "PART_2": "P2"}.get(str(part).upper())
         if not part_code:
-            raise ValueError("Physical part must be PART_1, PART_2, or BOTH.")
+            raise ValueError(
+                "Lesson segmentation accepts only PART_1 or PART_2. "
+                "BOTH is a source-input mode and must be split before Workspace emission."
+            )
         textbook_key = f"EDU-{subject}-G{int(str(grade).replace('G', '')):02d}-{part_code}-ED{edition}"
 
         # 1. Record source provenance only. The original book PDF is temporary
