@@ -19,7 +19,7 @@ Do not create a second database identity for aliases such as G4.
 
 ## 2. Workspace structure
 
-    workspace/T01/G04/SCI/ED2026/
+    Workspace/P1/G04/SCI/ED2026/...
       cover/
       unit_01_<slug>/
         lesson_01_<slug>/
@@ -47,13 +47,24 @@ Use manual classification when branch-specific structure cannot be safely inferr
 
 Arabic is the main example because the word "الدرس" can appear repeatedly while the actual distinction is often reading, grammar, spelling, morphology or expression.
 
-The manual page classification manifest overrides generic detection.
+The validated page classification manifest overrides generic detection. Page filenames remain page_{number}; classification never requires renaming files.
 
 ## 4. Manual classification example
 
     {
       "schemaVersion": "1",
       "lessonKey": "EDU-AR-G04-T1-ED2026-U01-L03",
+      "page": {
+        "printedPageNumber": 41,
+        "pdfPageIndex": 44,
+        "contentType": "MIXED",
+        "lessonContent": true,
+        "questionBlocks": ["q1", "q2"],
+        "unitAssessment": false,
+        "includeInLessonView": true,
+        "includeInQuestionExtraction": true,
+        "includeInUnitAssessment": false
+      },
       "pages": [
         {
           "pageNumber": 41,
@@ -146,8 +157,8 @@ Reject path traversal, duplicate entries, suspicious archive structures, excessi
 
 Normalize before identity lookup.
 
-T1 → T01 filesystem term coordinate
-T01 → T01 filesystem term coordinate
+T1/T01 are term identity aliases where applicable; they are not Workspace part coordinates.
+P1 → PART_1, P2 → PART_2, PB → BOTH.
 G4 → G04 canonical grade
 G04 → G04 canonical grade
 
@@ -229,3 +240,37 @@ Node/TypeScript canonical services own persistence.
 Prisma schema remains the persisted-data source of truth.
 
 React does not own classification, identity, deduplication, mastery, assessment or import decisions.
+
+
+## 15. Two-part book preparation
+
+When one source PDF contains Part 1 and Part 2, the Python engine must first resolve physical-part boundaries from publisher metadata, TOC/index, printed-page ranges and structural evidence, using AI as a proposal fallback. The first-page analysis window is configurable and defaults to approximately the first 15 PDF pages.
+
+After validation:
+
+    PART_1 → Workspace/P1/<grade>/<subject>/<edition>/
+    PART_2 → Workspace/P2/<grade>/<subject>/<edition>/
+    BOTH/shared → Workspace/PB/<grade>/<subject>/<edition>/
+
+The same printed page must not be assigned to both P1 and P2 unless the manifest explicitly declares shared content.
+
+The exact segmentation algorithm is owned by Docs_v10/13; this guide only states the developer boundary.
+
+## 16. Page routing without filename changes
+
+A page image remains page_NNN.* regardless of whether it contains lesson material, exercises, unit assessment material, or a mixture.
+
+page_classification.json is the routing contract. It can state independently whether a page:
+
+- belongs to the lesson view;
+- supplies question/exercise blocks;
+- supplies unit-assessment content;
+- contains mixed lesson and question content.
+
+A page classified as MIXED is not duplicated or renamed to make it appear in multiple views. The same page evidence is referenced by multiple semantic consumers.
+
+## 17. Configuration
+
+The classification configuration must define the TOC/index detector, first-page analysis window, part-boundary signals, subject/branch labels, lesson types, question roles, unit-assessment roles, mixed-page policy and confidence/review thresholds.
+
+Configuration is versioned. The active configuration version is part of preparation provenance.
