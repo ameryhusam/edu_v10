@@ -219,17 +219,17 @@ export function AppRouter(): ReactNode {
                   <Route path="/teacher/grading" element={<RequireRole roles={['TEACHER']}><ManualGrading /></RequireRole>} />
                   <Route path="/teacher/content" element={<RequireRole roles={['TEACHER']}><TeacherMaterials /></RequireRole>} />
                   <Route path="/teacher/reports" element={<RequireRole roles={['TEACHER']}><PlaceholderRoute area="teacher" /></RequireRole>} />
-                  <Route path="/teacher/*" element={<PlaceholderRoute area="teacher" />} />
+                  <Route path="/teacher/*" element={<RequireRole roles={['TEACHER']}><PlaceholderRoute area="teacher" /></RequireRole>} />
                   <Route path="/parent" element={<RequireRole roles={['PARENT']}><ParentHome /></RequireRole>} />
                   <Route path="/parent/learning" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
                   <Route path="/parent/progress" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
                   <Route path="/parent/work" element={<RequireRole roles={['PARENT']}><ParentWork /></RequireRole>} />
                   <Route path="/parent/support" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
-                  <Route path="/parent/*" element={<PlaceholderRoute area="parent" />} />
+                  <Route path="/parent/*" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
                   <Route path="/author" element={<RequireRole roles={['CONTENT_AUTHOR']}><Navigate to="/author/questions" replace /></RequireRole>} />
                   <Route path="/author/textbooks" element={<RequireRole roles={['CONTENT_AUTHOR']}><PlaceholderRoute area="author" /></RequireRole>} />
                   <Route path="/author/questions" element={<RequireRole roles={['CONTENT_AUTHOR']}><AuthorQuestionBank /></RequireRole>} />
-                  <Route path="/author/*" element={<PlaceholderRoute area="author" />} />
+                  <Route path="/author/*" element={<RequireRole roles={['CONTENT_AUTHOR']}><PlaceholderRoute area="author" /></RequireRole>} />
                   <Route path="/admin" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AdminOverview /></RequireRole>} />
                   <Route path="/admin/users" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AdminUsers /></RequireRole>} />
                   <Route path="/admin/structure" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AcademicStructure /></RequireRole>} />
@@ -241,7 +241,7 @@ export function AppRouter(): ReactNode {
                   <Route path="/admin/content" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN', 'CONTENT_AUTHOR']}><ContentSetup /></RequireRole>} />
                   <Route path="/admin/import" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><ProjectImport /></RequireRole>} />
                   <Route path="/admin/settings" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><Settings /></RequireRole>} />
-                  <Route path="/admin/*" element={<PlaceholderRoute area="admin" />} />
+                  <Route path="/admin/*" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><PlaceholderRoute area="admin" /></RequireRole>} />
 
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
