@@ -90,6 +90,12 @@ AI lesson analysis remains draft-only and workspace-based until human Apply.
 7. Explicit learning-path inclusion control.
 8. Broader integration/E2E coverage for content assets and AI workflows.
 
+## Frontend architecture update
+
+The frontend architecture fitness check now treats `education/` as a presentation-domain boundary rather than a permanently closed directory. `education/admin/` is allowed for educational administration presentation components when it remains presentation-only; server state, API orchestration, role composition and authorization remain in pages/features/backend layers.
+
+The final cross-document architecture and capability audit is recorded in `Docs_v10/15-final-architecture-and-capability-audit.md`.
+
 ## Verification policy
 
 This file records repository inspection. It does not claim a command was executed during documentation migration unless a later commit records that evidence.
