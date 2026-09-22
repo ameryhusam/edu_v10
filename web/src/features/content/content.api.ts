@@ -43,7 +43,7 @@ export interface TextbookSummary {
   readonly subjectName: string;
   readonly gradeKey: string;
   readonly gradeName: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly edition: string;
   readonly status: PublicationStatus;
   readonly adoptionCount: number;
@@ -79,7 +79,7 @@ export interface CreatedContentNode {
 export interface CreateTextbookInput {
   readonly subjectKey: string;
   readonly gradeKey: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly title: string;
   readonly edition: string;
   readonly isbn?: string | null;
@@ -91,7 +91,7 @@ export interface CreateTextbookInput {
 
 export interface EnsureTextbooksResult {
   readonly gradeKey: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly edition: string;
   readonly created: number;
   readonly unchanged: number;
@@ -103,14 +103,14 @@ export interface TextbookQuery {
   readonly search?: string | undefined;
   readonly subjectKey?: string | undefined;
   readonly gradeKey?: string | undefined;
-  readonly part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | undefined;
   readonly status?: PublicationStatus | undefined;
   readonly limit?: number | undefined;
   readonly offset?: number | undefined;
   readonly [key: string]: string | number | boolean | null | undefined;
 }
 
-/** An adoption: identity is the (textbook, school, year) triple. */
+/** An adoption is the textbook/school/year deployment fact with an explicit term link. */
 export interface AdoptionRow {
   readonly textbookKey: string;
   readonly textbookTitle: string;
@@ -118,6 +118,7 @@ export interface AdoptionRow {
   readonly schoolKey: string;
   readonly schoolName: string;
   readonly academicYearKey: string;
+  readonly termKey: string;
   readonly adoptedAt: string;
 }
 
@@ -419,7 +420,7 @@ export const textbookAdministrationApi = {
   },
   ensureForGrade: (input: {
     gradeKey: string;
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     edition: string;
     issuer?: string | null;
     publishYear?: number | null;
@@ -507,7 +508,7 @@ export const textbookAdministrationApi = {
   /** Workspace operations */
   workspacePrepareUpload: (input: {
     file: File;
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
     edition?: string;
@@ -526,7 +527,7 @@ export const textbookAdministrationApi = {
   }),
 
   workspacePrepare: (input: {
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
     edition?: string;
