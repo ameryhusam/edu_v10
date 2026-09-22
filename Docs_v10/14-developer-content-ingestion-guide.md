@@ -53,7 +53,7 @@ The validated page classification manifest overrides generic detection. Page fil
 
     {
       "schemaVersion": "1",
-      "lessonKey": "EDU-AR-G04-T1-ED2026-U01-L03",
+      "lessonKey": "EDU-AR-G04-P1-ED2026-U01-L03",
       "page": {
         "printedPageNumber": 41,
         "pdfPageIndex": 44,
