@@ -151,6 +151,17 @@ def transform(path: str, text: str) -> str:
   readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly edition: string;""")
         # Creation contract.
+        placement_marker = """  resolveTextbookCoordinates(input: {"""
+        if placement_marker in out and "resolveTextbookPlacement(input:" not in out:
+            out = out.replace(placement_marker, """  resolveTextbookPlacement(input: {
+    subjectKey: string;
+    gradeKey: string;
+  }): Promise<{
+    subject: { id: string; key: string; name: string } | null;
+    grade: { id: string; key: string; ordinal: number; name: string } | null;
+  }>;
+
+  resolveTextbookCoordinates(input: {""")
         create_anchor = """  createTextbook(input: {
     key: string;
     subjectId: string;
