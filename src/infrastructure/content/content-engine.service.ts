@@ -7,6 +7,8 @@ import type {
   ContentEnginePort,
   ContentEnginePrepareInput,
   ContentEnginePrepareResult,
+  ContentEngineIdentityInput,
+  ContentEngineIdentityResult,
 } from '../../contexts/content/application/content-engine.port.js';
 
 const execFileAsync = promisify(execFile);
@@ -16,6 +18,38 @@ export class ContentEngineService implements ContentEnginePort {
     private readonly pythonCommand: string,
     private readonly engineRoot: string,
   ) {}
+
+  async identify(input: ContentEngineIdentityInput): Promise<ContentEngineIdentityResult> {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'edu7-content-identify-'));
+    const sourcePath = path.join(tempDir, 'source.pdf');
+    const outputPath = path.join(tempDir, 'identity.json');
+
+    try {
+      await fs.writeFile(sourcePath, input.pdf);
+      const args = [
+        '-m', 'edu7_content.cli.main', 'identify', sourcePath,
+        '--out', outputPath,
+        '--analysis-pages', String(input.analysisPages ?? 15),
+        '--dpi', String(input.dpi ?? 150),
+      ];
+      if (input.model) args.push('--model', input.model);
+
+      const result = await execFileAsync(this.pythonCommand, args, {
+        cwd: path.resolve(this.engineRoot, '..'),
+        timeout: 5 * 60 * 1000,
+        maxBuffer: 8 * 1024 * 1024,
+        env: { ...process.env, PYTHONPATH: path.join(this.engineRoot, 'src') },
+      });
+      const raw = await fs.readFile(outputPath, 'utf8');
+      const proposal = JSON.parse(raw) as ContentEngineIdentityResult;
+      return proposal;
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      throw new Error(`edu7-content identify failed: ${detail}`);
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  }
 
   async prepare(input: ContentEnginePrepareInput): Promise<ContentEnginePrepareResult> {
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'edu7-content-'));
