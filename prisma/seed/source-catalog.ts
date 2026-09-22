@@ -19,7 +19,7 @@ const DATA_DIR = resolve(dirname(fileURLToPath(import.meta.url)), 'data', 'exter
 interface YemenTextbookSource {
   readonly gradeKey: string;
   readonly subjectKey: string;
-  readonly termOrdinal: number;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly coverage: 'TERM' | 'FULL_YEAR';
   readonly role: 'TEXTBOOK' | 'WORKBOOK' | 'ACTIVITY_BOOK' | 'HANDWRITING' | 'REFERENCE';
   readonly title: string;
@@ -54,14 +54,8 @@ export async function seedYemenSourceCatalog(
 ): Promise<YemenSourceSeedReport> {
   const grades = await prisma.grade.findMany({ select: { id: true, key: true, ordinal: true } });
   const subjects = await prisma.subject.findMany({ select: { id: true, key: true } });
-  const terms = await prisma.term.findMany({
-    where: { academicYear: { key: ctx.academicYearKey } },
-    select: { id: true, ordinal: true },
-  });
-
   const gradeByKey = new Map(grades.map((grade) => [grade.key, grade]));
   const subjectByKey = new Map(subjects.map((subject) => [subject.key, subject]));
-  const termByOrdinal = new Map(terms.map((term) => [term.ordinal, term]));
   const touchedTextbooks = new Set<string>();
   let resourcesTouched = 0;
   let skipped = 0;
@@ -69,18 +63,12 @@ export async function seedYemenSourceCatalog(
   for (const source of catalog.TextbookSource) {
     const grade = gradeByKey.get(source.gradeKey);
     const subject = subjectByKey.get(source.subjectKey);
-    const term = termByOrdinal.get(source.termOrdinal);
-    if (!grade || !subject || !term) {
+    if (!grade || !subject) {
       skipped += 1;
       continue;
     }
 
-    const part =
-      source.termOrdinal === 1
-        ? 'PART_1'
-        : source.termOrdinal === 2
-          ? 'PART_2'
-          : 'BOTH';
+    const part = source.part;
 
     const key = unwrap(
       textbookKey({
@@ -151,12 +139,12 @@ export async function seedYemenSourceCatalog(
 
 function orderFor(source: YemenTextbookSource): number {
   const base = source.role === 'TEXTBOOK' ? 10 : source.role === 'WORKBOOK' ? 20 : source.role === 'ACTIVITY_BOOK' ? 30 : 40;
-  return source.termOrdinal * 100 + base;
+  return source.part === 'PART_1' ? 100 + base : source.part === 'PART_2' ? 200 + base : 300 + base;
 }
 
 function textbookDescription(source: YemenTextbookSource, catalog: YemenSourceCatalog): string {
   const channel = catalog.sourceChannels[0]?.url ?? 'https://t.me/Books_Yemen_new';
-  const coverage = source.coverage === 'FULL_YEAR' ? 'مقرر يغطي العام الدراسي كاملاً' : `مقرر الفصل الدراسي ${source.termOrdinal}`;
+  const coverage = source.coverage === 'FULL_YEAR' ? 'مقرر يغطي العام الدراسي كاملاً' : `الجزء الفيزيائي ${source.part}`;
   return [
     `${coverage} مستخرج من فهرس المناهج اليمنية الرسمي ومربوط بقناة الكتب الدراسية اليمنية.`,
     `نوع المقرر: ${source.role}`,
@@ -170,7 +158,7 @@ function textbookDescription(source: YemenTextbookSource, catalog: YemenSourceCa
 
 function resourceDescription(source: YemenTextbookSource, catalog: YemenSourceCatalog): string {
   const channel = catalog.sourceChannels[0]?.url ?? 'https://t.me/Books_Yemen_new';
-  const coverage = source.coverage === 'FULL_YEAR' ? 'كتاب يغطي العام الدراسي' : `مصدر الفصل الدراسي ${source.termOrdinal}`;
+  const coverage = source.coverage === 'FULL_YEAR' ? 'كتاب يغطي العام الدراسي' : `مصدر الجزء الفيزيائي ${source.part}`;
   return [
     `${coverage} مستخرج من فهرس المناهج اليمنية الرسمي ومربوط بقناة الكتب الدراسية اليمنية على تيليجرام.`,
     `صفحة الفهرس: ${source.landingPage}`,
