@@ -114,6 +114,7 @@ class FakeRepo implements ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
   }) {
@@ -788,7 +789,7 @@ describe('createTextbook', () => {
     expect(second.value.key).toBe('EDU-MATH-G07-P1-EDREV2');
   });
 
-  it('refuses a duplicate subject+grade+term+edition', async () => {
+  it('refuses a duplicate subject+grade+part+edition', async () => {
     const { authoring } = setup();
     await authoring.createTextbook(CTX, COORDS);
     const again = await authoring.createTextbook(CTX, COORDS);
@@ -874,7 +875,7 @@ describe('createTextbook', () => {
     expect(created.error.code).toBe('content.title_repeats_placement');
   });
 
-  it('accepts a title that does not mention the grade or term', async () => {
+  it('accepts a title that does not mention the grade or part', async () => {
     const { authoring } = setup();
     const created = await authoring.createTextbook(CTX, COORDS);
 
