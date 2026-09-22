@@ -111,9 +111,11 @@ The importer will resolve:
 
 - `subjectKey`
 - `gradeKey`
-- `termKey`
+- physical part (`PART_1`/`PART_2`)
+- printed edition
 - `textbookKey`
 - unit/lesson keys
+- adoption term only when the deployment/adoption operation explicitly supplies it
 - ContentAsset identity/checksum
 - concepts/questions/flashcards/resources
 - grounding/provenance
