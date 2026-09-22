@@ -419,6 +419,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       schoolKey: row.school.key,
       schoolName: row.school.name,
       academicYearKey: row.academicYear.key,
+      termKey: row.term.key,
       adoptedAt: row.adoptedAt,
     };
   }
