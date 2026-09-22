@@ -26,7 +26,7 @@ export function TextbookBulkGradeModal({
   readonly open: boolean;
   readonly onClose: () => void;
   readonly initialGradeKey?: string | null | undefined;
-  readonly initialPart?: 'PART_1' | 'PART_2' | 'BOTH' | null | undefined;
+  readonly initialPart?: 'PART_1' | 'PART_2' | null | undefined;
 }): ReactNode {
   const { t } = useI18n();
   const { schoolIds } = useSession();
@@ -142,7 +142,7 @@ export function TextbookBulkGradeModal({
               <option value="">—</option>
               {<option value="PART_1">الجزء الأول</option>
               <option value="PART_2">الجزء الثاني</option>
-              <option value="BOTH">الجزآن</option>}
+              }
             </select>
           </label>
         </div>
