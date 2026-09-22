@@ -22,7 +22,6 @@ import {
 import {
   administrationApi,
   type GradeRecord,
-  type TermRecord,
 } from '../../features/administration/administration.api';
 import { queryKeys } from '../../shared/api/query-keys';
 
@@ -34,7 +33,7 @@ function getAutoActiveTermOrdinal(): 1 | 2 {
 export function TextbooksAdminPage(): ReactNode {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [selectedTermOrdinal, setSelectedTermOrdinal] = useState<1 | 2>(getAutoActiveTermOrdinal());
+  const [selectedPartOrdinal, setSelectedPartOrdinal] = useState<1 | 2>(1);
   const [selectedGradeKey, setSelectedGradeKey] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | undefined>(undefined);
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -47,7 +46,6 @@ export function TextbooksAdminPage(): ReactNode {
   const [workspaceModalOpen, setWorkspaceModalOpen] = useState(false);
 
   const gradesQuery = useQuery({ queryKey: queryKeys.administration.catalogue('grades'), queryFn: () => administrationApi.grades.list() });
-  const termsQuery = useQuery({ queryKey: queryKeys.administration.catalogue('terms'), queryFn: () => administrationApi.terms.list() });
   const subjectsQuery = useQuery({ queryKey: queryKeys.administration.catalogue('subjects'), queryFn: () => administrationApi.subjects.list() });
   const textbooksQuery = useQuery({
     queryKey: queryKeys.textbookAdministration.textbooks({ status: statusFilter ?? 'ALL', limit: 100 }),
@@ -63,7 +61,6 @@ export function TextbooksAdminPage(): ReactNode {
   });
 
   const grades = gradesQuery.data ?? [];
-  const terms = termsQuery.data ?? [];
   const subjects = subjectsQuery.data ?? [];
   const textbooks = textbooksQuery.data?.rows ?? [];
   const selectedGrade = useMemo(
@@ -71,12 +68,12 @@ export function TextbooksAdminPage(): ReactNode {
     [grades, selectedGradeKey],
   );
 
-  if (gradesQuery.isLoading || termsQuery.isLoading || subjectsQuery.isLoading || textbooksQuery.isLoading) return <LoadingState />;
-  if (gradesQuery.isError || termsQuery.isError || subjectsQuery.isError || textbooksQuery.isError) {
+  if (gradesQuery.isLoading || subjectsQuery.isLoading || textbooksQuery.isLoading) return <LoadingState />;
+  if (gradesQuery.isError || subjectsQuery.isError || textbooksQuery.isError) {
     return <ErrorState error={gradesQuery.error || termsQuery.error || subjectsQuery.error || textbooksQuery.error || new Error('Failed to load textbook administration data')} />;
   }
 
-  const activeTerm = terms.find((t: TermRecord) => (t.ordinal ?? (t.key.includes('2') ? 2 : 1)) === selectedTermOrdinal);
+  const activePart = selectedPartOrdinal === 1 ? 'PART_1' : 'PART_2';
   const commonViewProps = {
     statusFilter,
     onSelectStatus: setStatusFilter,
@@ -89,8 +86,8 @@ export function TextbooksAdminPage(): ReactNode {
           {...commonViewProps}
           grades={grades}
           textbooks={textbooks}
-          selectedTermOrdinal={selectedTermOrdinal}
-          onSelectTermOrdinal={setSelectedTermOrdinal}
+          selectedPartOrdinal={selectedPartOrdinal}
+          onSelectPartOrdinal={setSelectedPartOrdinal}
           onSelectGrade={setSelectedGradeKey}
           onOpenCreateModal={() => setCreateModalOpen(true)}
           onOpenBulkModal={() => setBulkModalOpen(true)}
@@ -100,11 +97,10 @@ export function TextbooksAdminPage(): ReactNode {
       ) : (
         <GradeMaterialsView
           grade={selectedGrade}
-          terms={terms}
           subjects={subjects}
           textbooks={textbooks}
-          selectedTermOrdinal={selectedTermOrdinal}
-          onSelectTermOrdinal={setSelectedTermOrdinal}
+          selectedPartOrdinal={selectedPartOrdinal}
+          onSelectPartOrdinal={setSelectedPartOrdinal}
           onBackToGrades={() => setSelectedGradeKey(null)}
           onTransitionTextbook={async (tb, action) => {
             await transitionMutation.mutateAsync({ textbookKey: tb.key, action });
@@ -124,15 +120,15 @@ export function TextbooksAdminPage(): ReactNode {
         onClose={() => setWorkspaceModalOpen(false)}
         initialCoordinates={{
           grade: selectedGradeKey || undefined,
-          term: activeTerm?.key || undefined,
+          part: activePart,
         }}
       />
       <TextbookPdfModal open={!!pdfModalTextbook} textbook={pdfModalTextbook} onClose={() => setPdfModalTextbook(null)} onSaved={() => queryClient.invalidateQueries({ queryKey: queryKeys.textbookAdministration.all })} />
       <ContentImportModal open={!!importModalTextbookKey} textbookKey={importModalTextbookKey} onClose={() => setImportModalTextbookKey(null)} />
       <TextbookOutlineModal open={!!outlineModalTextbook} textbook={outlineModalTextbook} onClose={() => setOutlineModalTextbook(null)} />
       <TextbookEditModal open={!!editModalTextbook} textbook={editModalTextbook as TextbookAdminSummary | null} onClose={() => setEditModalTextbook(null)} />
-      <TextbookCreateModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} initialGradeKey={selectedGradeKey || undefined} initialTermKey={activeTerm?.key || undefined} />
-      <TextbookBulkGradeModal open={bulkModalOpen} onClose={() => setBulkModalOpen(false)} initialGradeKey={selectedGradeKey || undefined} initialTermKey={activeTerm?.key || undefined} />
+      <TextbookCreateModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} initialGradeKey={selectedGradeKey || undefined} initialPart={activePart} />
+      <TextbookBulkGradeModal open={bulkModalOpen} onClose={() => setBulkModalOpen(false)} initialGradeKey={selectedGradeKey || undefined} initialPart={activePart} />
       <TextbookAccreditModal open={accreditModalOpen} onClose={() => setAccreditModalOpen(false)} />
     </div>
   );
