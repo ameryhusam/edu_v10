@@ -476,6 +476,16 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
     return row !== null;
   }
 
+  async textbookForAdoption(textbookKey: string) {
+    const row = await this.db.textbook.findUnique({
+      where: { key: textbookKey },
+      select: { key: true, title: true, part: true, grade: { select: { key: true } } },
+    });
+    return row
+      ? { key: row.key, title: row.title, gradeKey: row.grade.key, part: row.part }
+      : null;
+  }
+
   async schoolExists(schoolKey: string): Promise<boolean> {
     const row = await this.db.school.findUnique({ where: { key: schoolKey }, select: { key: true } });
     return row !== null;
@@ -492,5 +502,13 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
   async termExists(termKey: string): Promise<boolean> {
     const row = await this.db.term.findUnique({ where: { key: termKey }, select: { key: true } });
     return row !== null;
+  }
+
+  async termForAcademicYearOrdinal(academicYearKey: string, ordinal: 1 | 2): Promise<string | null> {
+    const row = await this.db.term.findFirst({
+      where: { academicYear: { key: academicYearKey }, ordinal },
+      select: { key: true },
+    });
+    return row?.key ?? null;
   }
 }

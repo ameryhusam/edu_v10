@@ -108,6 +108,15 @@ class FakeRepo implements TextbookAdministrationRepository {
   async textbookExists(): Promise<boolean> {
     return this.exists.textbook;
   }
+  textbookCoordinates = {
+    key: TRIPLE.textbookKey,
+    title: 'Maths G7',
+    gradeKey: 'G07',
+    part: 'PART_1' as const,
+  };
+  async textbookForAdoption(): Promise<typeof this.textbookCoordinates | null> {
+    return this.exists.textbook ? this.textbookCoordinates : null;
+  }
   async schoolExists(): Promise<boolean> {
     return this.exists.school;
   }
@@ -116,6 +125,11 @@ class FakeRepo implements TextbookAdministrationRepository {
   }
   async termExists(): Promise<boolean> {
     return true;
+  }
+  termKeys = new Set(['2026-2027-T01', '2026-2027-T02']);
+  async termForAcademicYearOrdinal(academicYearKey: string, ordinal: 1 | 2): Promise<string | null> {
+    const key = academicYearKey + '-T0' + ordinal;
+    return this.termKeys.has(key) ? key : null;
   }
 }
 
@@ -286,6 +300,43 @@ describe('accrediting a whole grade', () => {
     expect(result.ok).toBe(false);
     expect(codeOf(result)).toBe('content.adoption_coordinate_not_found');
     expect(repo.writes).toEqual([]);
+  });
+});
+
+describe('adoption coordinate integrity', () => {
+  it('refuses a named textbook from a different grade', async () => {
+    const repo = new FakeRepo();
+    repo.textbookCoordinates = { ...repo.textbookCoordinates, gradeKey: 'G08' };
+    const { inner } = service(repo);
+    const result = await inner.adoptGrade(ACTOR, {
+      gradeKey: 'G07', textbookKey: TRIPLE.textbookKey,
+      schoolKey: TRIPLE.schoolKey, academicYearKey: TRIPLE.academicYearKey,
+    });
+    expect(result.ok).toBe(false);
+    expect(codeOf(result)).toBe('content.adoption_grade_mismatch');
+    expect(repo.writes).toEqual([]);
+  });
+
+  it('refuses a named textbook from a different physical part', async () => {
+    const repo = new FakeRepo();
+    repo.textbookCoordinates = { ...repo.textbookCoordinates, part: 'PART_2' };
+    const { inner } = service(repo);
+    const result = await inner.adoptGrade(ACTOR, {
+      gradeKey: 'G07', textbookKey: TRIPLE.textbookKey, part: 'PART_1',
+      schoolKey: TRIPLE.schoolKey, academicYearKey: TRIPLE.academicYearKey,
+    });
+    expect(result.ok).toBe(false);
+    expect(codeOf(result)).toBe('content.adoption_part_mismatch');
+    expect(repo.writes).toEqual([]);
+  });
+
+  it('requires the physical part term to exist inside the selected academic year', async () => {
+    const repo = new FakeRepo();
+    repo.termKeys = new Set(['2026-2027-T02']);
+    const { inner } = service(repo);
+    const result = await inner.adopt(ACTOR, TRIPLE);
+    expect(result.ok).toBe(false);
+    expect(codeOf(result)).toBe('content.adoption_term_not_found');
   });
 });
 

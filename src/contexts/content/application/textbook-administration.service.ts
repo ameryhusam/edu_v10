@@ -266,15 +266,33 @@ export class TextbookAdministrationService {
 
     let candidateKeys: readonly string[];
     if (input.textbookKey) {
-      const exists = await this.repo.textbookExists(input.textbookKey);
-      if (!exists) {
+      const textbook = await this.repo.textbookForAdoption(input.textbookKey);
+      if (!textbook) {
         return Err(
           Errors.notFound('content.textbook_not_found', 'No such textbook.', {
             textbookKey: input.textbookKey,
           }),
         );
       }
-      candidateKeys = [input.textbookKey];
+      if (textbook.gradeKey !== input.gradeKey) {
+        return Err(
+          Errors.validation(
+            'content.adoption_grade_mismatch',
+            'The selected textbook does not belong to the requested grade.',
+            { textbookKey: input.textbookKey, textbookGradeKey: textbook.gradeKey, gradeKey: input.gradeKey },
+          ),
+        );
+      }
+      if (input.part && textbook.part !== input.part) {
+        return Err(
+          Errors.validation(
+            'content.adoption_part_mismatch',
+            'The selected textbook does not belong to the requested physical part.',
+            { textbookKey: input.textbookKey, textbookPart: textbook.part, part: input.part },
+          ),
+        );
+      }
+      candidateKeys = [textbook.key];
     } else {
       const candidates = await this.repo.textbooksForGrade({
         gradeKey: input.gradeKey,

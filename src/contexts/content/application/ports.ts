@@ -595,9 +595,17 @@ export interface TextbookAdministrationRepository {
   }): Promise<void>;
   /** Coordinate existence, resolved by business key. */
   textbookExists(textbookKey: string): Promise<boolean>;
+  /** Full physical identity used to validate grade/part adoption coordinates. */
+  textbookForAdoption(textbookKey: string): Promise<{
+    key: string;
+    title: string;
+    gradeKey: string;
+    part: 'PART_1' | 'PART_2';
+  } | null>;
   schoolExists(schoolKey: string): Promise<boolean>;
   academicYearExists(academicYearKey: string): Promise<boolean>;
-  termExists(termKey: string): Promise<boolean>;
+  /** Resolve the term belonging to the selected academic year and ordinal. */
+  termForAcademicYearOrdinal(academicYearKey: string, ordinal: 1 | 2): Promise<string | null>;
 }
 
 export interface ContentAssetRecord {
