@@ -118,7 +118,7 @@ After that, delete the old `docs/` directory in a separate cleanup commit.
 
 To prevent duplicated or contradictory algorithms:
 
-- architecture/02-content-workspace-ingestion.md: architectural boundary, ownership, P1/P2/PB physical-part rule, page metadata invariant, synchronization invariants.
+- architecture/02-content-workspace-ingestion.md: architectural boundary, ownership, P1/P2 physical-part rule, page metadata invariant, synchronization invariants.
 - architecture/03-ai-evidence-provenance.md: AI authority, evidence and provenance invariants.
 - Docs_v10/12-end-to-end-dataflows.md: end-to-end operational workflow.
 - Docs_v10/13-content-storage-page-classification-and-import-algorithms.md: detailed page classification, two-part segmentation, storage and import algorithms.
