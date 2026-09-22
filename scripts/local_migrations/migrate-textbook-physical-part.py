@@ -128,6 +128,42 @@ def transform(path: str, text: str) -> str:
     title: string;
 """, path)
 
+    elif path.endswith("application/ports.ts"):
+        # Academic coordinate resolution and academic filters keep termKey.
+        # Physical textbook payloads expose part instead.
+        export_anchor = """  readonly textbook: {
+    key: string;
+    subjectKey: string;
+    gradeKey: string;
+    termKey: string;"""
+        if export_anchor in out:
+            out = out.replace(export_anchor, """  readonly textbook: {
+    key: string;
+    subjectKey: string;
+    gradeKey: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';""")
+        summary_anchor = """  readonly gradeName: string;
+  readonly termKey: string;
+  readonly termName: string;
+  readonly edition: string;"""
+        if summary_anchor in out:
+            out = out.replace(summary_anchor, """  readonly gradeName: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly edition: string;""")
+        # Creation contract.
+        create_anchor = """  createTextbook(input: {
+    key: string;
+    subjectId: string;
+    gradeId: string;
+    termId: string;"""
+        if create_anchor in out:
+            out = out.replace(create_anchor, """  createTextbook(input: {
+    key: string;
+    subjectId: string;
+    gradeId: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';""")
+        elif "createTextbook(input: {" in out and "part: 'PART_1' | 'PART_2' | 'BOTH';" not in out:
+            stop(path + ": createTextbook contract anchor not found")
     elif path.endswith("authoring.service.ts"):
         old_sig = """      subjectKey: string;
       gradeKey: string;
@@ -300,11 +336,16 @@ def transform(path: str, text: str) -> str:
                   "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';\n", path)
 
     elif path.endswith("content.repository.ts"):
-        out = one(out, "    termId: string;\n    title: string;\n",
-                  "    part: 'PART_1' | 'PART_2' | 'BOTH';\n    title: string;\n", path)
-        out = one(out, "        termId: input.termId,\n",
-                  "        part: input.part,\n", path)
-
+        old_contract = """    termId: string;
+    title: string;"""
+        if old_contract in out:
+            out = out.replace(old_contract, """    part: 'PART_1' | 'PART_2' | 'BOTH';
+    title: string;""")
+        old_data = "        termId: input.termId,"
+        if old_data in out:
+            out = out.replace(old_data, "        part: input.part,")
+        elif "        part: input.part," not in out and "async createTextbook" in out:
+            stop(path + ": createTextbook persistence contract not migrated from termId to part")
     elif path.endswith("textbook-administration.repository.ts"):
         # The API may still accept an academic term filter. Resolve that term
         # to physical parts at the repository boundary; Textbook itself has no term relation.
@@ -403,21 +444,39 @@ def validate(files: dict[str, tuple[str, str]]) -> None:
     leftovers = sorted(set(OLD_KEY.findall(combined)))
     if leftovers:
         stop("Old physical textbook keys remain:\n" + "\n".join(leftovers[:20]))
-    if "createTextbook(input: {" not in combined or \
-       "part: 'PART_1' | 'PART_2' | 'BOTH';" not in combined:
-        stop("Physical createTextbook part contract is missing")
-    for marker in ["readonly term: string;", "readonly termKey: string;",
-                   "input.term", '"termKey": term']:
+
+    if "createTextbook(input: {" not in combined:
+        stop("createTextbook contract is missing")
+    if "part: 'PART_1' | 'PART_2' | 'BOTH';" not in combined:
+        stop("Physical part type contract is missing")
+
+    physical_residue = [
+        "termId: input.termId",
+        "termId: resolved.term.id",
+        "readonly termKey: string;",
+        "pkg.textbook.termKey",
+        '"termKey": term',
+    ]
+    for marker in physical_residue:
         if marker in combined:
             stop("Physical migration residue remains: " + marker)
-    if re.search(r"buildTextbookKey\([\s\S]{0,400}?term\s*:", combined):
+
+    if re.search(r"buildTextbookKey\([\s\S]{0,500}?term\s*:", combined):
         stop("A physical textbook key is still built from term")
     if re.search(r"EDU-[^\n]*-T[12]-ED", combined, re.I):
         stop("A T1/T2 physical-key compatibility path remains")
-    if re.search(r"createTextbook[\s\S]{0,2500}?input\.termKey", combined):
-        stop("createTextbook still consumes academic term as physical identity")
-    if re.search(r"createTextbook[\s\S]{0,2500}?resolveTextbookCoordinates", combined):
-        stop("physical createTextbook still resolves academic term")
+    if re.search(r"createTextbook[\s\S]{0,3000}?resolveTextbookCoordinates", combined):
+        stop("Physical createTextbook still resolves academic term")
+    if re.search(r"term\.ordinal\s*===\s*[12][\s\S]{0,120}?PART_", combined):
+        stop("Physical part is still derived from academic term ordinal")
+
+    workspace = "\n".join(
+        after for path, (_, after) in files.items()
+        if "workspace" in path.lower()
+    )
+    if workspace and ("T01" in workspace or re.search(r"\bT[12]\b", workspace)):
+        stop("Workspace still contains a physical T1/T01 identity")
+
     for path, (before, after) in files.items():
         guard_isbn(before, after, path)
 
