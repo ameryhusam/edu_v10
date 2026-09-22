@@ -25,6 +25,10 @@ Last reviewed: 2026-09-22
 | ADR-018 | Historical chats and commit comparisons are evidence, not current decision sources. |
 | ADR-019 | ~/edu_v10 is the canonical local working directory. |
 | ADR-020 | Durable architecture changes require repository documentation and stale-reference scanning. |
+| ADR-021 | A two-part source book is segmented into physical Workspace coordinates P1/P2/PB using publisher/TOC/structural evidence with AI as a proposal fallback; P1/P2/PB must not be confused with T1/T01 term identity. |
+| ADR-022 | Page filenames are stable evidence identifiers; page classification and downstream routing are stored as metadata in page_classification.json, including mixed lesson/question/assessment pages. |
+| ADR-023 | TOC/index detection, first-page analysis window, page roles, lesson types, question roles, assessment roles and AI review thresholds are configuration-driven and versioned rather than scattered hard-coded rules. |
+| ADR-024 | Workspace export/import and DB synchronization are controlled snapshot/reconciliation operations; no uncontrolled filesystem watcher or live bidirectional mirror. |
 
 ## Conflict rule
 If a proposal conflicts with an ADR, do not implement it as if approved. Inspect schema/code, propose a superseding decision, and update this register and affected documents only after adoption.
