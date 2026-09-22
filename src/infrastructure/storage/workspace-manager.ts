@@ -32,70 +32,13 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as crypto from 'node:crypto';
 import type { ContentPackage } from '../../contexts/content/domain/export-profile.js';
+import type { WorkspaceIndexManifest } from '../../contexts/content/application/workspace.ports.js';
 
 export interface WorkspaceCoordinates {
   readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly grade: string;
   readonly subject: string;
   readonly edition?: string | undefined;
-}
-
-export interface WorkspaceIndexManifest {
-  readonly manifestVersion: string;
-  readonly type: string;
-  readonly workspaceId: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
-  readonly grade: string;
-  readonly subject: string;
-  readonly edition: string;
-  readonly title: string;
-  readonly storagePolicy?: {
-    readonly sourcePdfPersisted?: boolean;
-    readonly unitPdfPersisted?: boolean;
-    readonly bookPdfPersisted?: boolean;
-    readonly textbookPageImagesPersisted?: boolean;
-  };
-  readonly source: {
-    readonly engine: string;
-    readonly engineVersion: string;
-    readonly sourcePdf: {
-      readonly relativePath: string;
-      readonly mimeType: string;
-      readonly sizeBytes: number;
-      readonly sha256: string;
-    };
-  };
-  readonly counts: {
-    readonly units: number;
-    readonly lessons: number;
-    readonly concepts: number;
-    readonly questions: number;
-    readonly flashcards: number;
-    readonly resources: number;
-    readonly assets?: number;
-  };
-  readonly units: ReadonlyArray<{
-    readonly unitNumber: number;
-    readonly slug: string;
-    readonly relativePath: string;
-    readonly manifest: string;
-    readonly pdf: string;
-    readonly lessons: ReadonlyArray<{
-      readonly lessonNumber: number;
-      readonly slug: string;
-      readonly relativePath: string;
-      readonly manifest: string;
-      readonly pdf: string;
-    }>;
-  }>;
-  readonly package: {
-    readonly relativePath: string;
-    readonly profile: string;
-    readonly profileVersion: string;
-  };
-  readonly contentVersion: number;
-  readonly updatedAt: string;
-  readonly contentHash: string;
 }
 
 export class WorkspaceManager {
