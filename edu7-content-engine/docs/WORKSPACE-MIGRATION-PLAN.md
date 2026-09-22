@@ -48,14 +48,13 @@ it does not invent a second key format.
 
 ### Phase B — Identity and coordinates
 
-- [x] Normalize `T01/T02` filesystem term names while passing numeric term
-  coordinates to the existing segmenter.
+- [x] Normalize physical-part aliases: `P1`/`PART_1` and `P2`/`PART_2`.
 - [x] Normalize `G04/G07` filesystem grade names.
-- [x] Require the subject value to be the canonical database
-  `Subject.key`.
-- [x] Derive the textbook key using the same identity contract as
-  `src/shared/kernel/identifiers.ts`.
+- [x] Require the subject value to be the canonical database `Subject.key`.
+- [x] Derive textbook identity from `subject + grade + physical part + printed edition`.
+- [x] Keep academic term outside textbook identity; it is resolved by `TextbookAdoption`.
 - [x] Stop using the PDF filename as textbook identity.
+- [x] Split a combined source into independent P1/P2 packages before Workspace emission; ambiguous boundaries route to review.
 
 **Gate B:** two files with different filenames but identical
 subject/grade/term/edition coordinates target the same textbook workspace.
