@@ -57,6 +57,7 @@ export class PrismaLearnerEntitlementReader implements LearnerEntitlementReader 
         gradeId: true,
         termId: true,
         academicYear: { select: { key: true } },
+        term: { select: { key: true, name: true } },
       },
     });
 
@@ -69,11 +70,11 @@ export class PrismaLearnerEntitlementReader implements LearnerEntitlementReader 
       where: {
         ...publishedTextbook,
         gradeId: enrollment.gradeId,
-        termId: enrollment.termId,
         adoptions: {
           some: {
             schoolId: enrollment.schoolId,
             academicYearId: enrollment.academicYearId,
+            termId: enrollment.termId,
           },
         },
       },
@@ -84,7 +85,6 @@ export class PrismaLearnerEntitlementReader implements LearnerEntitlementReader 
         totalPages: true,
         subject: { select: { key: true, name: true } },
         grade: { select: { key: true, name: true } },
-        term: { select: { key: true, name: true } },
       },
       orderBy: [{ subject: { key: 'asc' } }, { key: 'asc' }],
     });
@@ -96,8 +96,8 @@ export class PrismaLearnerEntitlementReader implements LearnerEntitlementReader 
       subjectName: row.subject.name,
       gradeKey: row.grade.key,
       gradeName: row.grade.name,
-      termKey: row.term.key,
-      termName: row.term.name,
+      termKey: enrollment.term.key,
+      termName: enrollment.term.name,
       academicYearKey: enrollment.academicYear.key,
       edition: row.edition,
       totalPages: row.totalPages,
