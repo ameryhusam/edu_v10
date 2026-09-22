@@ -49,7 +49,7 @@
 
 | الكيان | هل يظهر `key` في قالب التعبئة؟ | الهوية التي يكتبها الإنسان | من يولد `key`؟ | الملاحظات |
 |---|---:|---|---|---|
-| Textbook | لا | `subjectKey + gradeKey + termKey + edition` | `textbookKey()` | يمكن عرض key في المعاينة فقط. |
+| Textbook | لا | `subjectKey + gradeKey + physicalPart + edition` | `textbookKey()` | academic term belongs to `TextbookAdoption`; key may be shown in preview only. |
 | Unit | لا | `slug` داخل الكتاب | `unitKey(textbookKey, slug)` | تغيير slug يعني وحدة جديدة. |
 | Lesson | لا | `unitSlug + slug` | `lessonKey(unitKey, slug)` | مستقر طوال الفصل غالبًا. |
 | Concept | لا | `unitSlug + lessonSlug + slug` | `conceptKey(lessonKey, slug)` | يسمح بإضافة مفاهيم جديدة في Draft/edition جديد. |

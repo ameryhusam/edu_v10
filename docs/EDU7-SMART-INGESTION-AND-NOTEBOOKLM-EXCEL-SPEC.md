@@ -47,10 +47,10 @@ $$\text{ConceptKey} = \text{LessonKey} + \text{"-C"} + \text{Pad2}(\text{concept
 $$\text{QuestionKey} = \text{LessonKey} + \text{"-Q"} + \text{stableKeyFingerprint}(\text{questionText})$$
 
 *مثال حي:*
-- كتاب: `EDU-MATH-G07-T01-2026`
-- الوحدة 1: `EDU-MATH-G07-T01-2026-U01`
-- الدرس 2: `EDU-MATH-G07-T01-2026-U01-L02`
-- المفهوم 1: `EDU-MATH-G07-T01-2026-U01-L02-C01`
+- كتاب P1: `EDU-MATH-G07-P1-ED2026`
+- الوحدة 1: `EDU-MATH-G07-P1-ED2026-U-ALGEBRA`
+- الدرس 2: `EDU-MATH-G07-P1-ED2026-U-ALGEBRA-L-LINEAR-EQUATIONS`
+- المفهوم 1: `EDU-MATH-G07-P1-ED2026-U-ALGEBRA-L-LINEAR-EQUATIONS-C-SET`
 - السؤال الأول: `EDU-MATH-G07-T01-2026-U01-L02-Qa1b2c3d4`
 
 ---

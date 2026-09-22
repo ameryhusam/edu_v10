@@ -8,20 +8,23 @@ separate from the Python engine.
 
 ## Target contract
 
-`workspace/<TERM>/<GRADE>/<SUBJECT>/<TEXTBOOK_KEY>/`
+`workspace/<PART>/<GRADE>/<SUBJECT>/<EDITION>/`
 
-Example:
+Examples:
 
-`workspace/T01/G04/SCI/ED2026/`
+`workspace/P1/G04/SCI/ED2026/`
+`workspace/P2/G04/SCI/ED2026/`
 
-The four coordinates have different roles:
+The coordinates have different roles:
 
 | Level | Source of truth | Example |
 |---|---|---|
-| Term folder | Edu7 Term ordinal | `T01` |
+| Physical part | Textbook physical part | `P1` / `P2` |
 | Grade folder | Edu7 Grade ordinal | `G04` |
 | Subject folder | Prisma `Subject.key` | `SCI` |
-| Book folder | Prisma `Textbook.key` identity contract | `EDU-SCI-G04-T1-ED2026` |
+| Edition folder | Printed textbook edition | `ED2026` |
+
+Academic term is deliberately absent from the Workspace path. It is an adoption/deployment fact, not textbook identity.
 
 The Python implementation mirrors the canonical TypeScript textbook-key rule;
 it does not invent a second key format.
@@ -45,14 +48,13 @@ it does not invent a second key format.
 
 ### Phase B — Identity and coordinates
 
-- [x] Normalize `T01/T02` filesystem term names while passing numeric term
-  coordinates to the existing segmenter.
+- [x] Normalize physical-part aliases: `P1`/`PART_1` and `P2`/`PART_2`.
 - [x] Normalize `G04/G07` filesystem grade names.
-- [x] Require the subject value to be the canonical database
-  `Subject.key`.
-- [x] Derive the textbook key using the same identity contract as
-  `src/shared/kernel/identifiers.ts`.
+- [x] Require the subject value to be the canonical database `Subject.key`.
+- [x] Derive textbook identity from `subject + grade + physical part + printed edition`.
+- [x] Keep academic term outside textbook identity; it is resolved by `TextbookAdoption`.
 - [x] Stop using the PDF filename as textbook identity.
+- [x] Split a combined source into independent P1/P2 packages before Workspace emission; ambiguous boundaries route to review.
 
 **Gate B:** two files with different filenames but identical
 subject/grade/term/edition coordinates target the same textbook workspace.
@@ -109,9 +111,11 @@ The importer will resolve:
 
 - `subjectKey`
 - `gradeKey`
-- `termKey`
+- physical part (`PART_1`/`PART_2`)
+- printed edition
 - `textbookKey`
 - unit/lesson keys
+- adoption term only when the deployment/adoption operation explicitly supplies it
 - ContentAsset identity/checksum
 - concepts/questions/flashcards/resources
 - grounding/provenance
@@ -128,15 +132,17 @@ Required commands:
 ```bash
 PYTHONPATH=src python -m edu7_content.cli.main prepare \
   books_input/<book>.pdf \
-  --subject SCI --grade G04 --term T01 --edition 2026 \
+  --subject SCI --grade G04 --part PART_1 --edition 2026 \
   --model gemini-3.6-flash --no-ollama
 ```
 
-Expected root:
+Expected root for a single physical part:
 
 ```
-workspace/T01/G04/SCI/ED2026/
+workspace/P1/G04/SCI/ED2026/
 ```
+
+For a combined source, `--part BOTH` is source-input mode only. The engine detects the boundary and emits `P1/...` and `P2/...`; it never emits a `PB` Workspace identity.
 
 Validation gates:
 
