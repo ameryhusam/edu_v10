@@ -262,7 +262,7 @@ export class WorkspaceImporterService {
    * Prepares and stores a textbook source PDF into workspace
    */
   async prepareWorkspace(input: {
-    term: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     grade: string;
     subject: string;
     edition?: string;
@@ -272,10 +272,10 @@ export class WorkspaceImporterService {
     units?: Array<any>;
   }) {
     const edition = input.edition;
-    const coords = { term: input.term, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
+    const coords = { part: input.part, grade: input.grade, subject: input.subject, ...(edition ? { edition } : {}) };
     const wsDir = edition
       ? this.workspaceManager.getWorkspaceDir(coords)
-      : this.workspaceManager.getWorkspaceDir({ term: input.term, grade: input.grade, subject: input.subject });
+      : this.workspaceManager.getWorkspaceDir({ part: input.part, grade: input.grade, subject: input.subject });
 
     if (input.pdfBuffer && input.pdfBuffer.length > 0) {
       if (input.autoSegment === false) {
@@ -292,7 +292,7 @@ export class WorkspaceImporterService {
         workspaceDir: wsDir,
         subject: input.subject,
         grade: input.grade,
-        term: input.term,
+        part: input.part,
         edition,
         title: input.title,
         timeoutMs: this.engineTimeoutMs,
