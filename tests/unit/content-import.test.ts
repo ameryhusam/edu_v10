@@ -22,7 +22,7 @@ import {
 import { Errors } from '../../src/shared/kernel/errors.js';
 import { Err, Ok } from '../../src/shared/kernel/result.js';
 
-const TB = 'EDU-MATH-G07-T1-ED2026';
+const TB = 'EDU-MATH-G07-P1-ED2026';
 const CTX = { actorKey: 'usr_author' };
 
 /**
@@ -41,7 +41,7 @@ class SpyAuthoring {
     return this.textbookPresent;
   }
 
-  async createTextbook(_ctx: unknown, input: { subjectKey: string; gradeKey: string; termKey: string; title: string; edition: string }) {
+  async createTextbook(_ctx: unknown, input: { subjectKey: string; gradeKey: string; part: 'PART_1' | 'PART_2'; title: string; edition: string }) {
     this.calls.push({ method: 'createTextbook', input });
     return Ok({ key: TB, title: input.title, edition: input.edition, status: 'DRAFT' });
   }
@@ -153,7 +153,7 @@ function pkg(over: Partial<ContentPackage> = {}): ContentPackage {
       key: TB,
       subjectKey: 'MATH',
       gradeKey: 'G07',
-      termKey: '2026-2027-T01',
+      part: 'PART_1',
       title: 'Mathematics',
       edition: '2026',
       description: null,
