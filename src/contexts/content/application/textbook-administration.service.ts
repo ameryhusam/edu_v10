@@ -123,7 +123,7 @@ export class TextbookAdministrationService {
   ): Promise<
     Result<{
       gradeKey: string;
-      part: 'PART_1' | 'PART_2' | 'BOTH';
+      part: 'PART_1' | 'PART_2';
       edition: string;
       created: number;
       unchanged: number;
@@ -236,7 +236,7 @@ export class TextbookAdministrationService {
     ctx: AdminContext,
     input: {
       gradeKey: string;
-      part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
+      part?: 'PART_1' | 'PART_2' | undefined;
       textbookKey?: string | undefined;
       schoolKey: string;
       academicYearKey: string;
