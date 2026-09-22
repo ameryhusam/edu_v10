@@ -3,7 +3,7 @@ export interface ContentEnginePrepareInput {
   readonly workspaceDir: string;
   readonly subject: string;
   readonly grade: string;
-  readonly term: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly edition?: string;
   readonly title?: string;
   readonly timeoutMs: number;
