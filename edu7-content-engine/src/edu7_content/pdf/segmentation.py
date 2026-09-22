@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from .page_mapping import PageMappingEngine
 from .reader import PdfReader
+from .workspace_validation import validate_segmentation_input
 
 
 def slugify(text: str, fallback: str = "item") -> str:
@@ -78,6 +79,16 @@ class LessonSegmenter:
         if not edition:
             raise ValueError("Printed edition is required; it must be supplied or extracted before segmentation.")
         title = coords.get("title", raw_meta.get("title", f"كتاب {subject}"))
+
+        validate_segmentation_input(
+            units=units,
+            subject=subject,
+            grade=grade,
+            part=part,
+            edition=edition,
+            page_count=self.reader.page_count,
+            page_mapper=self.mapper,
+        )
 
         part_code = {"PART_1": "P1", "PART_2": "P2"}.get(str(part).upper())
         if not part_code:
