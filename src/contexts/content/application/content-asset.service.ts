@@ -23,7 +23,7 @@ import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import { contentAssetKey, textbookKey as buildTextbookKey } from '../../../shared/kernel/identifiers.js';
 
 export interface UploadTextbookSourceInput {
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly grade: string;
   readonly subject: string;
   readonly edition?: string;
