@@ -428,6 +428,7 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
     contentAsset,
     contentEngine,
     env.CONTENT_ENGINE_TIMEOUT_MS,
+    contentAuthoring,
   );
   const workspaceArchive = new WorkspaceArchiveService(
     workspaceManager,
