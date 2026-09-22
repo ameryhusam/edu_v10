@@ -5,7 +5,7 @@
  * structured according to the final project plan:
  *
  * Workspace/
- *   <term>/
+ *   <part>/
  *     <grade>/
  *       <subject>/
  *         index.json
@@ -34,7 +34,7 @@ import * as crypto from 'node:crypto';
 import type { ContentPackage } from '../../contexts/content/domain/export-profile.js';
 
 export interface WorkspaceCoordinates {
-  readonly term: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly grade: string;
   readonly subject: string;
   readonly edition?: string | undefined;
@@ -44,7 +44,7 @@ export interface WorkspaceIndexManifest {
   readonly manifestVersion: string;
   readonly type: string;
   readonly workspaceId: string;
-  readonly term: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly grade: string;
   readonly subject: string;
   readonly edition: string;
@@ -108,13 +108,19 @@ export class WorkspaceManager {
 
   /**
    * Derives standardized workspace directory for coordinates:
-   * e.g., workspaces/T01/G07/MATH
+   * e.g., workspaces/P1/G07/SCI
    */
   getWorkspaceDir(coords: WorkspaceCoordinates): string {
-    const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const partNorm = coords.part.trim().toUpperCase();
+    const partSegment =
+      partNorm === 'PART_1' ? 'P1' :
+      partNorm === 'PART_2' ? 'P2' :
+      partNorm === 'BOTH' ? 'PB' :
+      '';
+    if (!partSegment) throw new Error('Physical part must be PART_1, PART_2, or BOTH.');
     const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);
+    const base = path.join(this.workspaceBaseDir, partSegment, gradeNorm, subjectNorm);
     if (!coords.edition) return base;
     const editionNorm = coords.edition.trim().toUpperCase().replace(/[^A-Z0-9-]/g, '').replace(/^ED(?=\d)/, '');
     if (!editionNorm) throw new Error('Printed edition is required for a textbook workspace.');
@@ -123,18 +129,18 @@ export class WorkspaceManager {
 
   /** Resolves the canonical workspace path from the derived textbook key. */
   getWorkspaceDirFromTextbookKey(textbookKey: string): string {
-    const match = /^EDU-(.+?)-G(\d+)-T(\d+)-ED(.+)$/i.exec(textbookKey.trim());
+    const match = /^EDU-(.+?)-G(\d+)-(P1|P2|PB)-ED(.+)$/i.exec(textbookKey.trim());
     if (!match) throw new Error(`Invalid textbook key: ${textbookKey}`);
 
-    const [, subject, grade, term, edition] = match;
-    if (!subject || !grade || !term || !edition) {
+    const [, subject, grade, part, edition] = match;
+    if (!subject || !grade || !part || !edition) {
       throw new Error(`Invalid textbook key coordinates: ${textbookKey}`);
     }
 
     return this.getWorkspaceDir({
       subject,
       grade: `G${grade}`,
-      term: `T${term}`,
+      part: part === 'P1' ? 'PART_1' : part === 'P2' ? 'PART_2' : 'BOTH',
       edition,
     });
   }
@@ -173,8 +179,8 @@ export class WorkspaceManager {
       const initialManifest: WorkspaceIndexManifest = {
         manifestVersion: '1.0',
         type: 'workspace_subject',
-        workspaceId: `${coords.term}-${coords.grade}-${coords.subject}`,
-        term: coords.term,
+        workspaceId: `${coords.part}-${coords.grade}-${coords.subject}`,
+        part: coords.part,
         grade: coords.grade,
         subject: coords.subject,
         edition,
