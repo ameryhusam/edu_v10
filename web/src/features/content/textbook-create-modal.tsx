@@ -39,7 +39,6 @@ export function TextbookCreateModal({
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const 
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState(initialGradeKey ?? '');
   const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>(initialPart ?? '');
