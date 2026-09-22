@@ -277,7 +277,7 @@ export class TextbookAdministrationService {
     } else {
       const candidates = await this.repo.textbooksForGrade({
         gradeKey: input.gradeKey,
-        termKey: input.termKey,
+        part: input.part,
       });
       if (candidates.length === 0) {
         return Err(
