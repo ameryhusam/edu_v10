@@ -29,7 +29,7 @@
  *    hierarchy.
  *
  * A textbook is identified by subject + grade + physical part + **printed edition** —
- * the physical book being taught. Academic year is deliberately NOT part of
+ * the physical book being taught. Academic year and academic term are deliberately NOT part of
  * identity: the same printed edition is used across several years, so keying on
  * the year would mint a new key annually for a book that has not changed.
  * Which years a book is used in is a deployment fact, recorded by adoption.
@@ -58,8 +58,8 @@ export interface TextbookCoordinates {
   readonly subject: string;
   /** Grade ordinal, 1-based. */
   readonly grade: number;
-  /** Physical book coverage. */
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  /** Physical book part. Combined source PDFs are split before canonical import. */
+  readonly part: 'PART_1' | 'PART_2';
   /**
    * Printed edition of the physical book.
    * Not the academic year of use.
@@ -153,10 +153,10 @@ function normalizeEdition(raw: string): Result<string> {
 }
 
 function validateCoordinates(c: TextbookCoordinates): Result<TextbookCoordinates> {
-  if (!['PART_1', 'PART_2', 'BOTH'].includes(c.part)) {
+  if (!['PART_1', 'PART_2'].includes(c.part)) {
     return Err(Errors.validation(
       'identity.bad_part',
-      'Textbook part must be PART_1, PART_2, or BOTH.',
+      'Textbook part must be PART_1 or PART_2. Combined sources are split before import.',
     ));
   }
   if (!Number.isInteger(c.grade) || c.grade < 1 || c.grade > 12) {
@@ -181,7 +181,7 @@ export function textbookKey(coords: TextbookCoordinates): Result<TextbookKey> {
   const edition = normalizeEdition(v.value.edition);
   if (!edition.ok) return edition;
   const { subject, grade, part, edition } = v.value;
-  const partCode = part === 'PART_1' ? 'P1' : part === 'PART_2' ? 'P2' : 'PB';
+  const partCode = part === 'PART_1' ? 'P1' : 'P2';
   return Ok(`EDU-${subject}-G${pad(grade)}-${partCode}-${edition.value}` as TextbookKey);
 }
 
@@ -304,14 +304,14 @@ export function flashcardKey(parent: ConceptKey, stableIdentity: string): Result
 
 /** Parse a canonical textbook key back into its coordinates. */
 export function parseTextbookKey(key: string): Result<TextbookCoordinates> {
-  const m = /^EDU-([A-Z0-9]+)-G(\d{2})-(P1|P2|PB)-ED(.+)$/.exec(key);
+  const m = /^EDU-([A-Z0-9]+)-G(\d{2})-(P1|P2)-ED(.+)$/.exec(key);
   if (!m) {
     return Err(Errors.validation('identity.unparseable_key', 'Not a canonical textbook key.', { key }));
   }
   return Ok({
     subject: m[1]!,
     grade: Number(m[2]),
-    part: m[3] === 'P1' ? 'PART_1' : m[3] === 'P2' ? 'PART_2' : 'BOTH',
+    part: m[3] === 'P1' ? 'PART_1' : 'PART_2',
     edition: m[4]!,
   });
 }
