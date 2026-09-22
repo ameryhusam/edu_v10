@@ -95,7 +95,7 @@ A different printed edition is a new textbook identity, not an update to the pre
 
 Canonical identity:
 
-    subject + grade + term + printedEdition
+    subject + grade + physicalPart + printedEdition
               ↓
           Textbook.key
 
