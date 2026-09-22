@@ -411,8 +411,7 @@ export interface TextbookSummary {
   readonly subjectName: string;
   readonly gradeKey: string;
   readonly gradeName: string;
-  readonly termKey: string;
-  readonly termName: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly edition: string;
   readonly status: string;
   /** How many schools have adopted this book (any year). */
@@ -428,7 +427,7 @@ export interface TextbookListQuery {
   readonly search?: string | undefined;
   readonly subjectKey?: string | undefined;
   readonly gradeKey?: string | undefined;
-  readonly termKey?: string | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
   readonly status?: string | undefined;
   readonly limit: number;
   readonly offset: number;
