@@ -411,7 +411,7 @@ export interface TextbookSummary {
   readonly subjectName: string;
   readonly gradeKey: string;
   readonly gradeName: string;
-  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
+  readonly part: 'PART_1' | 'PART_2';
   readonly edition: string;
   readonly status: string;
   /** How many schools have adopted this book (any year). */
@@ -562,13 +562,12 @@ export interface TextbookAdministrationRepository {
   /** Active subjects the catalogue says this grade teaches. */
   activeGradeSubjects(gradeKey: string): Promise<readonly GradeSubjectSeed[] | null>;
   /**
-   * Every textbook that exists for a grade, across every subject and term
-   * (or one term when given). Feeds bulk accreditation: naming a grade means
+   * Every textbook that exists for a grade, across every subject, optionally filtered by physical part. Feeds bulk accreditation: naming a grade means
    * naming every book it has, not one coordinate at a time.
    */
   textbooksForGrade(input: {
     gradeKey: string;
-    termKey?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | undefined;
   }): Promise<readonly TextbookCoordinateMatch[]>;
   listAdoptions(query: AdoptionListQuery): Promise<AdoptionListPage>;
   /** The unit→lesson outline of a book, or null when the book is unknown. */
@@ -587,6 +586,7 @@ export interface TextbookAdministrationRepository {
     textbookKey: string;
     schoolKey: string;
     academicYearKey: string;
+    termKey: string;
   }): Promise<AdoptionRow>;
   deleteAdoption(input: {
     textbookKey: string;
