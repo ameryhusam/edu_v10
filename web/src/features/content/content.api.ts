@@ -509,12 +509,13 @@ export const textbookAdministrationApi = {
   /** Workspace operations */
   workspacePrepareUpload: (input: {
     file: File;
-    part: 'PART_1' | 'PART_2';
-    grade: string;
-    subject: string;
+    part?: 'PART_1' | 'PART_2';
+    grade?: string;
+    subject?: string;
     edition?: string | undefined;
     title?: string | undefined;
     autoSegment?: boolean | undefined;
+    confirmDetectedIdentity?: boolean | undefined;
   }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
     query: {
       part: input.part,
@@ -523,6 +524,7 @@ export const textbookAdministrationApi = {
       edition: input.edition,
       title: input.title,
       autoSegment: input.autoSegment,
+      confirmDetectedIdentity: input.confirmDetectedIdentity,
     },
     rawContentType: 'application/pdf',
   }),
