@@ -556,6 +556,19 @@ export const textbookAdministrationApi = {
     dryRun?: boolean;
     syncAssets?: boolean;
   }) => api.post<any>('content/workspace/import', input),
+
+  /** Import an already-complete Workspace ZIP. This path does not invoke the PDF preparation engine. */
+  workspaceImportZip: (input: {
+    file: File;
+    textbookKey?: string | undefined;
+    dryRun?: boolean | undefined;
+  }) => api.postRaw<any>('content/workspace/import-zip', input.file, {
+    query: {
+      textbookKey: input.textbookKey,
+      dryRun: input.dryRun,
+    },
+    rawContentType: 'application/zip',
+  }),
 };
 
 export const contentApi = textbookAdministrationApi;
