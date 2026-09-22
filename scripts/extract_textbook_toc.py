@@ -528,7 +528,7 @@ def generate_edu7_excel(
 
 # ─── واجهة سطر الأوامر (CLI Main) ───────────────────────────────────────────
 
-def infer_metadata_from_filename(filename: str) -> Tuple[str, str, int, str]:
+def infer_metadata_from_filename(filename: str) -> Tuple[str, str, str, str]:
     base = os.path.basename(filename).upper()
     
     subject = "GENERAL"
@@ -550,7 +550,7 @@ def infer_metadata_from_filename(filename: str) -> Tuple[str, str, int, str]:
     if "T2" in base or "P2" in base or "الفصل_الثاني" in base or "ترم2" in base:
         part = "PART_2"
 
-    title = f"كتاب {subject} للصف {grade} الجزء {1 if part == \"PART_1\" else 2}"
+    title = f"كتاب {subject} للصف {grade} الجزء {1 if part == 'PART_1' else 2}"
     return subject, grade, part, title
 
 
