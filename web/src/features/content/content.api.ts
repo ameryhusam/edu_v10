@@ -103,7 +103,7 @@ export interface TextbookQuery {
   readonly search?: string | undefined;
   readonly subjectKey?: string | undefined;
   readonly gradeKey?: string | undefined;
-  readonly termKey?: string | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
   readonly status?: PublicationStatus | undefined;
   readonly limit?: number | undefined;
   readonly offset?: number | undefined;
