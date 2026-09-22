@@ -19,7 +19,6 @@ import { Pager } from '../../design-system/patterns/pager';
 import { DataTable, type Column } from '../../design-system/patterns/data-table';
 import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
 import { RecordEditor, type FieldSpec } from '../../design-system/patterns/record-editor';
-import { EnrollmentCoordinates } from '../../features/people/user-enrollments-section';
 import { adminApi, type EnrollmentRow } from '../../features/people/people.api';
 import { administrationApi } from '../../features/administration/administration.api';
 import { schoolsApi } from '../../features/schools/schools.api';
@@ -39,11 +38,6 @@ export function EnrollmentsPage(): ReactNode {
   const [current, setCurrent] = useState<'any' | 'current' | 'ended'>('any');
   const [offset, setOffset] = useState(0);
 
-  const [creating, setCreating] = useState(false);
-  const [cSchool, setCSchool] = useState('');
-  const [cYear, setCYear] = useState('');
-  const [cTerm, setCTerm] = useState('');
-  const [cGrade, setCGrade] = useState('');
   const [ending, setEnding] = useState<EnrollmentRow | null>(null);
   const [makingCurrent, setMakingCurrent] = useState<EnrollmentRow | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -69,23 +63,6 @@ export function EnrollmentsPage(): ReactNode {
 
   const describe = (cause: unknown): string =>
     cause instanceof ApiError ? describeApiError(cause, locale, t).title : t('catalogue.saveFailed');
-
-  const enroll = useMutation({
-    mutationFn: (learnerKey: string) =>
-      adminApi.enroll({
-        learnerKey,
-        schoolKey: cSchool,
-        academicYearKey: cYear,
-        termKey: cTerm,
-        gradeKey: cGrade,
-      }),
-    onSuccess: async () => {
-      await refresh();
-      setCreating(false);
-      setFailure(null);
-    },
-    onError: (cause) => setFailure(describe(cause)),
-  });
 
   const end = useMutation({
     mutationFn: (row: EnrollmentRow) => adminApi.endEnrollment(row.key),
@@ -121,12 +98,7 @@ export function EnrollmentsPage(): ReactNode {
     {
       id: 'learner',
       label: t('enrollments.learner'),
-      render: (row) => (
-        <span>
-          <span className="font-semibold text-text">{row.learnerName}</span>
-          <span className="block text-xs text-text-muted">{row.learnerKey}</span>
-        </span>
-      ),
+      render: (row) => <span className="font-semibold text-text">{row.learnerName}</span>,
     },
     { id: 'school', label: t('enrollments.school'), render: (row) => row.schoolName },
     { id: 'year', label: t('enrollments.year'), render: (row) => row.academicYearKey },
@@ -149,18 +121,6 @@ export function EnrollmentsPage(): ReactNode {
     },
   ];
 
-  const learnerField: readonly FieldSpec[] = [
-    {
-      id: 'learnerKey',
-      label: t('enrollments.learnerKey'),
-      kind: 'text',
-      required: true,
-      hint: t('enrollments.learnerHint'),
-    },
-  ];
-
-  const canCreate = cSchool !== '' && cYear !== '' && cTerm !== '' && cGrade !== '';
-
   const selectClass =
     'h-11 min-w-36 rounded-lg border border-border bg-surface-raised px-3 text-sm text-text';
 
@@ -169,12 +129,11 @@ export function EnrollmentsPage(): ReactNode {
       <PageHeader
         title={t('enrollments.title')}
         subtitle={t('enrollments.subtitle')}
-        actions={
-          <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
-            {t('enrollments.create')}
-          </Button>
-        }
       />
+
+      <p className="rounded-xl border border-info-border bg-info-subtle px-3.5 py-2.5 text-xs leading-relaxed text-info">
+        {t('enrollments.manageFromUserProfile')}
+      </p>
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="space-y-1.5">
@@ -274,38 +233,7 @@ export function EnrollmentsPage(): ReactNode {
         />
       ) : null}
 
-      {creating ? (
-        <RecordEditor
-          title={t('enrollments.createTitle')}
-          fields={learnerField}
-          initial={{ learnerKey: '' }}
-          isNew
-          saving={enroll.isPending}
-          errorText={failure}
-          onSave={(values) => {
-            if (canCreate) enroll.mutate(values.learnerKey ?? '');
-            else setFailure(t('error.request.invalid_input'));
-          }}
-          onClose={() => {
-            setCreating(false);
-            setFailure(null);
-          }}
-        >
-          <EnrollmentCoordinates
-            schoolKey={cSchool}
-            yearKey={cYear}
-            termKey={cTerm}
-            gradeKey={cGrade}
-            onChange={(next) => {
-              if (next.schoolKey !== undefined) setCSchool(next.schoolKey);
-              if (next.yearKey !== undefined) setCYear(next.yearKey);
-              if (next.termKey !== undefined) setCTerm(next.termKey);
-              if (next.gradeKey !== undefined) setCGrade(next.gradeKey);
-            }}
-            t={t}
-          />
-        </RecordEditor>
-      ) : null}
+
     </div>
   );
 }
