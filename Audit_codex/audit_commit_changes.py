@@ -1,48 +1,53 @@
 #!/usr/bin/env python3
 """
-Audit the latest project commit and write machine-readable feedback.
+Audit Codex changes as both individual commits and multi-commit task groups.
 
 Usage:
   python Audit_codex/audit_commit_changes.py
-  python Audit_codex/audit_commit_changes.py <old-commit> <new-commit>
+  python Audit_codex/audit_commit_changes.py --base <commit> --head <commit>
 
-Default mode is intentionally "latest project commit":
-- It ignores commits whose changes are only inside Audit_codex/report.
-- It audits the newest commit that changed project files outside Audit_codex.
-- The comparison base is that commit's first parent.
-- Historical explicit comparisons are reported as historical and MUST NOT be
-  treated as the decision source for the latest project change.
+Default mode:
+- finds the newest project commit outside Audit_codex/
+- treats it as the current head
+- builds a candidate task group by walking backwards through related commits
+- audits the cumulative task diff (candidate base -> head)
+- also records every commit inside the candidate group
+- writes an immutable timestamped report plus latest_commit_feedback.txt
 
-The generated feedback is written to:
-  Audit_codex/report/latest_commit_feedback.txt
+Explicit --base/--head:
+- authoritative task boundary requested by the user
+- report is marked TASK_SCOPE_EXPLICIT
+- this is the decision source for that requested task when the head is the
+  latest project commit; otherwise it is historical-only
 
-The report is overwritten on every run. This tool never modifies source code.
+IMPORTANT:
+- Audit_codex/report/index.txt is a human-controlled acceptance ledger.
+- This program NEVER creates, edits, or rewrites index.txt.
+- The index is changed only by explicit user instruction after a report has
+  been discussed and accepted.
 """
 
 from __future__ import annotations
 
+import argparse
 import re
 import subprocess
-import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_DIR = Path(__file__).resolve().parent / "report"
-REPORT_FILE = REPORT_DIR / "latest_commit_feedback.txt"
+LATEST_FILE = REPORT_DIR / "latest_commit_feedback.txt"
+INDEX_FILE = REPORT_DIR / "index.txt"
 
+AUDIT_PREFIX = "Audit_codex/"
 SOURCE_EXTENSIONS = {".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".py"}
 IGNORED_PARTS = {"node_modules", ".git", "dist", "build", ".next", "coverage"}
-AUDIT_PREFIX = "Audit_codex/"
 
 FUNCTION_PATTERNS = [
-    re.compile(
-        r"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\("
-    ),
-    re.compile(
-        r"^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>"
-    ),
+    re.compile(r"^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\("),
+    re.compile(r"^\s*(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>"),
     re.compile(r"^\s*(?:async\s+)?def\s+([A-Za-z_][\w]*)\s*\("),
 ]
 
@@ -57,10 +62,25 @@ class FileStat:
     status: str
 
 
+@dataclass
+class CommitInfo:
+    sha: str
+    subject: str
+    date: str
+    paths: tuple[str, ...]
+
+
 def run(*args: str) -> str:
     return subprocess.check_output(
         ["git", *args], cwd=ROOT, text=True, stderr=subprocess.STDOUT
     )
+
+
+def safe_run(*args: str) -> str:
+    try:
+        return run(*args)
+    except subprocess.CalledProcessError:
+        return ""
 
 
 def line_count(text: str) -> int:
@@ -77,6 +97,10 @@ def function_signatures(text: str) -> set[str]:
     return found
 
 
+def is_decision_relevant_path(path: str) -> bool:
+    return not path.startswith(AUDIT_PREFIX)
+
+
 def is_source(path: str) -> bool:
     p = Path(path)
     return p.suffix in SOURCE_EXTENSIONS and not any(
@@ -84,47 +108,123 @@ def is_source(path: str) -> bool:
     )
 
 
-def is_decision_relevant_path(path: str) -> bool:
-    return not path.startswith(AUDIT_PREFIX)
+def changed_paths(commit: str) -> tuple[str, ...]:
+    out = safe_run("diff-tree", "--no-commit-id", "--name-only", "-r", commit)
+    return tuple(p for p in out.splitlines() if p)
 
 
-def commit_changed_paths(commit: str) -> list[str]:
-    return [
-        path
-        for path in run("diff-tree", "--no-commit-id", "--name-only", "-r", commit)
-        .splitlines()
-        if path
-    ]
-
-
-def find_latest_project_commit(start: str = "HEAD") -> tuple[str, str]:
-    """
-    Find the newest commit that changed something outside Audit_codex.
-
-    Returns (commit_sha, reason). The first parent of that commit is the
-    authoritative comparison base.
-    """
-    commits = run("rev-list", start).splitlines()
-    for commit in commits:
-        paths = commit_changed_paths(commit)
-        relevant = [p for p in paths if is_decision_relevant_path(p)]
-        if relevant:
-            return commit, (
-                "Latest commit with project changes outside "
-                "Audit_codex/report."
-            )
-    raise RuntimeError("No project commit found outside Audit_codex/report.")
-
-
-def parent_of(commit: str) -> str:
+def first_parent(commit: str) -> str:
     parents = run("rev-list", "--parents", "-n", "1", commit).split()
     if len(parents) < 2:
-        raise RuntimeError(f"Commit {commit[:12]} has no parent to compare.")
+        raise RuntimeError(f"Commit {commit[:12]} has no first parent.")
     return parents[1]
 
 
-def parse_numstat(text: str, base: str, head: str) -> list[FileStat]:
+def commit_info(commit: str) -> CommitInfo:
+    return CommitInfo(
+        sha=run("rev-parse", commit).strip(),
+        subject=run("show", "-s", "--format=%s", commit).strip(),
+        date=run("show", "-s", "--format=%cI", commit).strip(),
+        paths=changed_paths(commit),
+    )
+
+
+def latest_project_commit(start: str = "HEAD") -> tuple[str, str]:
+    for commit in run("rev-list", "--first-parent", start).splitlines():
+        paths = changed_paths(commit)
+        if any(is_decision_relevant_path(p) for p in paths):
+            return commit, "Latest first-parent commit with project changes outside Audit_codex."
+    raise RuntimeError("No project commit found outside Audit_codex.")
+
+
+def normalize_subject(subject: str) -> str:
+    # Keep the conventional prefix/scope, but remove issue/commit-specific noise.
+    text = subject.lower().strip()
+    text = re.sub(r"\b\d{5,}\b", " ", text)
+    text = re.sub(r"[^a-z0-9_:/.-]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def scope_tokens(info: CommitInfo) -> set[str]:
+    tokens: set[str] = set()
+    for path in info.paths:
+        if not is_decision_relevant_path(path):
+            continue
+        parts = Path(path).parts
+        if parts:
+            tokens.add(parts[0].lower())
+        if len(parts) > 1:
+            tokens.add("/".join(parts[:2]).lower())
+        if len(parts) > 2:
+            tokens.add("/".join(parts[:3]).lower())
+    subject = normalize_subject(info.subject)
+    for token in re.findall(r"[a-z0-9_]+", subject):
+        if len(token) >= 4:
+            tokens.add(token)
+    return tokens
+
+
+def related_score(left: CommitInfo, right: CommitInfo) -> int:
+    left_paths = set(p for p in left.paths if is_decision_relevant_path(p))
+    right_paths = set(p for p in right.paths if is_decision_relevant_path(p))
+    overlap = len(left_paths & right_paths)
+    left_top = {Path(p).parts[0].lower() for p in left_paths if Path(p).parts}
+    right_top = {Path(p).parts[0].lower() for p in right_paths if Path(p).parts}
+    top_overlap = len(left_top & right_top)
+    token_overlap = len(scope_tokens(left) & scope_tokens(right))
+    score = overlap * 5 + top_overlap * 2 + min(token_overlap, 4)
+    if normalize_subject(left.subject).split(":", 1)[0] == normalize_subject(right.subject).split(":", 1)[0]:
+        score += 3
+    return score
+
+
+def candidate_task_group(head: str, max_commits: int = 20) -> tuple[list[CommitInfo], str]:
+    chain = run("rev-list", "--first-parent", head).splitlines()
+    selected: list[CommitInfo] = []
+    previous: CommitInfo | None = None
+    boundary_reasons: list[str] = []
+
+    for sha in chain[:max_commits]:
+        info = commit_info(sha)
+        if not any(is_decision_relevant_path(p) for p in info.paths):
+            continue
+        if previous is None:
+            selected.append(info)
+            previous = info
+            continue
+
+        score = related_score(previous, info)
+        # Conservative automatic grouping: require meaningful continuity.
+        if score < 3:
+            boundary_reasons.append(
+                f"boundary before {previous.sha[:12]}: relatedness score {score} < 3"
+            )
+            break
+        selected.append(info)
+        previous = info
+
+    selected.reverse()
+    if not selected:
+        raise RuntimeError("Unable to identify a project task group.")
+
+    if len(selected) == 1:
+        confidence = "SINGLE_COMMIT_OR_NO_RELIABLE_MULTI_COMMIT_LINK"
+    elif boundary_reasons:
+        confidence = "CANDIDATE_GROUP_WITH_BOUNDARY_EVIDENCE"
+    else:
+        confidence = "CANDIDATE_GROUP_CONTINUITY_ONLY"
+
+    return selected, confidence
+
+
+def task_commits(base: str, head: str) -> list[CommitInfo]:
+    commits = run("rev-list", "--first-parent", "--reverse", f"{base}..{head}").splitlines()
+    return [commit_info(c) for c in commits if any(is_decision_relevant_path(p) for p in changed_paths(c))]
+
+
+def parse_numstat(base: str, head: str) -> list[FileStat]:
     rows: list[FileStat] = []
+    text = safe_run("diff", "--numstat", base, head)
     for line in text.splitlines():
         parts = line.split("\t")
         if len(parts) != 3:
@@ -133,221 +233,256 @@ def parse_numstat(text: str, base: str, head: str) -> list[FileStat]:
         if added == "-" or deleted == "-":
             continue
         try:
-            added_n = int(added)
-            deleted_n = int(deleted)
+            added_n, deleted_n = int(added), int(deleted)
         except ValueError:
             continue
-
-        try:
-            old = line_count(run("show", f"{base}:{path}"))
-        except subprocess.CalledProcessError:
-            old = 0
-        try:
-            new = line_count(run("show", f"{head}:{path}"))
-        except subprocess.CalledProcessError:
-            new = 0
-
+        old = line_count(safe_run("show", f"{base}:{path}")) if safe_run("cat-file", "-e", f"{base}:{path}") else 0
+        new = line_count(safe_run("show", f"{head}:{path}")) if safe_run("cat-file", "-e", f"{head}:{path}") else 0
         if added_n > 0 and deleted_n == 0:
             status = "ADDITION_ONLY"
         elif added_n == 0 and deleted_n > 0:
             status = "DELETION_ONLY"
         else:
             status = "MODIFIED"
-
         rows.append(FileStat(path, old, new, added_n, deleted_n, status))
     return rows
 
 
-def build_report(base: str, head: str, historical: bool, selection_reason: str) -> tuple[str, int]:
-    old_sha = run("rev-parse", base).strip()
-    new_sha = run("rev-parse", head).strip()
-    commit_subject = run("show", "-s", "--format=%s", head).strip()
-    commit_date = run("show", "-s", "--format=%cI", head).strip()
-
-    diff_stat = run("diff", "--shortstat", base, head).strip()
-    numstat = run("diff", "--numstat", base, head)
-    files = parse_numstat(numstat, base, head)
-    total_added = sum(x.added for x in files)
-    total_deleted = sum(x.deleted for x in files)
-
-    deleted_functions: list[tuple[str, list[str]]] = []
-    added_functions: list[tuple[str, list[str]]] = []
-
+def signature_delta(base: str, head: str, files: list[FileStat]) -> tuple[list[tuple[str, list[str]]], list[tuple[str, list[str]]]]:
+    removed: list[tuple[str, list[str]]] = []
+    added: list[tuple[str, list[str]]] = []
     for item in files:
         if not is_source(item.path):
             continue
-
-        try:
-            old_text = run("show", f"{base}:{item.path}")
-        except subprocess.CalledProcessError:
-            old_text = ""
-        try:
-            new_text = run("show", f"{head}:{item.path}")
-        except subprocess.CalledProcessError:
-            new_text = ""
-
+        old_text = safe_run("show", f"{base}:{item.path}")
+        new_text = safe_run("show", f"{head}:{item.path}")
         old_funcs = function_signatures(old_text)
         new_funcs = function_signatures(new_text)
+        r = sorted(old_funcs - new_funcs)
+        a = sorted(new_funcs - old_funcs)
+        if r:
+            removed.append((item.path, r))
+        if a:
+            added.append((item.path, a))
+    return removed, added
 
-        removed = sorted(old_funcs - new_funcs)
-        added = sorted(new_funcs - old_funcs)
 
-        if removed:
-            deleted_functions.append((item.path, removed))
-        if added:
-            added_functions.append((item.path, added))
+def commit_internal_risk(info: CommitInfo) -> str:
+    try:
+        parent = first_parent(info.sha)
+    except RuntimeError:
+        return "ROOT_COMMIT"
+    files = parse_numstat(parent, info.sha)
+    deleted = sum(f.deleted for f in files)
+    if deleted:
+        return "REVIEW_REQUIRED"
+    if sum(f.added for f in files):
+        return "LOW_RISK_SIGNAL"
+    return "NO_CHANGE"
 
+
+def accepted_reports() -> list[str]:
+    # Read-only. The tool must never write the acceptance index.
+    if not INDEX_FILE.exists():
+        return []
+    return [
+        line.strip()
+        for line in INDEX_FILE.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+
+
+def build_report(base: str, head: str, scope_kind: str, selection_reason: str, group: list[CommitInfo], confidence: str) -> tuple[str, int, str]:
+    base_sha = run("rev-parse", base).strip()
+    head_sha = run("rev-parse", head).strip()
+    files = parse_numstat(base, head)
+    total_added = sum(x.added for x in files)
+    total_deleted = sum(x.deleted for x in files)
+    deleted_functions, added_functions = signature_delta(base, head, files)
+
+    is_latest = run("rev-parse", head).strip() == run("rev-parse", "HEAD").strip()
     if deleted_functions:
         decision = "REVIEW_REQUIRED"
-        decision_reason = (
-            "Likely function signatures disappeared. Inspect the diff and "
-            "verify callers before allowing the next AI change."
-        )
+        reason = "The cumulative task diff contains likely disappeared function signatures."
         exit_code = 1
-    elif total_deleted > 0:
+    elif total_deleted:
         decision = "REVIEW_REQUIRED"
-        decision_reason = (
-            "Deleted lines exist. This is not proof of a defect, but the "
-            "change must be reviewed before continuing."
-        )
+        reason = "The cumulative task diff contains textual deletions; inspect the task as a whole."
         exit_code = 0
-    elif total_added > 0:
+    elif total_added:
         decision = "LOW_RISK_SIGNAL"
-        decision_reason = (
-            "No deleted lines detected. This is only a line-level signal, "
-            "not proof of correctness."
-        )
+        reason = "No cumulative textual deletions detected; this is only a change-safety signal."
         exit_code = 0
     else:
         decision = "NO_CHANGE"
-        decision_reason = "No textual line changes detected."
+        reason = "No textual changes detected in the requested scope."
         exit_code = 0
 
-    if historical:
-        decision = "HISTORICAL_ONLY"
-        decision_reason = (
-            "This comparison was explicitly requested between commits. "
-            "Do NOT use this report as the decision source for the latest "
-            "project change. Run the default command for the current change."
-        )
+    if not is_latest:
+        decision_scope = "HISTORICAL_ONLY"
+        scope_note = "Head is not the repository HEAD; this report is historical and is not the current decision source."
         exit_code = 0
-
-    lines: list[str] = []
-    lines.append("=" * 78)
-    lines.append("EDU_V10 LATEST COMMIT FEEDBACK")
-    lines.append("=" * 78)
-    lines.append(f"Generated: {datetime.now(timezone.utc).isoformat()}")
-    lines.append("")
-    lines.append("DECISION SCOPE")
-    lines.append("-" * 78)
-    if historical:
-        lines.append("SCOPE: HISTORICAL COMPARISON — NOT A DECISION SOURCE")
+    elif scope_kind == "EXPLICIT":
+        decision_scope = "TASK_SCOPE_EXPLICIT"
+        scope_note = "User-specified base/head define the Codex task boundary. This is the current decision source for that task."
     else:
-        lines.append("SCOPE: LATEST PROJECT COMMIT — DECISION SOURCE")
-    lines.append(f"Selection: {selection_reason}")
-    lines.append("")
-    lines.append("COMMITS")
-    lines.append("-" * 78)
-    lines.append(f"Base : {base} ({old_sha})")
-    lines.append(f"Head : {head} ({new_sha})")
-    lines.append(f"Date : {commit_date}")
-    lines.append(f"Commit: {commit_subject}")
-    lines.append("")
-    lines.append("CHANGE SUMMARY")
-    lines.append("-" * 78)
-    lines.append(f"Git diff: {diff_stat or 'no textual changes'}")
-    lines.append(f"Lines: +{total_added} / -{total_deleted}")
-    lines.append("")
-    lines.append("FILE CHANGES")
-    lines.append("-" * 78)
+        decision_scope = "TASK_SCOPE_CANDIDATE"
+        scope_note = "Task boundary was inferred. Treat grouping as evidence, not certainty; explicit --base/--head overrides it."
+    
+    lines = [
+        "=" * 90,
+        "EDU_V10 CODEX TASK AUDIT FEEDBACK",
+        "=" * 90,
+        f"Generated: {datetime.now(timezone.utc).isoformat()}",
+        "",
+        "DECISION SCOPE",
+        "-" * 90,
+        f"SCOPE: {decision_scope}",
+        f"Selection: {selection_reason}",
+        f"Grouping confidence: {confidence}",
+        f"Head is current HEAD: {'YES' if is_latest else 'NO'}",
+        scope_note,
+        "",
+        "TASK BOUNDARY",
+        "-" * 90,
+        f"Base: {base} ({base_sha})",
+        f"Head: {head} ({head_sha})",
+        f"Commits in task group: {len(group)}",
+        "",
+        "COMMIT GROUP",
+        "-" * 90,
+    ]
+    for idx, info in enumerate(group, 1):
+        lines.append(
+            f"{idx:02d}. {info.sha} | {info.date} | {commit_internal_risk(info)} | {info.subject}"
+        )
+        relevant_paths = [p for p in info.paths if is_decision_relevant_path(p)]
+        lines.append(f"    files: {len(relevant_paths)}")
+        for path in relevant_paths[:20]:
+            lines.append(f"      - {path}")
+        if len(relevant_paths) > 20:
+            lines.append(f"      ... {len(relevant_paths)-20} more")
+    lines += [
+        "",
+        "CUMULATIVE TASK DIFF",
+        "-" * 90,
+        f"Git diff: {safe_run('diff', '--shortstat', base, head).strip() or 'no textual changes'}",
+        f"Lines: +{total_added} / -{total_deleted}",
+        "",
+        "FILE CHANGES (BASE -> HEAD)",
+        "-" * 90,
+    ]
     if files:
         for item in files:
             lines.append(
-                f"{item.status:14} {item.path} | "
-                f"old={item.old_lines} new={item.new_lines} | "
-                f"+{item.added}/-{item.deleted}"
+                f"{item.status:14} {item.path} | old={item.old_lines} new={item.new_lines} | +{item.added}/-{item.deleted}"
             )
     else:
         lines.append("No file-level textual changes detected.")
-    lines.append("")
-    lines.append("FUNCTION / API SIGNATURE CHECK")
-    lines.append("-" * 78)
+    lines += ["", "FUNCTION / API SIGNATURE CHECK", "-" * 90]
     if deleted_functions:
         lines.append("WARNING: likely deleted function signatures:")
         for path, names in deleted_functions:
             lines.append(f"  - {path}: {', '.join(names)}")
     else:
         lines.append("OK: no likely deleted function signatures detected.")
-
     if added_functions:
         lines.append("Added function signatures:")
         for path, names in added_functions:
             lines.append(f"  + {path}: {', '.join(names)}")
     else:
         lines.append("Added function signatures: none detected.")
-    lines.append("")
-    lines.append("DECISION SIGNAL")
-    lines.append("-" * 78)
-    lines.append(decision)
-    lines.append(decision_reason)
-    lines.append("")
-    lines.append("AI DECISION RULE")
-    lines.append("-" * 78)
-    if historical:
-        lines.append(
-            "IGNORE THIS REPORT FOR DECIDING WHETHER THE LATEST CHANGE IS "
-            "CORRECT. It describes an older/external comparison only."
-        )
+
+    lines += [
+        "",
+        "DECISION SIGNAL",
+        "-" * 90,
+        decision,
+        reason,
+        "",
+        "HOW TO READ THIS REPORT",
+        "-" * 90,
+        "1. The COMMIT GROUP shows the individual Codex commits included in this task.",
+        "2. CUMULATIVE TASK DIFF is the authoritative final-state comparison for this task.",
+        "3. Do not sum deletions across individual commits: a later commit may restore or replace earlier changes.",
+        "4. Per-commit REVIEW_REQUIRED is an internal warning; final task safety is judged from the cumulative diff plus semantic review.",
+        "5. An accepted report is not recorded automatically. Audit_codex/report/index.txt is manually controlled.",
+        "",
+        "ACCEPTANCE INDEX STATUS (READ ONLY)",
+        "-" * 90,
+    ]
+    accepted = accepted_reports()
+    if accepted:
+        lines.extend(f"- {x}" for x in accepted)
     else:
-        lines.append(
-            "This report describes the latest project commit relative to its "
-            "immediate first parent. Use it as the first change-safety "
-            "feedback before continuing to another AI coding step."
-        )
-        lines.append(
-            "A REVIEW_REQUIRED signal means stop and inspect the diff; it "
-            "does not by itself prove that the implementation is wrong."
-        )
-    lines.append("")
-    lines.append("LIMITATIONS")
-    lines.append("-" * 78)
-    lines.append(
-        "This is a guardrail, not a correctness proof. Renames/moves, "
-        "multiline declarations, generated files, semantic regressions, "
-        "and runtime behavior require deeper review and project tests."
-    )
-    return "\n".join(lines) + "\n", exit_code
+        lines.append("No accepted report entries detected (or index.txt does not exist).")
+    
+    lines += [
+        "",
+        "LIMITATIONS",
+        "-" * 90,
+        "Automatic grouping is conservative evidence, not proof of a Codex task boundary.",
+        "Use --base <commit> --head <commit> when the task boundary is known.",
+        "Function detection is signature-based and may miss multiline declarations, renames, moves, generated code, and semantic/API behavior changes.",
+        "This guardrail does not prove runtime, database, API, architecture, or business-rule correctness.",
+        "",
+        "RECOMMENDED COMMANDS",
+        "-" * 90,
+        "Current inferred task:",
+        "  python Audit_codex/audit_commit_changes.py",
+        "Known task boundary:",
+        "  python Audit_codex/audit_commit_changes.py --base <BASE_SHA> --head <HEAD_SHA>",
+        "",
+        "IMPORTANT: index.txt is human-controlled and is NEVER modified by this tool.",
+    ]
+    report = "\n".join(lines) + "\n"
+    return report, exit_code, decision_scope
 
 
 def main() -> int:
-    try:
-        if len(sys.argv) == 1:
-            head, reason = find_latest_project_commit()
-            base = parent_of(head)
-            historical = False
-        elif len(sys.argv) == 3:
-            base = sys.argv[1]
-            head = sys.argv[2]
-            reason = (
-                "Explicit commit range requested. This is historical-only "
-                "feedback and is not used as the latest-change decision source."
-            )
-            historical = True
-        else:
-            print(
-                "Usage: python Audit_codex/audit_commit_changes.py "
-                "[<old-commit> <new-commit>]"
-            )
-            return 2
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--base")
+    parser.add_argument("--head")
+    args = parser.parse_args()
 
-        report, exit_code = build_report(base, head, historical, reason)
+    if (args.base is None) != (args.head is None):
+        parser.error("--base and --head must be supplied together")
+
+    try:
+        if args.base and args.head:
+            base = args.base
+            head = args.head
+            group = task_commits(base, head)
+            if not group:
+                group = [commit_info(head)]
+            reason = "Explicit task boundary supplied by the user."
+            scope_kind = "EXPLICIT"
+            confidence = "AUTHORITATIVE_USER_BOUNDARY"
+        else:
+            head, reason = latest_project_commit()
+            group, confidence = candidate_task_group(head)
+            base = first_parent(group[0].sha)
+            scope_kind = "AUTO"
+
+        report, exit_code, _ = build_report(
+            base, head, scope_kind, reason, group, confidence
+        )
         REPORT_DIR.mkdir(parents=True, exist_ok=True)
-        REPORT_FILE.write_text(report, encoding="utf-8")
+
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+        base_short = run("rev-parse", "--short", base).strip()
+        head_short = run("rev-parse", "--short", head).strip()
+        archive = REPORT_DIR / f"audit_{timestamp}_{base_short}_{head_short}.txt"
+
+        archive.write_text(report, encoding="utf-8")
+        LATEST_FILE.write_text(report, encoding="utf-8")
 
         print(report)
-        print(f"\nREPORT SAVED: {REPORT_FILE}")
+        print(f"ARCHIVE REPORT: {archive}")
+        print(f"LATEST FEEDBACK: {LATEST_FILE}")
+        print("ACCEPTANCE INDEX: READ ONLY (never modified)")
         return exit_code
-    except (subprocess.CalledProcessError, RuntimeError) as exc:
+    except (subprocess.CalledProcessError, RuntimeError, OSError) as exc:
         print(f"ERROR: {exc}")
         return 2
 
