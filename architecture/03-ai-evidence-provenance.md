@@ -1,7 +1,8 @@
-# AI, Evidence and Provenance
+# AI, Evidence, Page Classification and Provenance
 
 Status: ADOPTED
 Last reviewed: 2026-09-22
+Detailed algorithms: Docs_v10/13-content-storage-page-classification-and-import-algorithms.md
 
 ## AI authority
 AI is an adapter/proposal generator, not canonical truth.
@@ -10,21 +11,38 @@ Evidence → AI analysis/classification → Proposal/Draft → schema/evidence v
 
 AI must not directly write PostgreSQL, approve, publish, alter mastery, create learner evidence, alter authorization/entitlement, invent canonical identity, or bypass canonical services.
 
+## Book segmentation and two-part detection
+For books containing multiple physical parts, AI may analyze the table of contents/index and a configurable initial-page window (default proposal: first 15 PDF pages) together with page images/text and neighboring evidence.
+
+AI may propose part boundary, unit/lesson boundaries, printed-page ranges, lesson type/branch and page roles.
+
+The final Workspace manifest records the selected result, evidence and confidence. Conflicting evidence routes to review.
+
+Physical routing is P1 for PART_1, P2 for PART_2, and PB only for content explicitly shared by both parts. This is a physical Workspace coordinate; T1/T01 remains a separate term identity concern.
+
+## Page classification
+Page classification is semantic metadata. It is never encoded by renaming the image.
+
+The original pages/page_NNN.* asset remains unchanged. page_classification.json describes how the page participates in different downstream uses.
+
+A page can simultaneously be lesson content, question/exercise source, unit-assessment source, or mixed content.
+
+Classification therefore supports independent routing flags rather than one mutually exclusive filename/category.
+
+Conceptual fields include printedPageNumber, pdfPageIndex, contentType, branch, lessonType, questionRole, questionBlocks, lessonContent, unitAssessment, includeInLessonView, includeInQuestionExtraction, includeInUnitAssessment, confidence, evidence and source.
+
 ## Grounding
-AI inputs should be grounded in textbook identity, unit/lesson, printed page, neighboring-page metadata, extracted text, page image, TOC evidence, subject/branch profile and the allowed output schema.
+AI inputs should be grounded in textbook identity, physical part, unit/lesson, printed page, PDF index, neighboring-page metadata, extracted text, page image, TOC evidence, subject/branch profile and the allowed output schema.
 
 ## Classification precedence
-1. explicit manual manifest
+1. explicit manual/validated manifest
 2. validated deterministic mapping
-3. TOC evidence
-4. subject profile
+3. TOC/index evidence
+4. subject/branch profile
 5. AI proposal
 6. unresolved/review
 
-Arabic and other branch-rich subjects require branch-aware profiles. The word “lesson” alone is insufficient to determine semantic lesson type.
-
-## AI pages
-Original pages/page_NNN.* remains unchanged. AI-derived representations may be stored under ai_pages/ and linked to the same printed page. Temporary provider bundles must not become accidental permanent storage.
+The final classification records its evidence source.
 
 ## Provenance
 Where supported by the schema/contract, record provider, model, task/purpose, source fingerprint, prompt/schema version, input identity, output status, review/approval state and correlation/request identifier.
@@ -40,3 +58,6 @@ QuestionType and QuestionOrigin are independent dimensions. Origin describes pro
 
 ## Human review
 AI confidence routes review; it is not approval. A model's own claim that output is correct is never human approval.
+
+## Detailed-document rule
+The exact JSON schema, threshold values, configuration file shape and implementation steps belong to Docs_v10/13. This architecture document defines the invariant that classification is metadata and supports multi-purpose/mixed pages.
