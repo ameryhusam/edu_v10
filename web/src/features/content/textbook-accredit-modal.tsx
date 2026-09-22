@@ -65,8 +65,6 @@ export function TextbookAccreditModal({
     queryFn: () => administrationApi.grades.list(),
   });
 
-  const terms = useQuery({
-
   const adoptMutation = useMutation({
     mutationFn: async () => {
       if (mode === 'single') {
@@ -216,40 +214,22 @@ export function TextbookAccreditModal({
             </select>
           </label>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="space-y-1.5">
-              <span className="text-xs font-medium text-text-muted">{t('collection.grades')} *</span>
-              <select
-                value={selectedGradeKey}
-                onChange={(e) => setSelectedGradeKey(e.target.value)}
-                className={selectClass}
-                required
-              >
-                <option value="">—</option>
-                {(grades.data ?? []).map((grade) => (
-                  <option key={grade.key} value={grade.key}>
-                    {grade.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="space-y-1.5">
-              <span className="text-xs font-medium text-text-muted">{t('collection.terms')} (اختياري)</span>
-              <select
-                value={selectedTermKey}
-                onChange={(e) => setSelectedTermKey(e.target.value)}
-                className={selectClass}
-              >
-                <option value="">كل الفصول</option>
-                {(terms.data ?? []).map((term) => (
-                  <option key={term.key} value={term.key}>
-                    {term.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-text-muted">{t('collection.grades')} *</span>
+            <select
+              value={selectedGradeKey}
+              onChange={(e) => setSelectedGradeKey(e.target.value)}
+              className={selectClass}
+              required
+            >
+              <option value="">—</option>
+              {(grades.data ?? []).map((grade) => (
+                <option key={grade.key} value={grade.key}>
+                  {grade.name}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
 
         <div className="rounded-xl border border-warning/30 bg-warning-subtle/50 p-3 text-2xs text-text-muted">
