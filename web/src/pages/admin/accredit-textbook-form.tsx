@@ -31,7 +31,7 @@ export function AccreditTextbookForm({
   const [mode, setMode] = useState<'one' | 'grade'>('one');
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState('');
-  const [termKey, setTermKey] = useState('');
+  const [part, setPart] = useState<'PART_1' | 'PART_2' | ''>('');
   const [yearKey, setYearKey] = useState('');
   const [failure, setFailure] = useState<string | null>(null);
   const [summary, setSummary] = useState<GradeAdoptionResult | null>(null);
@@ -44,10 +44,6 @@ export function AccreditTextbookForm({
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const terms = useQuery({
-    queryKey: queryKeys.administration.catalogue('terms'),
-    queryFn: () => administrationApi.terms.list(),
-  });
   const years = useQuery({
     queryKey: queryKeys.administration.catalogue('academicYears'),
     queryFn: () => administrationApi.academicYears.list(),
@@ -55,9 +51,9 @@ export function AccreditTextbookForm({
   // Only textbooks that actually exist for the chosen coordinates — an
   // administrator accredits a book that was authored, not a guess at a key.
   const textbooks = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({ subjectKey, gradeKey, termKey }),
-    queryFn: () => textbookAdministrationApi.textbooks({ subjectKey, gradeKey, termKey, limit: 5 }),
-    enabled: mode === 'one' && subjectKey !== '' && gradeKey !== '' && termKey !== '',
+    queryKey: queryKeys.textbookAdministration.textbooks({ subjectKey, gradeKey, part }),
+    queryFn: () => textbookAdministrationApi.textbooks({ subjectKey, gradeKey, part: part || undefined, limit: 5 }),
+    enabled: mode === 'one' && subjectKey !== '' && gradeKey !== '' && part !== '',
   });
   const matchedTextbook = textbooks.data?.rows[0] ?? null;
 
@@ -85,7 +81,7 @@ export function AccreditTextbookForm({
     mutationFn: () =>
       textbookAdministrationApi.adoptGrade({
         gradeKey,
-        termKey: termKey || undefined,
+        part: part || undefined,
         schoolKey,
         academicYearKey: yearKey,
       }),
@@ -149,16 +145,13 @@ export function AccreditTextbookForm({
         </label>
         <label className="space-y-1.5">
           <span className="block text-xs font-medium text-text-muted">
-            {t('collection.terms')}
-            {mode === 'grade' ? ` (${t('common.all')})` : ''}
+            {t('textbookAdmin.part1')}
+            {mode === 'grade' ? ` / ${t('textbookAdmin.part2')}` : ''}
           </span>
-          <select value={termKey} onChange={(e) => setTermKey(e.target.value)} className={selectClass}>
+          <select value={part} onChange={(e) => setPart(e.target.value as 'PART_1' | 'PART_2' | '')} className={selectClass}>
             <option value="">—</option>
-            {(terms.data ?? []).map((term) => (
-              <option key={term.key} value={term.key}>
-                {term.name}
-              </option>
-            ))}
+            <option value="PART_1">{t('textbookAdmin.part1')}</option>
+            <option value="PART_2">{t('textbookAdmin.part2')}</option>
           </select>
         </label>
         <label className="space-y-1.5">
@@ -174,7 +167,7 @@ export function AccreditTextbookForm({
         </label>
       </div>
 
-      {mode === 'one' && subjectKey && gradeKey && termKey && !matchedTextbook && textbooks.isSuccess ? (
+      {mode === 'one' && subjectKey && gradeKey && part && !matchedTextbook && textbooks.isSuccess ? (
         <p className="text-xs text-danger">{t('textbookAdmin.noMatchingTextbook')}</p>
       ) : null}
       {mode === 'one' && matchedTextbook ? (
