@@ -38,11 +38,11 @@ For a two-part book:
       ↓
     assign each segment to physicalPart
       ↓
-    P1 for PART_1; P2 for PART_2; PB only for explicitly shared content
+    P1 for PART_1; P2 for PART_2
       ↓
     validate cross-part identity and page mappings
 
-P1/P2/PB are physical Workspace coordinates. They must not be confused with term aliases T1/T01.
+P1/P2 are the only physical Workspace coordinates. T01/T02 are academic-term coordinates and are not textbook identity aliases.
 
 The AI may propose a boundary; it does not make an unreviewed canonical database decision. The manifest preserves the evidence and confidence used for the assignment.
 
@@ -61,7 +61,6 @@ The AI may propose a boundary; it does not make an unreviewed canonical database
           ai_pages/
           resource/
       P2/G07/SCI/ED2026/...
-      PB/G07/SCI/ED2026/...
 
 pages/ contains original page evidence. ai_pages/ contains derived AI representations and never replaces the original page asset.
 
