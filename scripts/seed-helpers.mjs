@@ -34,7 +34,7 @@ export async function withClient(fn, attempts = 20) {
  * Create an empty DRAFT textbook reusing the seeded subject/grade/term.
  *
  * `edition` is what makes it distinct: the schema's uniqueness is
- * (subject, grade, term, edition), which is precisely the "a correction is a
+ * (subject, grade, part, edition), which is precisely the "a correction is a
  * new edition" model this gate settled on.
  */
 export async function createTextbook(key, edition) {
@@ -42,16 +42,18 @@ export async function createTextbook(key, edition) {
     const { rows } = await client.query(
       `select
          (select id from subjects limit 1) as subject_id,
-         (select id from grades   limit 1) as grade_id,
-         (select id from terms    limit 1) as term_id`,
+         (select id from grades   limit 1) as grade_id`,
     );
-    const { subject_id, grade_id, term_id } = rows[0];
+    const { subject_id, grade_id } = rows[0];
+    const partMatch = /^EDU-[A-Z0-9]+-G\d{2}-(P1|P2|PB)-ED/i.exec(key);
+    if (!partMatch) throw new Error(`Invalid physical textbook key: ${key}`);
+    const part = partMatch[1] === 'P1' ? 'PART_1' : partMatch[1] === 'P2' ? 'PART_2' : 'BOTH';
 
     await client.query(
       `insert into textbooks (id, key, "part", "gradeId", "subjectId", title, edition, status, "createdAt", "updatedAt")
        values (gen_random_uuid(), $1, $2, $3, $4, $5, $6, 'DRAFT', now(), now())
        on conflict (key) do nothing`,
-      [key, term_id, grade_id, subject_id, `Scenario ${edition}`, edition],
+      [key, part, grade_id, subject_id, `Scenario ${edition}`, edition],
     );
     return key;
   });
