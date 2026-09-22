@@ -274,14 +274,16 @@ def transform(path: str, text: str) -> str:
 
     elif path.endswith("workspace.ports.ts"):
         term_fields = out.count("  readonly term: string;\n")
-        if term_fields != 2:
-            stop(path + f": expected two physical workspace term fields, found {term_fields}")
+        if term_fields != 1:
+            stop(path + f": expected one workspace coordinate term field, found {term_fields}")
         out = out.replace("  readonly term: string;\n",
                           "  readonly part: string;\n")
 
     elif path.endswith("workspace-manager.ts"):
-        out = one(out, "  readonly term: string;\n",
-                  "  readonly part: string;\n", path)
+        term_fields = out.count("  readonly term: string;\n")
+        if term_fields != 2:
+            stop(path + f": expected two workspace term fields, found {term_fields}")
+        out = out.replace("  readonly term: string;\n", "  readonly part: string;\n")
         out = out.replace("<term>/", "<part>/")
         out = out.replace("workspaces/T01/G07/MATH", "workspaces/P1/G07/MATH")
         out = one(out,
@@ -341,34 +343,25 @@ def transform(path: str, text: str) -> str:
         elif "        part: input.part," not in out and "async createTextbook" in out:
             stop(path + ": createTextbook persistence contract not migrated from termId to part")
     elif path.endswith("textbook-administration.repository.ts"):
-        # The API may still accept an academic term filter. Resolve that term
-        # to physical parts at the repository boundary; Textbook itself has no term relation.
-        old_filter = """      ...(query.termKey ? { term: { key: query.termKey } } : {}),"""
-        if old_filter in out:
-            old_where = """    const where = {
+        # Academic term remains an API filter. Resolve it to physical parts at
+        # the repository boundary because Textbook has no academic-term relation.
+        old_where = """    const where = {
       ...(search ? { title: { contains: search, mode: 'insensitive' as const } } : {}),
       ...(query.subjectKey ? { subject: { key: query.subjectKey } } : {}),
       ...(query.gradeKey ? { grade: { key: query.gradeKey } } : {}),
       ...(query.termKey ? { term: { key: query.termKey } } : {}),
       ...(query.status ? { status: query.status as never } : {}),
     };"""
-            if old_where not in out:
-                stop(path + ": textbook list where-clause changed; refusing unsafe semantic rewrite")
-            new_where = """    const academicTerm = query.termKey
-      ? await this.db.term.findUnique({
-          where: { key: query.termKey },
-          select: { ordinal: true },
-        })
+        if old_where not in out:
+            stop(path + ": textbook list where-clause changed; refusing unsafe semantic rewrite")
+        new_where = """    const academicTerm = query.termKey
+      ? await this.db.term.findUnique({ where: { key: query.termKey }, select: { ordinal: true } })
       : null;
-    if (query.termKey && !academicTerm) {
-      return { total: 0, rows: [] };
-    }
+    if (query.termKey && !academicTerm) return { total: 0, rows: [] };
     const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> = academicTerm
-      ? academicTerm.ordinal === 1
-        ? ['PART_1', 'BOTH']
-        : academicTerm.ordinal === 2
-          ? ['PART_2', 'BOTH']
-          : ['BOTH']
+      ? academicTerm.ordinal === 1 ? ['PART_1', 'BOTH']
+        : academicTerm.ordinal === 2 ? ['PART_2', 'BOTH']
+        : ['BOTH']
       : ['PART_1', 'PART_2', 'BOTH'];
 
     const where = {
@@ -378,42 +371,143 @@ def transform(path: str, text: str) -> str:
       part: { in: physicalParts },
       ...(query.status ? { status: query.status as never } : {}),
     };"""
-            out=out.replace(old_where,new_where)
-        # Physical selects and coordinate lookups.
-        out=out.replace("        term: { select: { key: true, name: true } },",
-                        "        part: true,")
-        out=out.replace("        termKey: row.term.key,\n        termName: row.term.name,",
-                        "        part: String(row.part),")
-        old_coord = """        term: { key: input.termKey },
-        edition: input.edition,"""
-        if old_coord in out:
-            out=out.replace(old_coord, """        part: { in: input.termKey === 'T1' ? ['PART_1', 'BOTH'] : ['PART_2', 'BOTH'] },
-        edition: input.edition,""")
-            # This literal T1/T2 conversion is not acceptable for academic term keys;
-            # stop so the caller is forced through a real term lookup.
-            stop(path + ": coordinate lookup requires academic-term ordinal resolution; refusing literal T1/T2 mapping")
-        if re.search(r"\bterm:\s*\{\s*key:\s*input\.termKey\s*\}", out):
-            stop(path + ": physical coordinate lookup still uses Textbook.term")
-        if re.search(r"\bterm:\s*\{\s*select:", out):
-            stop(path + ": physical Textbook read still selects the removed term relation")
-    elif "edu7-content-engine" in path and path.endswith(".py"):
-        out = out.replace(
-            "def textbook_key(subject: str, grade: int, term: int, edition: str)",
-            "def textbook_key(subject: str, grade: int, part: str, edition: str)")
-        out = out.replace(
-            "def book_workspace(subject: str, grade: int, term: int, edition: str)",
-            "def book_workspace(subject: str, grade: int, part: str, edition: str)")
-        out = out.replace(
-            'f"EDU-{subject}-G{grade:02d}-T{term}-ED{edition}"',
-            'f"EDU-{subject}-G{grade:02d}-{part}-ED{edition}"')
-        out = out.replace(
-            'metadata.get("termKey", metadata.get("term", "2026-2027-T01"))',
-            'metadata.get("part", "P1")')
-        out = out.replace('"termKey": term', '"part": part')
-        out = out.replace('term = coords.get("term", "T1")',
-                          'part = coords.get("part", "P1")')
-        out = out.replace('"term": term', '"part": part')
+        out=out.replace(old_where,new_where)
+        out=out.replace("        term: { select: { key: true, name: true } },", "        part: true,")
+        out=out.replace("        termKey: row.term.key,\n        termName: row.term.name,", "        part: String(row.part),")
 
+        old_method="""  async findTextbookByCoordinates(input: {
+    subjectKey: string;
+    gradeKey: string;
+    termKey: string;
+    edition: string;
+  }) {
+    const row = await this.db.textbook.findFirst({
+      where: {
+        subject: { key: input.subjectKey },
+        grade: { key: input.gradeKey },
+        term: { key: input.termKey },
+        edition: input.edition,
+      },
+      select: { key: true, title: true, edition: true },
+    });
+    return row;
+  }"""
+        new_method="""  async findTextbookByCoordinates(input: {
+    subjectKey: string;
+    gradeKey: string;
+    termKey: string;
+    edition: string;
+  }) {
+    const academicTerm = await this.db.term.findUnique({
+      where: { key: input.termKey },
+      select: { ordinal: true },
+    });
+    if (!academicTerm) return null;
+    const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> =
+      academicTerm.ordinal === 1 ? ['PART_1', 'BOTH'] :
+      academicTerm.ordinal === 2 ? ['PART_2', 'BOTH'] :
+      ['BOTH'];
+    return this.db.textbook.findFirst({
+      where: {
+        subject: { key: input.subjectKey },
+        grade: { key: input.gradeKey },
+        part: { in: physicalParts },
+        edition: input.edition,
+      },
+      select: { key: true, title: true, edition: true },
+      orderBy: { part: 'asc' },
+    });
+  }"""
+        if old_method not in out: stop(path + ": academic coordinate lookup anchor not found")
+        out=out.replace(old_method,new_method)
+
+        old_grade="""  async textbooksForGrade(input: {
+    gradeKey: string;
+    termKey?: string | undefined;
+  }): Promise<TextbookCoordinateMatch[]> {
+    const rows = await this.db.textbook.findMany({
+      where: {
+        grade: { key: input.gradeKey },
+        ...(input.termKey ? { term: { key: input.termKey } } : {}),
+      },
+      select: { key: true, title: true, edition: true },
+      orderBy: { key: 'asc' },
+    });
+    return rows;
+  }"""
+        new_grade="""  async textbooksForGrade(input: {
+    gradeKey: string;
+    termKey?: string | undefined;
+  }): Promise<TextbookCoordinateMatch[]> {
+    const academicTerm = input.termKey
+      ? await this.db.term.findUnique({ where: { key: input.termKey }, select: { ordinal: true } })
+      : null;
+    if (input.termKey && !academicTerm) return [];
+    const physicalParts: Array<'PART_1' | 'PART_2' | 'BOTH'> = academicTerm
+      ? academicTerm.ordinal === 1 ? ['PART_1', 'BOTH']
+        : academicTerm.ordinal === 2 ? ['PART_2', 'BOTH']
+        : ['BOTH']
+      : ['PART_1', 'PART_2', 'BOTH'];
+    return this.db.textbook.findMany({
+      where: { grade: { key: input.gradeKey }, part: { in: physicalParts } },
+      select: { key: true, title: true, edition: true },
+      orderBy: { key: 'asc' },
+    });
+  }"""
+        if old_grade not in out: stop(path + ": grade textbook lookup anchor not found")
+        out=out.replace(old_grade,new_grade)
+    elif "edu7-content-engine" in path and path.endswith(".py"):
+        if path.endswith("workspace_layout.py"):
+            # Replace the complete identity/workspace functions so no academic
+            # term normalization survives in the Python canonical layout.
+            old = out[out.find("def textbook_key("):out.find("\ndef _rewrite_json")]
+            if not old:
+                stop(path + ": workspace_layout identity functions not found")
+            new = '''def normalize_part(raw: str) -> str:
+    value = str(raw).strip().upper()
+    mapping = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}
+    value = mapping.get(value, value)
+    if value not in {"P1", "P2", "PB"}:
+        raise ValueError("Physical part must be P1, P2, or PB.")
+    return value
+
+
+def textbook_key(subject: str, grade: int, part: str, edition: str) -> str:
+    """Mirror src/shared/kernel/identifiers.ts textbookKey exactly."""
+    subject = normalize_subject(subject)
+    part_key = normalize_part(part)
+    edition = str(edition).strip()
+    if re.fullmatch(r"\\d{4}([/-]\\d{4})?", edition):
+        edition_key = "ED" + edition.replace("/", "-")
+    else:
+        edition_key = "ED" + re.sub(r"[^A-Z0-9-]", "", edition.upper().replace("_", "-"))
+    if not edition_key or edition_key == "ED":
+        raise ValueError("Printed edition is required.")
+    return f"EDU-{subject}-G{grade:02d}-{part_key}-{edition_key}"
+
+
+def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
+    _, grade_key = normalize_grade(grade)
+    part_key = normalize_part(part)
+    edition_segment = "ED" + re.sub(
+        r"[^A-Z0-9-]", "", str(edition).strip().upper().replace("_", "-")
+    )
+    if edition_segment == "ED":
+        raise ValueError("Printed edition is required.")
+    return workspace_root() / part_key / grade_key / normalize_subject(subject) / edition_segment
+'''
+            out=out.replace(old,new)
+        elif path.endswith("export/json_exporter.py"):
+            out=out.replace('        term = metadata.get("termKey", metadata.get("term", "2026-2027-T01"))',
+                            '        part = metadata.get("part", "P1")')
+            out=out.replace('f"EDU-{subject}-{grade}-T1-ED{edition}"',
+                            'f"EDU-{subject}-{grade}-{part}-ED{edition}"')
+            out=out.replace('"termKey": term,', '"part": part,')
+        else:
+            out=out.replace('term = coords.get("term", "T1")', 'part = coords.get("part", "P1")')
+            out=out.replace('"term": term', '"part": part')
+            out=out.replace('"termKey": term', '"part": part')
+            out=out.replace('-T1-ED', '-P1-ED')
     elif path.endswith(("textbook-workspace-modal.tsx",
                         "textbook-pdf-modal.tsx",
                         "textbook-create-modal.tsx",
