@@ -50,11 +50,11 @@ Edu7_Digital_Library/
 │   │
 │   ├── MATH_الرياضيات/
 │   │   │
-│   │   ├── T01_الفصل_الأول/
+│   │   ├── P1_الجزء_الأول/
 │   │   │   │
 │   │   │   ├── 00_الكتاب_المدرسي_الرسمي/
-│   │   │   │   ├── EDU-MATH-G07-T01-2026_الطالب.pdf      <-- (كتاب الطالب المعتمد)
-│   │   │   │   └── EDU-MATH-G07-T01-2026_دليل_المعلم.pdf  <-- (دليل المعلم إن وجد)
+│   │   │   │   ├── EDU-MATH-G07-P1-ED2026_الطالب.pdf      <-- (كتاب الطالب المعتمد)
+│   │   │   │   └── EDU-MATH-G07-P1-ED2026_دليل_المعلم.pdf  <-- (دليل المعلم إن وجد)
 │   │   │   │
 │   │   │   ├── 01_الوحدة_الأولى_الأعداد_الصحيحة/
 │   │   │   │   │
@@ -82,7 +82,7 @@ Edu7_Digital_Library/
 │   │   │   └── 02_الوحدة_الثانية_الكسور_والعمليات_عليها/
 │   │   │       └── ...
 │   │   │
-│   │   └── T02_الفصل_الثاني/
+│   │   └── P2_الجزء_الثاني/
 │   │       └── ...
 │   │
 │   └── SCI_العلوم/
@@ -100,7 +100,7 @@ Edu7_Digital_Library/
 
 | المسار في Google Drive | نوع الملف | الجدول المستهدف | الحقول المتطابقة في قاعدة البيانات | نوع المورد (`ResourceKind`) |
 |---|---|---|---|---|
-| `G07/MATH/T01/00_الكتاب_المدرسي_الرسمي/كتاب_الطالب.pdf` | PDF | `Textbook` و `LearningResource` | `Textbook.sourceUrl = <DriveURL>`<br>`LearningResource.textbookId = textbook.id`<br>`LearningResource.url = <DriveURL>` | `READING` أو `TEXTBOOK_PAGE` |
+| `G07/MATH/P1/00_الكتاب_المدرسي_الرسمي/كتاب_الطالب.pdf` | PDF | `Textbook` و `LearningResource` | `Textbook.sourceUrl = <DriveURL>`<br>`LearningResource.textbookId = textbook.id`<br>`LearningResource.url = <DriveURL>` | `READING` أو `TEXTBOOK_PAGE` |
 | `.../01_الدرس_.../01_نصوص_وقراءات/ملخص.txt` | TXT / MD | `LearningResource` | `lessonId = lesson.id`<br>`title = "ملخص شرح الدرس"`<br>`body = <محتوى النص>` أو `url = <DriveURL>` | `READING` |
 | `.../01_الدرس_.../02_فيديوهات_شرح/فيديو.mp4` | MP4 / WebM | `LearningResource` | `lessonId = lesson.id`<br>`title = "تجربة خط الأعداد"`<br>`url = <DriveURL>` | `VIDEO` |
 | `.../01_الدرس_.../03_صور_ورسوم/رسم.png` | PNG / JPG | `LearningResource` | `lessonId = lesson.id`<br>`title = "رسم القيمة المطلقة"`<br>`url = <DriveURL>` | `WORKED_EXAMPLE` |
@@ -118,8 +118,8 @@ Edu7_Digital_Library/
    - يستخرج المحرك من أسماء المجلدات العليا:
      - الصف: `G07_الصف_السابع` ➜ `gradeKey: "G07"`
      - المادة: `MATH_الرياضيات` ➜ `subjectKey: "MATH"`
-     - الفصل: `T01_الفصل_الأول` ➜ `termOrdinal: 1`
-   - يتم اشتقاق مفتاح الكتاب آلياً: `EDU-MATH-G07-T01-2026`.
+     - الفصل: `T01_الفصل_الأول` ➜ `physicalPart: PART_1`
+   - يتم اشتقاق مفتاح الكتاب آلياً: `EDU-MATH-G07-P1-ED2026`.
 2. **مطابقة الكتاب الرسمي:**
    - الدخول إلى مجلد `00_الكتاب_المدرسي_الرسمي`:
      - استخراج رابط الملف المباشر وتحديث حقل `sourceUrl` في جدول `Textbook`.
