@@ -80,9 +80,10 @@ def main():
                             "Ollama: optional future/local adapter; requires --ollama and EDU7_ENABLE_OLLAMA=true\n"
                             "Default: Gemini when configured; Ollama is never used implicitly"
                         ))
-    p_prep.add_argument("--analysis-pages", type=int, default=15,\n                        help="Initial PDF analysis window for identity/TOC and combined-part detection (default: 15)")
+    p_prep.add_argument("--analysis-pages", type=int, default=15,
+                        help="Initial PDF analysis window for identity/TOC and combined-part detection (default: 15)")
     p_prep.add_argument("--vision-pages", type=int, default=15,
-                        help="Pages to render for vision analysis (default: 10)")
+                        help="Pages to render for vision analysis (default: 15)")
     p_prep.add_argument("--dpi", type=int, default=150,
                         help="Render DPI for vision analysis (default: 150, higher=better quality)")
     p_prep.add_argument("--ollama", action="store_true",
