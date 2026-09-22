@@ -207,6 +207,6 @@ Resolution order for the display textbook title is:
 2. PDF metadata title when available.
 3. A normalized human-readable form of the PDF filename as a fallback.
 
-The PDF filename is not the canonical Edu7 textbook key. The workspace key is derived from the explicit academic coordinates (subject/grade/term/edition), while the source filename is retained as the physical asset identity.
+The PDF filename is not the canonical Edu7 textbook key. The workspace key is derived from the physical textbook coordinates (part/grade/subject/printed edition); academic term remains an adoption/enrollment coordinate, while the source filename is retained as the physical asset identity.
 
 When more than one PDF exists in `books_input/` and no input path is supplied, the CLI now refuses to guess and asks for the exact file path. This prevents preparing the wrong book accidentally.
