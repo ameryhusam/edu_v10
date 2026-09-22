@@ -108,7 +108,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
   async findTextbookByCoordinates(input: {
     subjectKey: string;
     gradeKey: string;
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     edition: string;
   }) {
     const row = await this.db.textbook.findFirst({
@@ -125,7 +125,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
 
   async textbooksForGrade(input: {
     gradeKey: string;
-    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
+    part?: 'PART_1' | 'PART_2' | undefined;
   }): Promise<TextbookCoordinateMatch[]> {
     const rows = await this.db.textbook.findMany({
       where: {
@@ -385,6 +385,7 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
         schoolKey: row.school.key,
         schoolName: row.school.name,
         academicYearKey: row.academicYear.key,
+        termKey: row.term.key,
         adoptedAt: row.adoptedAt,
       })),
     };
@@ -424,12 +425,14 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
     textbookKey: string;
     schoolKey: string;
     academicYearKey: string;
+    termKey: string;
   }): Promise<AdoptionRow> {
     const created = await this.db.textbookAdoption.create({
       data: {
         textbook: { connect: { key: input.textbookKey } },
         school: { connect: { key: input.schoolKey } },
         academicYear: { connect: { key: input.academicYearKey } },
+        term: { connect: { key: input.termKey } },
       },
       select: {
         adoptedAt: true,
@@ -478,6 +481,11 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
       where: { key: academicYearKey },
       select: { key: true },
     });
+    return row !== null;
+  }
+
+  async termExists(termKey: string): Promise<boolean> {
+    const row = await this.db.term.findUnique({ where: { key: termKey }, select: { key: true } });
     return row !== null;
   }
 }
