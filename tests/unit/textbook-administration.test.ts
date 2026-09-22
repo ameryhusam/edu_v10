@@ -123,9 +123,6 @@ class FakeRepo implements TextbookAdministrationRepository {
   async academicYearExists(): Promise<boolean> {
     return this.exists.academicYear;
   }
-  async termExists(): Promise<boolean> {
-    return true;
-  }
   termKeys = new Set(['2026-2027-T01', '2026-2027-T02']);
   async termForAcademicYearOrdinal(academicYearKey: string, ordinal: 1 | 2): Promise<string | null> {
     const key = academicYearKey + '-T0' + ordinal;

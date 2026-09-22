@@ -390,12 +390,12 @@ export class TextbookAdministrationService {
     const parsed = parseTextbookKey(input.textbookKey);
     if (!parsed.ok) return parsed;
     const termOrdinal = parsed.value.part === 'PART_1' ? 1 : 2;
-    const termKey = `${input.academicYearKey}-T0${termOrdinal}`;
-    if (!(await this.repo.termExists(termKey))) {
+    const termKey = await this.repo.termForAcademicYearOrdinal(input.academicYearKey, termOrdinal);
+    if (!termKey) {
       return Err(
-        Errors.notFound('content.adoption_term_not_found', 'The academic term required by this textbook part does not exist.', {
+        Errors.notFound('content.adoption_term_not_found', 'The academic term required by this textbook part does not exist in the selected academic year.', {
           academicYearKey: input.academicYearKey,
-          termKey,
+          ordinal: termOrdinal,
           part: parsed.value.part,
         }),
       );

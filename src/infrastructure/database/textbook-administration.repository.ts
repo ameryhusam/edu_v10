@@ -499,11 +499,6 @@ export class PrismaTextbookAdministrationRepository implements TextbookAdministr
     return row !== null;
   }
 
-  async termExists(termKey: string): Promise<boolean> {
-    const row = await this.db.term.findUnique({ where: { key: termKey }, select: { key: true } });
-    return row !== null;
-  }
-
   async termForAcademicYearOrdinal(academicYearKey: string, ordinal: 1 | 2): Promise<string | null> {
     const row = await this.db.term.findFirst({
       where: { academicYear: { key: academicYearKey }, ordinal },
