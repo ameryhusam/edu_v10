@@ -46,7 +46,7 @@ from ..validation.evidence_validator import EvidenceValidator
 from ..export.json_exporter import Edu7JsonExporter
 from ..export.excel_exporter import Edu7ExcelExporter
 from ..ai.gemini import _load_env_file
-from ..workspace_layout import books_input_root, book_workspace, normalize_grade, normalize_subject, normalize_term, project_root, textbook_key, workspace_root, finalize_book_workspace
+from ..workspace_layout import books_input_root, book_workspace, normalize_grade, normalize_subject, project_root, textbook_key, workspace_root, finalize_book_workspace
 from ..workspace_rebuild import rebuild_lesson, rebuild_unit, rebuild_book
 
 
@@ -280,6 +280,9 @@ def _cmd_prepare(args):
 
     print(f"[+] Workspace root: {workspace_root()}")
     print(f"[+] Coordinates: {grade_key}/{subject_key}")
+    if not supplied_part:
+        print("[invalid workspace coordinates] Physical part is required (--part PART_1|PART_2|BOTH).")
+        sys.exit(2)
 
     print(f"\n[*] Reading PDF: {target_pdf}")
     reader = PdfReader(str(target_pdf))
@@ -296,11 +299,11 @@ def _cmd_prepare(args):
     if not edition:
         print("[invalid workspace coordinates] Printed edition could not be established from the cover.")
         sys.exit(2)
-    book_key = textbook_key(subject_key, grade_number, term_number, edition)
+    book_key = textbook_key(subject_key, grade_number, supplied_part, edition)
     ws_path = (
         Path(args.workspace).expanduser().resolve()
         if args.workspace
-        else book_workspace(subject_key, grade_number, term_number, edition)
+        else book_workspace(subject_key, grade_number, supplied_part, edition)
     )
     # When the Node bridge supplies the shared subject root, create the edition
     # as the final identity segment instead of creating a duplicate textbook key.
@@ -387,7 +390,7 @@ def _cmd_prepare(args):
     coordinates = {
         "subject": subject_key,
         "grade": grade_number,
-        "term": term_number,
+        "part": supplied_part,
         "edition": edition,
         "title": book_title,
     }
