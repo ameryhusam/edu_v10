@@ -16,6 +16,7 @@ import type { ContentAssetService } from './content-asset.service.js';
 import type { WorkspacePort } from './workspace.ports.js';
 import { Errors, DomainErrorException } from '../../../shared/kernel/errors.js';
 import type { ContentPackage } from '../domain/export-profile.js';
+import type { WorkspaceIndexManifest } from './workspace.ports.js';
 import type { AuthorContext, ContentAuthoringService } from './authoring.service.js';
 import { textbookKey as buildTextbookKey } from '../../../shared/kernel/identifiers.js';
 import type { ContentEnginePort } from './content-engine.port.js';
@@ -281,6 +282,7 @@ export class WorkspaceImporterService {
   }) {
     const proposal = await this.contentEngine.identify({ pdf: input.pdfBuffer, analysisPages: 15, dpi: 150 });
     const detected = proposal.identity;
+    const detectedEdition = detected.edition ?? undefined;
     const conflicts: Array<{ field: string; declared: string | null; detected: string | null }> = [];
     const compare = (field: 'subjectKey' | 'gradeKey' | 'part' | 'edition') => {
       const declared = input.declared?.[field] ?? null;
@@ -330,7 +332,7 @@ export class WorkspaceImporterService {
           part: 'PART_1',
           grade: detected.gradeKey,
           subject: detected.subjectKey,
-          edition: detected.edition,
+          edition: detectedEdition,
         }),
         '../../../../',
       );
@@ -351,7 +353,7 @@ export class WorkspaceImporterService {
           subject: detected.subjectKey!,
           edition: detected.edition!,
         });
-        return { workspaceDir, part, indexManifest: null, package: null };
+        return { workspaceDir, part, indexManifest: null as WorkspaceIndexManifest | null, package: null as ContentPackage | null };
       });
       for (const workspace of workspaces) {
         workspace.indexManifest = await this.workspaceManager.readIndexManifest(workspace.workspaceDir);
