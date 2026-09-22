@@ -301,7 +301,7 @@ export function normalizeOrConvertPackage(
         key: tbKey,
         subjectKey: raw.textbook?.subjectKey || raw.subjectKey || 'GENERAL',
         gradeKey: raw.textbook?.gradeKey || raw.gradeKey || 'G01',
-        termKey: raw.textbook?.termKey || '2026-2027-T01',
+        part: raw.textbook?.part || '',
         title: raw.textbook?.title || raw.title || 'كتاب دراسي',
         edition: String(raw.textbook?.edition || raw.edition || '2026'),
         status: 'DRAFT',
@@ -620,7 +620,7 @@ export class ContentImportService {
       const createdTextbook = await this.authoring.createTextbook(ctx, {
         subjectKey: pkg.textbook.subjectKey,
         gradeKey: pkg.textbook.gradeKey,
-        termKey: pkg.textbook.termKey,
+        part: pkg.textbook.part,
         title: pkg.textbook.title,
         edition: pkg.textbook.edition,
         description: pkg.textbook.description ?? null,
