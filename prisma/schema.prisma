@@ -451,6 +451,7 @@ model Term {
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
   enrollments  Enrollment[]
   plans InstructionalPlan[]
+  textbookAdoptions TextbookAdoption[]
 
   @@unique([academicYearId, ordinal])
   @@map("terms")
