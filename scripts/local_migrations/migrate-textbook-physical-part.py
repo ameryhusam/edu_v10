@@ -159,80 +159,49 @@ def transform(path: str, text: str) -> str:
 
   resolveTextbookCoordinates(input: {""")
     elif path.endswith("source-catalog.ts"):
-        # Source catalogue physical identity must carry an explicit part.
-        # Use exact source blocks rather than regex so this migration cannot
-        # silently leave academic-term derivation behind.
-        out = one(
-            out,
-            "  readonly termOrdinal: number;",
-            "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';",
-            path,
-        )
-        out = one(
-            out,
-            """  const terms = await prisma.term.findMany({
-    where: { academicYear: { key: ctx.academicYearKey } },
-    select: { id: true, ordinal: true },
-  });
-
-""",
-            "",
-            path,
-        )
-        out = one(
-            out,
-            "  const termByOrdinal = new Map(terms.map((term) => [term.ordinal, term]));",
-            "",
-            path,
-        )
-        out = one(
-            out,
-            """    const term = termByOrdinal.get(source.termOrdinal);
-    if (!grade || !subject || !term) {""",
-            """    if (!grade || !subject) {""",
-            path,
-        )
-        out = one(
-            out,
-            """    const part =
-      source.termOrdinal === 1
-        ? 'PART_1'
-        : source.termOrdinal === 2
-          ? 'PART_2'
-          : 'BOTH';
-
-""",
-            "",
-            path,
-        )
-        out = one(
-            out,
-            "    const key = unwrap(",
-            """    const part = source.part;
-
-    const key = unwrap(""",
-            path,
-        )
-        out = one(
-            out,
-            "  return source.termOrdinal * 100 + base;",
-            """  return source.part === 'PART_1'
-    ? 100 + base
-    : source.part === 'PART_2'
-      ? 200 + base
-      : 300 + base;""",
-            path,
-        )
-        out = out.replace(
-            "مقرر الفصل الدراسي ${source.termOrdinal}",
-            "الجزء الفيزيائي ${source.part}",
-        )
-        out = out.replace(
-            "مصدر الفصل الدراسي ${source.termOrdinal}",
-            "مصدر الجزء الفيزيائي ${source.part}",
-        )
+        # Source catalogue physical identity is explicit; never derive it from
+        # AcademicYear/Term. The source data must carry the physical part.
+        replacements = [
+            (
+                "  readonly termOrdinal: number;",
+                "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';",
+            ),
+            (
+                "  const terms = await prisma.term.findMany({\n    where: { academicYear: { key: ctx.academicYearKey } },\n    select: { id: true, ordinal: true },\n  });\n\n",
+                "",
+            ),
+            (
+                "  const termByOrdinal = new Map(terms.map((term) => [term.ordinal, term]));",
+                "",
+            ),
+            (
+                "    const term = termByOrdinal.get(source.termOrdinal);\n    if (!grade || !subject || !term) {",
+                "    if (!grade || !subject) {",
+            ),
+            (
+                "    const part =\n      source.termOrdinal === 1\n        ? 'PART_1'\n        : source.termOrdinal === 2\n          ? 'PART_2'\n          : 'BOTH';\n\n",
+                "    const part = source.part;\n\n",
+            ),
+            (
+                "  return source.termOrdinal * 100 + base;",
+                "  return source.part === 'PART_1' ? 100 + base : source.part === 'PART_2' ? 200 + base : 300 + base;",
+            ),
+            (
+                "مقرر الفصل الدراسي " + "$" + "{source.termOrdinal}",
+                "الجزء الفيزيائي " + "$" + "{source.part}",
+            ),
+            (
+                "مصدر الفصل الدراسي " + "$" + "{source.termOrdinal}",
+                "مصدر الجزء الفيزيائي " + "$" + "{source.part}",
+            ),
+        ]
+        for old, new in replacements:
+            if old not in out:
+                stop(path + ": expected source-catalog anchor missing: " + old.splitlines()[0][:100])
+            out = out.replace(old, new, 1)
         if "termOrdinal" in out or "termByOrdinal" in out or "term.ordinal" in out:
             stop(path + ": source catalogue still derives physical part from academic term")
+
     elif path.endswith("yemen-moe-textbook-sources.json"):
         try:
             data = json.loads(out)
