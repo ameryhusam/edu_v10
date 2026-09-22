@@ -268,6 +268,10 @@ def transform(path: str, text: str) -> str:
         out = one(out, "  readonly term: string;\n",
                   "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';\n", path)
 
+    elif path.endswith("content-import.service.ts"):
+        out = out.replace("termKey: pkg.textbook.termKey,", "part: pkg.textbook.part,")
+        out = out.replace("pkg.textbook.termKey", "pkg.textbook.part")
+
     elif path.endswith("content-engine.service.ts"):
         out = one(out, "        '--term',\n        input.term,\n",
                   "        '--part',\n        input.part,\n", path)
