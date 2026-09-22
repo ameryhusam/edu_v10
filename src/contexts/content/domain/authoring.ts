@@ -184,12 +184,12 @@ export function textbookTitleForSubject(subjectName: string): string {
  */
 export function checkTitleDoesNotRepeatPlacement(
   title: string,
-  placement: { gradeName: string; termName: string },
+  placement: { gradeName: string; part: string },
 ): Result<void> {
   const haystack = title.trim();
   if (haystack.length === 0) return Ok(undefined);
 
-  const repeated = [placement.gradeName, placement.termName].find(
+  const repeated = [placement.gradeName, placement.part].find(
     (name) => name.trim().length > 0 && haystack.includes(name.trim()),
   );
 
@@ -197,7 +197,7 @@ export function checkTitleDoesNotRepeatPlacement(
     return Err(
       Errors.validation(
         'content.title_repeats_placement',
-        'The grade and term are shown automatically — do not repeat them in the title.',
+        'The grade and physical part are shown automatically — do not repeat them in the title.',
         { title, repeated },
       ),
     );

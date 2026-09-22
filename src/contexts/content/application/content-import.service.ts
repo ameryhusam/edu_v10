@@ -141,7 +141,7 @@ export function normalizeOrConvertPackage(
       raw.textbook?.key ||
       (raw.subjectKey
         ? `EDU-${raw.subjectKey}-${raw.gradeKey || 'G01'}-T${raw.term || 1}-ED${raw.edition || '2026'}`
-        : 'EDU-CUSTOM-G01-T1-ED2026');
+        : 'EDU-CUSTOM-G01-P1-ED2026');
 
     const flatUnits: any[] = [];
     const flatLessons: any[] = [];

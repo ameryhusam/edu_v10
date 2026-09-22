@@ -60,7 +60,7 @@ export class WorkspaceArchiveService {
       const textbookKey = await this.resolveTextbookKey(pkg, options.textbookKey);
       const workspaceDir = pkg
         ? this.workspaceManager.getWorkspaceDir({
-            term: pkg.textbook.termKey,
+            part: pkg.textbook.part,
             grade: pkg.textbook.gradeKey,
             subject: pkg.textbook.subjectKey,
             edition: pkg.textbook.edition,
@@ -213,7 +213,7 @@ export class WorkspaceArchiveService {
       const derived = buildTextbookKey({
         subject: tb.subjectKey,
         grade: Number(String(tb.gradeKey).replace(/\D/g, '')),
-        term: Number(String(tb.termKey).replace(/\D/g, '')),
+        part: tb.part,
         edition: tb.edition,
       });
       if (!derived.ok || derived.value !== tb.key) {

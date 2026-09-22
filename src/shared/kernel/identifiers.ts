@@ -170,9 +170,9 @@ function validateCoordinates(c: TextbookCoordinates): Result<TextbookCoordinates
 }
 
 /**
- * `EDU-MATH-G07-T1-ED2026`
+ * `EDU-MATH-G07-P1-ED2026`
  *
- * Subject + grade + term + printed edition. Sorting is by subject then grade,
+ * Subject + grade + physical part + printed edition. Sorting is by subject then grade,
  * which is how a catalogue is browsed.
  */
 export function textbookKey(coords: TextbookCoordinates): Result<TextbookKey> {
