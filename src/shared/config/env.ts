@@ -30,6 +30,11 @@ const schema = z.object({
   /** Set to 1 for the embedded PGlite dev database (single connection). */
   DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
 
+  /** File and asset storage directory */
+  STORAGE_ROOT: z.string().default('./data/storage'),
+  /** Workspace directory for imported textbooks and metadata */
+  WORKSPACE_ROOT: z.string().default('./workspaces'),
+
   // Auth. In production a real secret is mandatory; there is no dev default
   // that could ever be shipped by accident.
   JWT_SECRET: z.string().min(16).default('dev-only-insecure-secret-change-me'),
@@ -51,8 +56,6 @@ const schema = z.object({
   CONTENT_ENGINE_ROOT: z.string().default('./edu7-content-engine'),
   CONTENT_ENGINE_TIMEOUT_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   CONTENT_UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(250 * 1024 * 1024),
-  WORKSPACE_ROOT: z.string().default('./workspaces'),
-  STORAGE_ROOT: z.string().default('./data/storage'),
 
   /**
    * Whether the refresh cookie may travel in a cross-site context.

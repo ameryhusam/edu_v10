@@ -13,22 +13,16 @@ import { useState, useRef, type ReactNode, type ChangeEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   BookOpen,
-  UploadCloud,
-  FileText,
   FolderTree,
   CheckCircle2,
   AlertCircle,
-  Play,
-  Layers,
   Database,
-  RefreshCw,
-  ShieldCheck,
 } from 'lucide-react';
 import { ActionModal } from '../../design-system/patterns/action-modal';
-import { Button } from '../../design-system/ui/button';
-import { Input } from '../../design-system/ui/input';
-import { Badge } from '../../design-system/ui/badge';
 import { textbookAdministrationApi } from './content.api';
+import { TextbookWorkspaceUploadStep } from './textbook-workspace-upload-step';
+import { TextbookWorkspaceSliceView } from './textbook-workspace-slice-view';
+import { TextbookWorkspaceSyncView } from './textbook-workspace-sync-view';
 
 export interface TextbookWorkspaceModalProps {
   readonly open: boolean;
@@ -98,8 +92,6 @@ export function TextbookWorkspaceModal({
     }
     setSelectedFile(file);
     setActionError(null);
-
-
   };
 
   // Mutation: Prepare & Segment Workspace
@@ -107,30 +99,16 @@ export function TextbookWorkspaceModal({
     mutationFn: async () => {
       setActionError(null);
       setActionSuccess(null);
-      const payload: {
-        part: 'PART_1' | 'PART_2' | 'BOTH';
-        grade: string;
-        subject: string;
-        edition?: string;
-        title?: string;
-        autoSegment?: boolean;
-      } = {
-        part,
-        grade: grade.trim(),
-        subject: subject.trim(),
-        edition: edition.trim() || undefined,
-        title: title.trim() || `كتاب ${subject.trim()}`,
-        autoSegment: true,
-      };
       if (!selectedFile) throw new Error('يرجى اختيار ملف PDF للكتاب');
+      const validPart: 'PART_1' | 'PART_2' = part === 'BOTH' ? 'PART_1' : part;
       const res = await textbookAdministrationApi.workspacePrepareUpload({
         file: selectedFile,
-        part: payload.part,
-        grade: payload.grade,
-        subject: payload.subject,
-        edition: payload.edition,
-        title: payload.title,
-        autoSegment: payload.autoSegment,
+        part: validPart,
+        grade: grade.trim(),
+        subject: subject.trim(),
+        edition: edition.trim() ? edition.trim() : undefined,
+        title: title.trim() ? title.trim() : `كتاب ${subject.trim()}`,
+        autoSegment: true,
       });
       return res;
     },
@@ -207,8 +185,6 @@ export function TextbookWorkspaceModal({
 
   if (!open) return null;
 
-  const manifest = inspectedWorkspace?.indexManifest;
-
   return (
     <ActionModal
       kind="textbook"
@@ -276,358 +252,59 @@ export function TextbookWorkspaceModal({
 
         {/* STEP 1: Coordinates & PDF Upload / Workspace Select */}
         {currentStep === 1 && (
-          <div className="space-y-5">
-            {/* Quick Workspace Selection if available */}
-            {workspacesList.length > 0 && (
-              <div className="p-4 bg-surface-subtle border border-border/60 rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold flex items-center gap-2">
-                    <FolderTree className="w-4 h-4 text-accent" />
-                    <span>مساحات العمل الموجودة مسبقاً على الخادم:</span>
-                  </h4>
-                  <Button variant="ghost" size="sm" onClick={() => refetchWorkspaces()}>
-                    <RefreshCw className="w-3.5 h-3.5 mr-1" />
-                    <span>تحديث</span>
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-1">
-                  {workspacesList.map((ws: any) => (
-                    <button
-                      key={ws.workspaceDir}
-                      type="button"
-                      onClick={() => {
-                        setSelectedWorkspaceDir(ws.workspaceDir);
-                        setPart(ws.manifest?.part || 'PART_1');
-                        setGrade(ws.manifest?.grade || 'G07');
-                        setSubject(ws.manifest?.subject || 'MATH');
-                        setEdition(ws.manifest?.edition || '');
-                        setTitle(ws.manifest?.title || '');
-                        setCurrentStep(2);
-                      }}
-                      className={`text-right p-2.5 rounded-lg border text-xs transition-all flex flex-col gap-1 ${
-                        selectedWorkspaceDir === ws.workspaceDir
-                          ? 'border-accent bg-surface-raised text-text font-medium shadow-sm'
-                          : 'border-border/60 hover:bg-surface text-text-muted'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between font-bold text-text">
-                        <span>{ws.manifest?.title || ws.relativePath}</span>
-                        <Badge tone="accent">
-                          {ws.manifest?.workspaceId || ws.manifest?.part}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-3 text-[11px] text-text-muted">
-                        <span>الوحدات: {ws.manifest?.counts?.units ?? 0}</span>
-                        <span>الدروس: {ws.manifest?.counts?.lessons ?? 0}</span>
-                        <span>الأصول: {ws.manifest?.counts?.assets ?? 0}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Coordinates Form */}
-            <div className="p-4 border border-border/60 rounded-xl space-y-4">
-              <h4 className="text-sm font-semibold flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-accent" />
-                <span>إحداثيات الكتاب الأكاديمية (Coordinates)</span>
-              </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-muted">الجزء الفيزيائي (Part)</label>
-                  <Input
-                    value={part}
-                    onChange={(e) => setPart(e.target.value.toUpperCase() as 'PART_1' | 'PART_2' | 'BOTH')}
-                    placeholder="PART_1"
-                    className="h-9 text-xs uppercase"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-muted">الصف (Grade)</label>
-                  <Input
-                    value={grade}
-                    onChange={(e) => setGrade(e.target.value.toUpperCase())}
-                    placeholder="G07"
-                    className="h-9 text-xs uppercase"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-muted">المادة (Subject)</label>
-                  <Input
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value.toUpperCase())}
-                    placeholder="MATH"
-                    className="h-9 text-xs uppercase"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-text-muted">الطبعة المطبوعة (Edition)</label>
-                  <Input
-                    value={edition}
-                    onChange={(e) => setEdition(e.target.value)}
-                    placeholder="يُستخرج من الغلاف تلقائياً"
-                    className="h-9 text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-text-muted">عنوان الكتاب الكامل</label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="كتاب الرياضيات - الصف السابع - الجزء الأول"
-                  className="h-9 text-xs"
-                />
-              </div>
-            </div>
-
-            {/* PDF File Upload Zone */}
-            <div className="p-5 border-2 border-dashed border-border/80 hover:border-accent rounded-xl text-center space-y-3 transition-colors">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <div className="w-12 h-12 rounded-full bg-surface-subtle text-accent flex items-center justify-center mx-auto">
-                <UploadCloud className="w-6 h-6" />
-              </div>
-              <div>
-                <h5 className="text-sm font-semibold text-text">
-                  {selectedFile ? selectedFile.name : 'رفع ملف PDF للكتاب المدرسي'}
-                </h5>
-                <p className="text-xs text-text-muted mt-1">
-                  {selectedFile
-                    ? `الحجم: ${(selectedFile.size / (1024 * 1024)).toFixed(2)} ميجابايت`
-                    : 'سيُرسل الكتاب إلى الخادم مؤقتاً ثم يعالجه محرك المحتوى؛ الحفظ الدائم يكون لملفات الدروس فقط'}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {selectedFile ? 'تغيير الملف' : 'اختيار ملف PDF'}
-              </Button>
-            </div>
-
-            {/* Prepare Button */}
-            <div className="flex justify-end gap-3 pt-2">
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() => prepareMutation.mutate()}
-                disabled={prepareMutation.isPending || !subject || !grade || !part}
-                className="gap-2"
-              >
-                {prepareMutation.isPending ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Play className="w-4 h-4" />
-                )}
-                <span>تجهيز وتقطيع مساحة العمل (Prepare & Slice)</span>
-              </Button>
-            </div>
-          </div>
+          <TextbookWorkspaceUploadStep
+            workspacesList={workspacesList}
+            refetchWorkspaces={refetchWorkspaces}
+            selectedWorkspaceDir={selectedWorkspaceDir}
+            onSelectWorkspace={(ws) => {
+              setSelectedWorkspaceDir(ws.workspaceDir);
+              setPart(ws.manifest?.part || 'PART_1');
+              setGrade(ws.manifest?.grade || 'G07');
+              setSubject(ws.manifest?.subject || 'MATH');
+              setEdition(ws.manifest?.edition || '');
+              setTitle(ws.manifest?.title || '');
+              setCurrentStep(2);
+            }}
+            part={part}
+            onPartChange={setPart}
+            grade={grade}
+            onGradeChange={setGrade}
+            subject={subject}
+            onSubjectChange={setSubject}
+            edition={edition}
+            onEditionChange={setEdition}
+            title={title}
+            onTitleChange={setTitle}
+            selectedFile={selectedFile}
+            fileInputRef={fileInputRef}
+            onFileChange={handleFileChange}
+            isPreparePending={prepareMutation.isPending}
+            onPrepare={() => prepareMutation.mutate()}
+          />
         )}
 
         {/* STEP 2: Slicing Structure & Assets Preview */}
         {currentStep === 2 && (
-          <div className="space-y-4">
-            {isInspecting ? (
-              <div className="p-8 text-center text-text-muted flex items-center justify-center gap-2">
-                <RefreshCw className="w-5 h-5 animate-spin text-accent" />
-                <span>جاري قراءة وتحليل مساحة العمل...</span>
-              </div>
-            ) : manifest ? (
-              <div className="space-y-4">
-                {/* Stats Header */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className="p-3 bg-surface-subtle border rounded-xl text-center">
-                    <span className="text-xs text-text-muted block">الوحدات</span>
-                    <span className="text-xl font-bold text-text">{manifest.counts?.units ?? 0}</span>
-                  </div>
-                  <div className="p-3 bg-surface-subtle border rounded-xl text-center">
-                    <span className="text-xs text-text-muted block">الدروس</span>
-                    <span className="text-xl font-bold text-text">{manifest.counts?.lessons ?? 0}</span>
-                  </div>
-                  <div className="p-3 bg-surface-subtle border rounded-xl text-center">
-                    <span className="text-xs text-text-muted block">الأصول الرقمية</span>
-                    <span className="text-xl font-bold text-text">{manifest.counts?.assets ?? inspectedWorkspace?.assets?.length ?? 0}</span>
-                  </div>
-                  <div className="p-3 bg-surface-subtle border rounded-xl text-center">
-                    <span className="text-xs text-text-muted block">حالة الحزمة</span>
-                    <Badge tone={inspectedWorkspace?.contentPackage ? 'success' : 'neutral'} className="mt-1">
-                      {inspectedWorkspace?.contentPackage ? 'جاهزة للاستيراد' : 'غير مكتملة'}
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Sliced Units & Lessons Tree */}
-                <div className="border border-border/60 rounded-xl overflow-hidden">
-                  <div className="p-3 bg-surface-subtle border-b font-semibold text-xs flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <FolderTree className="w-4 h-4 text-accent" />
-                      <span>الهيكل والشرائح المستخرجة (Units & Lessons Slices)</span>
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => segmentMutation.mutate()}
-                      disabled={segmentMutation.isPending}
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 mr-1 ${segmentMutation.isPending ? 'animate-spin' : ''}`} />
-                      <span>التحقق من التقطيع</span>
-                    </Button>
-                  </div>
-
-                  <div className="p-3 space-y-3 max-h-64 overflow-y-auto">
-                    {manifest.units?.map((u: any) => (
-                      <div key={u.slug} className="p-2.5 bg-surface-raised border border-border/60 rounded-lg space-y-2">
-                        <div className="flex items-center justify-between text-xs font-semibold">
-                          <span className="flex items-center gap-1.5">
-                            <Layers className="w-3.5 h-3.5 text-accent" />
-                            <span>الوحدة {u.unitNumber}: {u.name || u.slug}</span>
-                          </span>
-                          <span className="text-[11px] text-text-muted font-mono">
-                            {u.pdf}
-                          </span>
-                        </div>
-
-                        {/* Lessons */}
-                        <div className="pr-4 space-y-1.5 border-r-2 border-accent/20 mr-1.5">
-                          {u.lessons?.map((l: any) => (
-                            <div
-                              key={l.slug}
-                              className="flex items-center justify-between text-xs p-1.5 bg-surface-subtle rounded border border-border/40"
-                            >
-                              <span className="flex items-center gap-1.5">
-                                <FileText className="w-3.5 h-3.5 text-text-muted" />
-                                <span>الدرس {l.lessonNumber}: {l.name || l.slug}</span>
-                              </span>
-                              <span className="text-[10px] text-text-muted font-mono">
-                                {l.pdf}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Next Step Actions */}
-                <div className="flex justify-between items-center pt-2">
-                  <Button variant="secondary" size="sm" onClick={() => setCurrentStep(1)}>
-                    <span>السابق</span>
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    onClick={() => dryRunMutation.mutate()}
-                    disabled={dryRunMutation.isPending}
-                    className="gap-2"
-                  >
-                    {dryRunMutation.isPending ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <ShieldCheck className="w-4 h-4" />
-                    )}
-                    <span>بدء الفحص التجريبي والمزامنة (Verify & Dry-Run)</span>
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="p-8 text-center text-text-muted">
-                <AlertCircle className="w-8 h-8 mx-auto mb-2 text-warning" />
-                <p className="text-sm">لم يتم العثور على ملف index.json في مساحة العمل المحددة.</p>
-              </div>
-            )}
-          </div>
+          <TextbookWorkspaceSliceView
+            isInspecting={isInspecting}
+            inspectedWorkspace={inspectedWorkspace}
+            segmentPending={segmentMutation.isPending}
+            onSegment={() => segmentMutation.mutate()}
+            onBack={() => setCurrentStep(1)}
+            onVerifyAndDryRun={() => dryRunMutation.mutate()}
+            dryRunPending={dryRunMutation.isPending}
+          />
         )}
 
         {/* STEP 3: Dry-Run Verification & Final Database Sync */}
         {currentStep === 3 && (
-          <div className="space-y-4">
-            {/* Dry Run Outcome Summary */}
-            {dryRunResult && (
-              <div className="p-4 bg-success-subtle/30 border border-success/20 rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold text-success flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>تقرير الفحص التجريبي للمزامنة (Dry-Run Verification)</span>
-                  </h4>
-                  <Badge tone="neutral">
-                    الكتاب: {dryRunResult.textbookKey}
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="p-2 bg-surface-raised rounded border text-center">
-                    <span className="text-text-muted block text-[10px]">العناصر الجديدة</span>
-                    <span className="text-base font-bold text-success">{dryRunResult.importSummary?.created?.length ?? 0}</span>
-                  </div>
-                  <div className="p-2 bg-surface-raised rounded border text-center">
-                    <span className="text-text-muted block text-[10px]">العناصر المطابقة</span>
-                    <span className="text-base font-bold text-text">{dryRunResult.importSummary?.identical?.length ?? 0}</span>
-                  </div>
-                  <div className="p-2 bg-surface-raised rounded border text-center">
-                    <span className="text-text-muted block text-[10px]">الأصول الموثقة</span>
-                    <span className="text-base font-bold text-accent">{dryRunResult.assetsVerified ?? 0}</span>
-                  </div>
-                  <div className="p-2 bg-surface-raised rounded border text-center">
-                    <span className="text-text-muted block text-[10px]">التعارضات</span>
-                    <span className="text-base font-bold text-warning">{dryRunResult.importSummary?.conflicts?.length ?? 0}</span>
-                  </div>
-                </div>
-
-                {dryRunResult.missingAssets && dryRunResult.missingAssets.length > 0 && (
-                  <div className="p-2 bg-warning-subtle text-warning text-xs rounded">
-                    تنبيه: يوجد {dryRunResult.missingAssets.length} ملف أصل غير مكتمل في مساحة العمل.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Final Sync Confirmation */}
-            <div className="p-5 border border-border/60 rounded-xl text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-surface-subtle text-accent flex items-center justify-center mx-auto">
-                <Database className="w-6 h-6" />
-              </div>
-              <div>
-                <h4 className="text-sm font-semibold text-text">حفظ ومزامنة محتويات الكتاب في قاعدة البيانات</h4>
-                <p className="text-xs text-text-muted mt-1 max-w-md mx-auto">
-                  سيتم إنشاء وتحديث سجلات الكتاب، الوحدات، الدروس، المفاهيم، الأسئلة، وملفات الأصول بصورة آمنة وغير قابلة لفقدان البيانات السابقة.
-                </p>
-              </div>
-
-              <div className="pt-2 flex justify-center gap-3">
-                <Button variant="secondary" size="sm" onClick={() => setCurrentStep(2)}>
-                  <span>رجوع للمعاينة</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() => syncMutation.mutate()}
-                  disabled={syncMutation.isPending || !!importResult}
-                  className="gap-2"
-                >
-                  {syncMutation.isPending ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4" />
-                  )}
-                  <span>
-                    {importResult ? 'تم الحفظ والمزامنة بنجاح' : 'تأكيد الحفظ النهائي في قاعدة البيانات'}
-                  </span>
-                </Button>
-              </div>
-            </div>
-          </div>
+          <TextbookWorkspaceSyncView
+            dryRunResult={dryRunResult}
+            importResult={importResult}
+            syncPending={syncMutation.isPending}
+            onSync={() => syncMutation.mutate()}
+            onBack={() => setCurrentStep(2)}
+          />
         )}
       </div>
     </ActionModal>

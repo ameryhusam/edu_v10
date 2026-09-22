@@ -109,15 +109,20 @@ function ExamCreateModal({ onClose }: { readonly onClose: () => void }): ReactNo
     (book) =>
       (!filters.subjectKey || book.subjectKey === filters.subjectKey) &&
       (!filters.gradeKey || book.gradeKey === filters.gradeKey) &&
-      (!filters.termKey || book.termKey === filters.termKey),
+      (!filters.termKey || book.part === filters.termKey),
   );
   const scopeOptions = useMemo(
     () => ({
       subjects: uniqueOptions(books.map((book) => ({ key: book.subjectKey, name: book.subjectName }))),
       grades: uniqueOptions(books.map((book) => ({ key: book.gradeKey, name: book.gradeName }))),
-      terms: uniqueOptions(books.map((book) => ({ key: book.termKey, name: book.termName }))),
+      terms: uniqueOptions(
+        books.map((book) => ({
+          key: book.part,
+          name: book.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2'),
+        })),
+      ),
     }),
-    [books],
+    [books, t],
   );
   const lessons = (outline.data ?? []).flatMap((unit) =>
     unit.lessons.map((lesson) => ({ ...lesson, unitName: unit.name })),
@@ -284,7 +289,7 @@ function ExamCreateModal({ onClose }: { readonly onClose: () => void }): ReactNo
                   title: book.title,
                   subjectName: book.subjectName,
                   gradeName: book.gradeName,
-                  termName: book.termName,
+                  extra: [book.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')],
                 }).join(' · '),
               }))}
               required

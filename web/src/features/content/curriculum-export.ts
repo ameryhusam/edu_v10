@@ -10,7 +10,7 @@ export function exportCurriculumPackage(selected: TextbookSummary, units: readon
       title: selected.title,
       subjectName: selected.subjectName,
       gradeName: selected.gradeName,
-      termName: selected.termName,
+      part: selected.part,
       edition: selected.edition,
     },
     units: units.map((u) => ({

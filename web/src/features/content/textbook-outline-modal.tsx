@@ -83,7 +83,7 @@ export function TextbookOutlineModal({
         title: textbook.title,
         subjectName: textbook.subjectName,
         gradeName: textbook.gradeName,
-        termName: textbook.termName,
+        part: textbook.part,
         edition: textbook.edition,
       },
       units: units.map((u) => ({
@@ -119,7 +119,7 @@ export function TextbookOutlineModal({
               <PublicationBadge status={textbook.status} />
             </div>
             <p className="text-xs text-text-muted">
-              {textbook.gradeName} · {textbook.subjectName} · {textbook.termName} · {t('textbookAdmin.edition')} {textbook.edition}
+              {textbook.gradeName} · {textbook.subjectName} · {textbook.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')} · {t('textbookAdmin.edition')} {textbook.edition}
             </p>
           </div>
           <button

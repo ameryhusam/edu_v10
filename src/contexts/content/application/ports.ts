@@ -15,7 +15,7 @@ import type { PublicationState } from '../domain/publication.js';
 import type { ContentNodeKind } from '../domain/authoring.js';
 import type { TextbookStructure } from '../domain/structural-validation.js';
 import type { ContentAssetType, ContentAssetScope } from '../domain/assets.js';
-import type { ContentAssetExport } from '../domain/export-profile.js';
+import type { ContentAssetExport, ContentPackage } from '../domain/export-profile.js';
 
 /** Identity and lifecycle facts about a node, plus its owning textbook. */
 export interface NodeContext {
@@ -690,4 +690,53 @@ export interface ContentStorage {
   delete(storageKey: string): Promise<void>;
   getPublicUrl(storageKey: string): Promise<string | null>;
 }
+
+export interface WorkspaceSummary {
+  readonly workspaceDir: string;
+  readonly relativePath: string;
+  readonly manifest: unknown;
+  readonly packageExists: boolean;
+}
+
+export interface WorkspaceStoragePort {
+  getWorkspaceDir(coords: { term: string; grade: string; subject: string }): string;
+  storeTextbookSource(
+    coords: { term: string; grade: string; subject: string },
+    pdfBuffer: Buffer,
+    edition?: string,
+    title?: string,
+  ): Promise<{
+    workspaceDir: string;
+    pdfRelativePath: string;
+    pdfFullPath: string;
+    sizeBytes: number;
+    sha256: string;
+  }>;
+  readIndexManifest(workspaceDir: string): Promise<unknown | null>;
+  readContentPackage(workspaceDir: string): Promise<ContentPackage | null>;
+  readAssetFile(workspaceDir: string, relativePath: string): Promise<Buffer | null>;
+  listAllWorkspaces(): Promise<Array<WorkspaceSummary>>;
+  inspectWorkspace(workspaceDir: string): Promise<unknown>;
+  segmentWorkspace(
+    workspaceDir: string,
+    units?: Array<{
+      unitNumber: number;
+      title: string;
+      slug?: string;
+      startPage?: number;
+      endPage?: number;
+      lessons?: Array<{
+        lessonNumber: number;
+        title: string;
+        slug?: string;
+        startPage?: number;
+        endPage?: number;
+      }>;
+    }>,
+  ): Promise<{
+    indexManifest: unknown;
+    package: ContentPackage;
+  }>;
+}
+
 

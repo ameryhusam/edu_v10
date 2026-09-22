@@ -134,7 +134,7 @@ export function TextbookDetailDrawer({
     ['textbookAdmin.textbook', textbook.title],
     ['collection.subjects', textbook.subjectName],
     ['collection.grades', textbook.gradeName],
-    ['collection.terms', textbook.termName],
+    ['textbookAdmin.physicalPart', textbook.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')],
     ['textbookAdmin.edition', textbook.edition],
     ['textbookAdmin.unitsCount', String(textbook.unitCount)],
     ['textbookAdmin.questionsCount', String(textbook.questionCount)],
@@ -168,7 +168,7 @@ export function TextbookDetailDrawer({
                   title: textbook.title,
                   subjectName: textbook.subjectName,
                   gradeName: textbook.gradeName,
-                  termName: textbook.termName,
+                  extra: [textbook.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')],
                 }).join(' · ')}
               </p>
             </div>

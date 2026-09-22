@@ -56,8 +56,10 @@ export function TextbookCreatePanel(): ReactNode {
   };
 
   const create = useMutation({
-    mutationFn: () =>
-      textbookAdministrationApi.createTextbook({ subjectKey, gradeKey, part, title, edition }),
+    mutationFn: () => {
+      if (!part) throw new Error('Part is required');
+      return textbookAdministrationApi.createTextbook({ subjectKey, gradeKey, part, title, edition });
+    },
     onSuccess: async (result) => {
       setLastResult(result.key);
       setTitle('');
@@ -66,8 +68,9 @@ export function TextbookCreatePanel(): ReactNode {
   });
 
   const ensure = useMutation({
-    mutationFn: () =>
-      textbookAdministrationApi.ensureForGrade({
+    mutationFn: () => {
+      if (!bulkPart) throw new Error('Part is required');
+      return textbookAdministrationApi.ensureForGrade({
         gradeKey: bulkGradeKey,
         part: bulkPart,
         edition: bulkEdition,
@@ -75,7 +78,8 @@ export function TextbookCreatePanel(): ReactNode {
           adoptBulk && adoptableSchoolKey && currentAcademicYearKey
             ? { schoolKey: adoptableSchoolKey, academicYearKey: currentAcademicYearKey }
             : null,
-      }),
+      });
+    },
     onSuccess: async (result) => {
       setLastResult(
         t('textbookAdmin.ensureSummary', {
@@ -135,9 +139,10 @@ export function TextbookCreatePanel(): ReactNode {
           </label>
           <label className="space-y-1.5">
             <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')}</span>
-            <select value={part} onChange={(e) => setPart(e.target.value)} className={selectClass} required>
+            <select value={part} onChange={(e) => setPart(e.target.value as 'PART_1' | 'PART_2' | '')} className={selectClass} required>
               <option value="">—</option>
-              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option>}
+              <option value="PART_1">{t('textbookAdmin.part1')}</option>
+              <option value="PART_2">{t('textbookAdmin.part2')}</option>
             </select>
           </label>
           <label className="space-y-1.5">
@@ -168,9 +173,10 @@ export function TextbookCreatePanel(): ReactNode {
           </label>
           <label className="space-y-1.5">
             <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')}</span>
-            <select value={bulkPart} onChange={(e) => setBulkPart(e.target.value)} className={selectClass} required>
+            <select value={bulkPart} onChange={(e) => setBulkPart(e.target.value as 'PART_1' | 'PART_2' | '')} className={selectClass} required>
               <option value="">—</option>
-              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option>}
+              <option value="PART_1">{t('textbookAdmin.part1')}</option>
+              <option value="PART_2">{t('textbookAdmin.part2')}</option>
             </select>
           </label>
           <label className="space-y-1.5">

@@ -23,13 +23,15 @@ export interface GradeCardStats {
 export interface GradeCardItemProps {
   readonly grade: GradeRecord;
   readonly stats: GradeCardStats;
-  readonly activeTermName: string;
+  readonly activePartName?: string;
+  readonly activeTermName?: string;
   readonly onSelectGrade: (gradeKey: string) => void;
 }
 
 export function GradeCardItem({
   grade,
   stats,
+  activePartName,
   activeTermName,
   onSelectGrade,
 }: GradeCardItemProps): ReactNode {
@@ -55,7 +57,7 @@ export function GradeCardItem({
               <h3 className="text-base font-extrabold text-text group-hover:text-accent transition-colors">
                 {grade.name}
               </h3>
-              <p className="text-2xs font-medium text-text-muted">{activeTermName}</p>
+              <p className="text-2xs font-medium text-text-muted">{activePartName ?? activeTermName}</p>
             </div>
           </div>
 

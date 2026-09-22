@@ -19,6 +19,8 @@ import { Pager } from '../../design-system/patterns/pager';
 import { DataTable, type Column } from '../../design-system/patterns/data-table';
 import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
 import { adminApi, type EnrollmentRow } from '../../features/people/people.api';
+import { administrationApi } from '../../features/administration/administration.api';
+import { schoolsApi } from '../../features/schools/schools.api';
 import { queryKeys } from '../../shared/api/query-keys';
 import { useI18n } from '../../shared/i18n/i18n';
 import { ApiError } from '../../shared/api/errors';
@@ -232,5 +234,38 @@ export function EnrollmentsPage(): ReactNode {
 
 
     </div>
+  );
+}
+
+/** Filter options fetched where they are used, so the page body stays flat. */
+function SchoolOptions(): ReactNode {
+  const schools = useQuery({
+    queryKey: queryKeys.administration.schools(),
+    queryFn: () => schoolsApi.list(),
+  });
+  return (
+    <>
+      {(schools.data ?? []).map((school) => (
+        <option key={school.key} value={school.key}>
+          {school.name}
+        </option>
+      ))}
+    </>
+  );
+}
+
+function GradeOptions(): ReactNode {
+  const grades = useQuery({
+    queryKey: queryKeys.administration.catalogue('grades'),
+    queryFn: () => administrationApi.grades.list(),
+  });
+  return (
+    <>
+      {(grades.data ?? []).map((grade) => (
+        <option key={grade.key} value={grade.key}>
+          {grade.name}
+        </option>
+      ))}
+    </>
   );
 }

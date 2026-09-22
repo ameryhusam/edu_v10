@@ -512,9 +512,9 @@ export const textbookAdministrationApi = {
     part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
-    edition?: string;
-    title?: string;
-    autoSegment?: boolean;
+    edition?: string | undefined;
+    title?: string | undefined;
+    autoSegment?: boolean | undefined;
   }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
     query: {
       part: input.part,
@@ -531,11 +531,11 @@ export const textbookAdministrationApi = {
     part: 'PART_1' | 'PART_2';
     grade: string;
     subject: string;
-    edition?: string;
-    title?: string;
-    pdfBase64?: string;
-    autoSegment?: boolean;
-    units?: Array<any>;
+    edition?: string | undefined;
+    title?: string | undefined;
+    pdfBase64?: string | undefined;
+    autoSegment?: boolean | undefined;
+    units?: Array<any> | undefined;
   }) => api.post<any>('content/workspace/prepare', input),
 
   workspaceList: () => api.get<Array<{

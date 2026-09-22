@@ -7,8 +7,6 @@ import { useState, useRef, type ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   FileText,
-  ExternalLink,
-  Trash2,
   CheckCircle2,
   AlertCircle,
   UploadCloud,
@@ -18,7 +16,6 @@ import { ActionModal, ActionStepCard } from '../../design-system/patterns/action
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';
 import { Textarea } from '../../design-system/ui/textarea';
-import { Badge } from '../../design-system/ui/badge';
 import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
 import { useI18n } from '../../shared/i18n/i18n';
 import {
@@ -26,6 +23,7 @@ import {
   type TextbookSummary,
   type ResourceRecord,
 } from './content.api';
+import { TextbookPdfAttachedList } from './textbook-pdf-attached-list';
 
 export interface TextbookPdfModalProps {
   readonly open: boolean;
@@ -217,68 +215,12 @@ export function TextbookPdfModal({
           )}
 
           {/* Current Attached PDFs */}
-          <ActionStepCard step={1} title={t('textbookAdmin.pdfCurrentAttached')}>
-            {isLoading ? (
-              <div className="py-4 text-center text-xs text-text-muted">{t('common.working')}</div>
-            ) : pdfResources.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border bg-surface p-4 text-center">
-                <FileText className="mx-auto size-8 text-text-muted/40" />
-                <p className="mt-2 text-xs text-text-muted">{t('textbookAdmin.pdfNoneAttached')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {pdfResources.map((res) => (
-                  <div
-                    key={res.key}
-                    className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-3.5 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent-subtle text-accent">
-                        <FileText className="size-5" />
-                      </span>
-                      <div className="min-w-0 space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <h4 className="truncate text-xs font-bold text-text">{res.title}</h4>
-                          <Badge tone="neutral">PDF</Badge>
-                          {textbook.totalPages ? (
-                            <Badge tone="accent">{`${textbook.totalPages} ${t('textbookAdmin.totalPages')}`}</Badge>
-                          ) : null}
-                        </div>
-                        {res.url ? (
-                          <p className="truncate text-2xs text-text-muted" dir="ltr">
-                            {res.url}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      {res.url ? (
-                        <a
-                          href={res.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text hover:bg-surface-subtle"
-                        >
-                          <ExternalLink className="size-3.5" />
-                          <span>{t('textbookAdmin.pdfOpen')}</span>
-                        </a>
-                      ) : null}
-                      <Button
-                        variant="ghost"
-                        size="iconSm"
-                        onClick={() => setRetireTarget(res)}
-                        aria-label={t('textbookAdmin.pdfRetire')}
-                        className="text-danger hover:bg-danger-subtle"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </ActionStepCard>
+          <TextbookPdfAttachedList
+            textbook={textbook}
+            pdfResources={pdfResources}
+            isLoading={isLoading}
+            onRetire={(res) => setRetireTarget(res)}
+          />
 
           {/* Form to Attach or Replace PDF */}
           <ActionStepCard step={2} title={t('textbookAdmin.pdfAttachNew')}>

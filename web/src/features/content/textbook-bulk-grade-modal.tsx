@@ -56,8 +56,9 @@ export function TextbookBulkGradeModal({
   const currentAcademicYearKey = currentAcademicYear?.key ?? null;
 
   const ensure = useMutation({
-    mutationFn: () =>
-      textbookAdministrationApi.ensureForGrade({
+    mutationFn: () => {
+      if (!bulkPart) throw new Error('Part is required');
+      return textbookAdministrationApi.ensureForGrade({
         gradeKey: bulkGradeKey,
         part: bulkPart,
         edition: bulkEdition,
@@ -65,7 +66,8 @@ export function TextbookBulkGradeModal({
           adoptBulk && selectedSchoolKey && currentAcademicYearKey
             ? { schoolKey: selectedSchoolKey, academicYearKey: currentAcademicYearKey }
             : null,
-      }),
+      });
+    },
     onSuccess: async (result) => {
       setSummaryResult(
         t('textbookAdmin.ensureSummary', {
@@ -135,14 +137,13 @@ export function TextbookBulkGradeModal({
             <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')} *</span>
             <select
               value={bulkPart}
-              onChange={(e) => setBulkPart(e.target.value)}
+              onChange={(e) => setBulkPart(e.target.value as 'PART_1' | 'PART_2' | '')}
               className={selectClass}
               required
             >
               <option value="">—</option>
-              {<option value="PART_1">الجزء الأول</option>
-              <option value="PART_2">الجزء الثاني</option>
-              }
+              <option value="PART_1">{t('textbookAdmin.part1')}</option>
+              <option value="PART_2">{t('textbookAdmin.part2')}</option>
             </select>
           </label>
         </div>

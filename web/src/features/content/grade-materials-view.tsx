@@ -20,12 +20,11 @@ import { Badge } from '../../design-system/ui/badge';
 import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
 import { downloadJson } from '../../shared/platform/download';
 import { useI18n } from '../../shared/i18n/i18n';
-import type { GradeRecord, SubjectRecord, TermRecord } from '../catalogue/catalogue.api';
+import type { GradeRecord, SubjectRecord } from '../catalogue/catalogue.api';
 import type { PublicationAction, PublicationStatus, TextbookSummary } from './content.api';
 
 export interface GradeMaterialsViewProps {
   readonly grade: GradeRecord;
-  readonly terms: readonly TermRecord[];
   readonly subjects: readonly SubjectRecord[];
   readonly textbooks: readonly TextbookSummary[];
   readonly selectedPartOrdinal: 1 | 2;
@@ -88,7 +87,7 @@ export function GradeMaterialsView({
       return book.title.toLowerCase().includes(query) || book.key.toLowerCase().includes(query) || subject?.name.toLowerCase().includes(query);
     });
   }, [gradeMaterials, searchQuery, subjectsMap]);
-  const activePartName = selectedPartOrdinal === 1 ? t('الجزء الأول') : t('الجزء الثاني');
+  const activePartName = selectedPartOrdinal === 1 ? t('textbookAdmin.part1') : t('textbookAdmin.part2');
   const publishedCount = gradeMaterials.filter((book) => book.status === 'PUBLISHED').length;
   const draftCount = gradeMaterials.filter((book) => book.status === 'DRAFT').length;
 
@@ -116,8 +115,8 @@ export function GradeMaterialsView({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-xl border border-border bg-surface p-1 shadow-xs">
-            <button type="button" onClick={() => onSelectPartOrdinal(1)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 1 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('الجزء الأول')}</button>
-            <button type="button" onClick={() => onSelectPartOrdinal(2)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 2 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('الجزء الثاني')}</button>
+            <button type="button" onClick={() => onSelectPartOrdinal(1)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 1 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.part1')}</button>
+            <button type="button" onClick={() => onSelectPartOrdinal(2)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 2 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.part2')}</button>
           </div>
           <Button variant="primary" size="sm" onClick={onOpenCreateModal} className="gap-1.5 text-xs"><Plus className="size-4" />{t('textbookAdmin.addTextbookButton')}</Button>
           <Button variant="secondary" size="sm" onClick={onOpenBulkModal} className="gap-1.5 text-xs"><Sparkles className="size-4 text-accent" />{t('textbookAdmin.bulkSetupButton')}</Button>

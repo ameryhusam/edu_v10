@@ -222,7 +222,7 @@ export function ContentOutlineBrowser({
                     title: selected.title,
                     subjectName: selected.subjectName,
                     gradeName: selected.gradeName,
-                    termName: selected.termName,
+                    extra: [selected.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')],
                   }).join(' · ')}
                 </p>
               </div>
