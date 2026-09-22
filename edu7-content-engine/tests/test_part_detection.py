@@ -47,3 +47,13 @@ def test_single_part_without_both_markers_requires_review():
 
     assert result["status"] == "REVIEW"
     assert result["boundaryPdfPage"] is None
+
+
+def test_both_cannot_become_workspace_identity():
+    import pytest
+    from edu7_content.workspace_layout import book_workspace, textbook_key
+
+    with pytest.raises(ValueError):
+        textbook_key("SCI", 7, "BOTH", "2026")
+    with pytest.raises(ValueError):
+        book_workspace("SCI", 7, "BOTH", "2026")
