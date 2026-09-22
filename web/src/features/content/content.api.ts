@@ -145,6 +145,7 @@ export interface AdoptionInput {
 /** Accredit one book (`textbookKey` given) or a grade's whole shelf. */
 export interface GradeAdoptionInput {
   readonly gradeKey: string;
+  readonly part?: 'PART_1' | 'PART_2' | undefined;
   readonly textbookKey?: string | undefined;
   readonly schoolKey: string;
   readonly academicYearKey: string;
