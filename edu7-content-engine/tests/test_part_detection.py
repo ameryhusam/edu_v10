@@ -14,7 +14,7 @@ def test_combined_pdf_uses_structural_part_two_marker_after_front_matter():
     texts = [
         "الغلاف\nالجزء الأول\nفهرس المحتويات: الجزء الثاني يبدأ لاحقاً",
         "المحتويات",
-    ] + ["محتوى الجزء الأول"] * 8 + [
+     ] + ["محتوى الجزء الأول"] * 13 + [
         "الجزء الثاني",
         "الوحدة الأولى",
     ] + ["محتوى الجزء الثاني"] * 5
@@ -23,8 +23,8 @@ def test_combined_pdf_uses_structural_part_two_marker_after_front_matter():
 
     assert result["status"] == "DETECTED"
     assert result["confidence"] == "HIGH"
-    assert result["boundaryPdfPage"] == 12
-    assert result["part1"] == {"startPdfPage": 1, "endPdfPage": 11}
+    assert result["boundaryPdfPage"] == 16
+    assert result["part1"] == {"startPdfPage": 1, "endPdfPage": 15}
     assert result["part2"] == {"startPdfPage": 12, "endPdfPage": len(texts)}
 
 
