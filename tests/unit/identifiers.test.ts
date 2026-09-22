@@ -29,7 +29,7 @@ import {
 } from '../../src/shared/kernel/identifiers.js';
 import { unwrap } from '../../src/shared/kernel/result.js';
 
-const coords = { subject: 'MATH', grade: 7, term: 1, edition: '2026' };
+const coords = { subject: 'MATH', grade: 7, part: 'PART_1' as const, edition: '2026' };
 const book = (): TextbookKey => unwrap(textbookKey(coords));
 const unit = (slug = 'SETS-RELATIONS'): UnitKey => unwrap(unitKey(book(), slug));
 const lesson = (slug = 'SET-AND-ELEMENT'): LessonKey => unwrap(lessonKey(unit(), slug));
@@ -43,7 +43,7 @@ describe('textbookKey — identified by printed edition', () => {
     expect(unwrap(textbookKey(coords))).toBe(unwrap(textbookKey(coords)));
   });
 
-  it('distinguishes two printings of the same subject/grade/term', () => {
+  it('distinguishes two printings of the same subject/grade/part', () => {
     // The whole point of keying on edition: a reprint is a different book.
     const first = unwrap(textbookKey({ ...coords, edition: '2026' }));
     const revised = unwrap(textbookKey({ ...coords, edition: 'REV2' }));
@@ -74,17 +74,16 @@ describe('textbookKey — identified by printed edition', () => {
     expect(r.error.code).toBe('identity.edition_required');
   });
 
-  it('rejects out-of-range grade and term', () => {
+  it('rejects out-of-range grade', () => {
     expect(textbookKey({ ...coords, grade: 0 }).ok).toBe(false);
     expect(textbookKey({ ...coords, grade: 13 }).ok).toBe(false);
-    expect(textbookKey({ ...coords, term: 5 }).ok).toBe(false);
   });
 
   it('round-trips through parseTextbookKey', () => {
     expect(unwrap(parseTextbookKey(book()))).toEqual({
       subject: 'MATH',
       grade: 7,
-      term: 1,
+      part: 'PART_1',
       edition: '2026',
     });
   });
