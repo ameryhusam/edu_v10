@@ -84,13 +84,12 @@ def preflight() -> None:
 def read(path: str) -> str:
     return (ROOT / path).read_text(encoding="utf-8")
 
-def isbn_lines(text: str) -> dict[int, str]:
-    return {i: line for i, line in enumerate(text.splitlines(keepends=True), 1)
-            if ISBN.search(line)}
+def isbn_lines(text: str) -> list[str]:
+    return [line for line in text.splitlines(keepends=True) if ISBN.search(line)]
 
 def guard_isbn(before: str, after: str, path: str) -> None:
     if isbn_lines(before) != isbn_lines(after):
-        stop("ISBN line changed in " + path)
+        stop("ISBN content changed in " + path)
 
 def one(text: str, old: str, new: str, path: str) -> str:
     n = text.count(old)
