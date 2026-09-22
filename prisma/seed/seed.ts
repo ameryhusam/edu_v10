@@ -756,8 +756,6 @@ async function main(): Promise<void> {
   const science = await seedTextbookFromSpec(
     prisma,
     {
-      termId: term.id,
-      termKey: term.key,
       academicYearId: year.id,
       schoolId: school.id,
     },
