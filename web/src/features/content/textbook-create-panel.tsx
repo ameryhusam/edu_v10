@@ -39,11 +39,11 @@ export function TextbookCreatePanel(): ReactNode {
 
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState('');
-  const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>('');
+  const [part, setPart] = useState<'PART_1' | 'PART_2' | ''>('');
   const [title, setTitle] = useState('');
   const [edition, setEdition] = useState(String(new Date().getFullYear()));
   const [bulkGradeKey, setBulkGradeKey] = useState('');
-  const [bulkPart, setBulkPart] = useState<'PART_1' | 'PART_2' | 'BOTH' | ''>('');
+  const [bulkPart, setBulkPart] = useState<'PART_1' | 'PART_2' | ''>('');
   const [bulkEdition, setBulkEdition] = useState(String(new Date().getFullYear()));
   const [adoptBulk, setAdoptBulk] = useState(true);
   const [lastResult, setLastResult] = useState<string | null>(null);
@@ -137,7 +137,7 @@ export function TextbookCreatePanel(): ReactNode {
             <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')}</span>
             <select value={part} onChange={(e) => setPart(e.target.value)} className={selectClass} required>
               <option value="">—</option>
-              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option><option value="BOTH">الجزآن</option>}
+              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option>}
             </select>
           </label>
           <label className="space-y-1.5">
@@ -170,7 +170,7 @@ export function TextbookCreatePanel(): ReactNode {
             <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')}</span>
             <select value={bulkPart} onChange={(e) => setBulkPart(e.target.value)} className={selectClass} required>
               <option value="">—</option>
-              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option><option value="BOTH">الجزآن</option>}
+              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option>}
             </select>
           </label>
           <label className="space-y-1.5">
