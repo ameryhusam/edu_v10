@@ -32,22 +32,18 @@ export function TextbookCreatePanel(): ReactNode {
     queryKey: queryKeys.administration.catalogue('grades'),
     queryFn: () => administrationApi.grades.list(),
   });
-  const terms = useQuery({
-    queryKey: queryKeys.administration.catalogue('terms'),
-    queryFn: () => administrationApi.terms.list(),
-  });
-  const academicYears = useQuery({
+  const   const academicYears = useQuery({
     queryKey: queryKeys.administration.catalogue('academicYears'),
     queryFn: () => administrationApi.academicYears.list(),
   });
 
   const [subjectKey, setSubjectKey] = useState('');
   const [gradeKey, setGradeKey] = useState('');
-  const [termKey, setTermKey] = useState('');
+  const [part, setPart] = useState('');
   const [title, setTitle] = useState('');
   const [edition, setEdition] = useState(String(new Date().getFullYear()));
   const [bulkGradeKey, setBulkGradeKey] = useState('');
-  const [bulkTermKey, setBulkTermKey] = useState('');
+  const [bulkPart, setBulkPart] = useState('');
   const [bulkEdition, setBulkEdition] = useState(String(new Date().getFullYear()));
   const [adoptBulk, setAdoptBulk] = useState(true);
   const [lastResult, setLastResult] = useState<string | null>(null);
@@ -61,7 +57,7 @@ export function TextbookCreatePanel(): ReactNode {
 
   const create = useMutation({
     mutationFn: () =>
-      textbookAdministrationApi.createTextbook({ subjectKey, gradeKey, termKey, title, edition }),
+      textbookAdministrationApi.createTextbook({ subjectKey, gradeKey, part, title, edition }),
     onSuccess: async (result) => {
       setLastResult(result.key);
       setTitle('');
@@ -73,7 +69,7 @@ export function TextbookCreatePanel(): ReactNode {
     mutationFn: () =>
       textbookAdministrationApi.ensureForGrade({
         gradeKey: bulkGradeKey,
-        termKey: bulkTermKey,
+        part: bulkPart,
         edition: bulkEdition,
         adopt:
           adoptBulk && adoptableSchoolKey && currentAcademicYearKey
@@ -138,12 +134,10 @@ export function TextbookCreatePanel(): ReactNode {
             </select>
           </label>
           <label className="space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('collection.terms')}</span>
-            <select value={termKey} onChange={(e) => setTermKey(e.target.value)} className={selectClass} required>
+            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')}</span>
+            <select value={part} onChange={(e) => setPart(e.target.value)} className={selectClass} required>
               <option value="">—</option>
-              {(terms.data ?? []).map((term) => (
-                <option key={term.key} value={term.key}>{term.name}</option>
-              ))}
+              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option><option value="BOTH">الجزآن</option>}
             </select>
           </label>
           <label className="space-y-1.5">
@@ -173,12 +167,10 @@ export function TextbookCreatePanel(): ReactNode {
             </select>
           </label>
           <label className="space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('collection.terms')}</span>
-            <select value={bulkTermKey} onChange={(e) => setBulkTermKey(e.target.value)} className={selectClass} required>
+            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.physicalPart')}</span>
+            <select value={bulkPart} onChange={(e) => setBulkPart(e.target.value)} className={selectClass} required>
               <option value="">—</option>
-              {(terms.data ?? []).map((term) => (
-                <option key={term.key} value={term.key}>{term.name}</option>
-              ))}
+              {<option value="PART_1">الجزء الأول</option><option value="PART_2">الجزء الثاني</option><option value="BOTH">الجزآن</option>}
             </select>
           </label>
           <label className="space-y-1.5">
