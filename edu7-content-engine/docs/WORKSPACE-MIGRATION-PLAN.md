@@ -8,20 +8,23 @@ separate from the Python engine.
 
 ## Target contract
 
-`workspace/<TERM>/<GRADE>/<SUBJECT>/<TEXTBOOK_KEY>/`
+`workspace/<PART>/<GRADE>/<SUBJECT>/<EDITION>/`
 
-Example:
+Examples:
 
-`workspace/T01/G04/SCI/ED2026/`
+`workspace/P1/G04/SCI/ED2026/`
+`workspace/P2/G04/SCI/ED2026/`
 
-The four coordinates have different roles:
+The coordinates have different roles:
 
 | Level | Source of truth | Example |
 |---|---|---|
-| Term folder | Edu7 Term ordinal | `T01` |
+| Physical part | Textbook physical part | `P1` / `P2` |
 | Grade folder | Edu7 Grade ordinal | `G04` |
 | Subject folder | Prisma `Subject.key` | `SCI` |
-| Book folder | Prisma `Textbook.key` identity contract | `EDU-SCI-G04-T1-ED2026` |
+| Edition folder | Printed textbook edition | `ED2026` |
+
+Academic term is deliberately absent from the Workspace path. It is an adoption/deployment fact, not textbook identity.
 
 The Python implementation mirrors the canonical TypeScript textbook-key rule;
 it does not invent a second key format.
