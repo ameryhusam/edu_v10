@@ -74,7 +74,7 @@ export interface ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
     description?: string | null;
@@ -244,7 +244,7 @@ export interface ExportableTextbook {
     key: string;
     subjectKey: string;
     gradeKey: string;
-    part: 'PART_1' | 'PART_2' | 'BOTH';
+    part: 'PART_1' | 'PART_2';
     title: string;
     edition: string;
     description: string | null;
@@ -427,7 +427,7 @@ export interface TextbookListQuery {
   readonly search?: string | undefined;
   readonly subjectKey?: string | undefined;
   readonly gradeKey?: string | undefined;
-  readonly part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
+  readonly part?: 'PART_1' | 'PART_2' | undefined;
   readonly status?: string | undefined;
   readonly limit: number;
   readonly offset: number;
@@ -555,7 +555,7 @@ export interface TextbookAdministrationRepository {
   findTextbookByCoordinates(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2';
     edition: string;
   }): Promise<TextbookCoordinateMatch | null>;
   /** Active subjects the catalogue says this grade teaches. */
