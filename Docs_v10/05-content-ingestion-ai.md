@@ -357,10 +357,11 @@ Arabic, Islamic Studies and Quran use branch-aware profiles. In Arabic, the word
 
 The importer normalizes aliases before any lookup:
 
-    T1 ↔ T01
     G4 ↔ G04
+    P1 ↔ PART_1
+    P2 ↔ PART_2
 
-T01 remains the filesystem/term coordinate while T1 remains the term token inside the canonical textbook key. G4 must resolve to an existing G04 row rather than creating a new Grade identity.
+T01/T02 are academic-term coordinates only. They are never textbook-key or Workspace identity components. G4 must resolve to an existing G04 row rather than creating a new Grade identity.
 
 ## 21. Algorithm configuration
 
