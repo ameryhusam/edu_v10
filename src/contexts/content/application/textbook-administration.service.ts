@@ -122,7 +122,7 @@ export class TextbookAdministrationService {
   ): Promise<
     Result<{
       gradeKey: string;
-      termKey: string;
+      part: 'PART_1' | 'PART_2' | 'BOTH';
       edition: string;
       created: number;
       unchanged: number;
@@ -215,7 +215,7 @@ export class TextbookAdministrationService {
 
     return Ok({
       gradeKey: input.gradeKey,
-      termKey: input.termKey,
+      part: input.part,
       edition: input.edition,
       created: rows.filter((row) => row.created).length,
       unchanged: rows.filter((row) => !row.created).length,
