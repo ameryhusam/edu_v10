@@ -159,42 +159,80 @@ def transform(path: str, text: str) -> str:
 
   resolveTextbookCoordinates(input: {""")
     elif path.endswith("source-catalog.ts"):
-        # Source catalogue identity is physical. Convert its legacy ordinal
-        # field to an explicit part without consulting AcademicYear/Term.
-        out = out.replace(
+        # Source catalogue physical identity must carry an explicit part.
+        # Use exact source blocks rather than regex so this migration cannot
+        # silently leave academic-term derivation behind.
+        out = one(
+            out,
             "  readonly termOrdinal: number;",
             "  readonly part: 'PART_1' | 'PART_2' | 'BOTH';",
+            path,
         )
-        out = re.sub(
-            r"  const terms = await prisma\\.term\\.findMany\\(\\{.*?\\n  \\}\\);\\n\\n",
-            "",
+        out = one(
             out,
-            count=1,
-            flags=re.S,
+            """  const terms = await prisma.term.findMany({
+    where: { academicYear: { key: ctx.academicYearKey } },
+    select: { id: true, ordinal: true },
+  });
+
+""",
+            "",
+            path,
+        )
+        out = one(
+            out,
+            "  const termByOrdinal = new Map(terms.map((term) => [term.ordinal, term]));",
+            "",
+            path,
+        )
+        out = one(
+            out,
+            """    const term = termByOrdinal.get(source.termOrdinal);
+    if (!grade || !subject || !term) {""",
+            """    if (!grade || !subject) {""",
+            path,
+        )
+        out = one(
+            out,
+            """    const part =
+      source.termOrdinal === 1
+        ? 'PART_1'
+        : source.termOrdinal === 2
+          ? 'PART_2'
+          : 'BOTH';
+
+""",
+            "",
+            path,
+        )
+        out = one(
+            out,
+            "    const key = unwrap(",
+            """    const part = source.part;
+
+    const key = unwrap(""",
+            path,
+        )
+        out = one(
+            out,
+            "  return source.termOrdinal * 100 + base;",
+            """  return source.part === 'PART_1'
+    ? 100 + base
+    : source.part === 'PART_2'
+      ? 200 + base
+      : 300 + base;""",
+            path,
         )
         out = out.replace(
-            "  const termByOrdinal = new Map(terms.map((term) => [term.ordinal, term]));\\n",
-            "",
-        )
-        out = re.sub(
-            r"    const term = termByOrdinal\\.get\\(source\\.termOrdinal\\);\\n    if \\(!grade \\|\\| !subject \\|\\| !term\\) \\{",
-            "    if (!grade || !subject) {",
-            out,
-            count=1,
-        )
-        out = re.sub(
-            r"    const part =\\n      source\\.termOrdinal === 1\\n        \\? 'PART_1'\\n        : source\\.termOrdinal === 2\\n          \\? 'PART_2'\\n          : 'BOTH';\\n\\n",
-            "",
-            out,
-            count=1,
+            "مقرر الفصل الدراسي ${source.termOrdinal}",
+            "الجزء الفيزيائي ${source.part}",
         )
         out = out.replace(
-            "source.termOrdinal * 100 + base",
-            "source.part === 'PART_1' ? 100 + base : source.part === 'PART_2' ? 200 + base : 300 + base",
+            "مصدر الفصل الدراسي ${source.termOrdinal}",
+            "مصدر الجزء الفيزيائي ${source.part}",
         )
         if "termOrdinal" in out or "termByOrdinal" in out or "term.ordinal" in out:
             stop(path + ": source catalogue still derives physical part from academic term")
-
     elif path.endswith("yemen-moe-textbook-sources.json"):
         try:
             data = json.loads(out)
