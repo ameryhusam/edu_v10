@@ -91,7 +91,7 @@ export class TextbookAdministrationService {
     search?: string | undefined;
     subjectKey?: string | undefined;
     gradeKey?: string | undefined;
-    termKey?: string | undefined;
+    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;
     status?: string | undefined;
     limit?: number | undefined;
     offset?: number | undefined;
@@ -101,7 +101,7 @@ export class TextbookAdministrationService {
         ...(query.search ? { search: query.search } : {}),
         ...(query.subjectKey ? { subjectKey: query.subjectKey } : {}),
         ...(query.gradeKey ? { gradeKey: query.gradeKey } : {}),
-        ...(query.termKey ? { termKey: query.termKey } : {}),
+        ...(query.part ? { part: query.part } : {}),
         ...(query.status ? { status: query.status } : {}),
         limit: Math.min(Math.max(query.limit ?? 25, 1), 100),
         offset: Math.max(query.offset ?? 0, 0),
@@ -113,7 +113,7 @@ export class TextbookAdministrationService {
     ctx: AdminContext,
     input: {
       gradeKey: string;
-      termKey: string;
+      part: 'PART_1' | 'PART_2' | 'BOTH';
       edition: string;
       issuer?: string | null;
       publishYear?: number | null;
@@ -152,7 +152,7 @@ export class TextbookAdministrationService {
       const created = await this.authoring.createTextbook(ctx, {
         subjectKey: subject.subjectKey,
         gradeKey: subject.gradeKey,
-        termKey: input.termKey,
+        part: input.part,
         title,
         edition: input.edition,
         issuer: input.issuer ?? null,
@@ -168,7 +168,7 @@ export class TextbookAdministrationService {
         const existing = await this.repo.findTextbookByCoordinates({
           subjectKey: subject.subjectKey,
           gradeKey: subject.gradeKey,
-          termKey: input.termKey,
+          part: input.part,
           edition: input.edition,
         });
         textbookKey = existing?.key ?? null;
@@ -183,7 +183,7 @@ export class TextbookAdministrationService {
             {
               subjectKey: subject.subjectKey,
               gradeKey: subject.gradeKey,
-              termKey: input.termKey,
+              part: input.part,
               edition: input.edition,
             },
           ),
@@ -209,7 +209,7 @@ export class TextbookAdministrationService {
 
     await this.audit(ctx, 'content.grade_textbooks_ensured', input.gradeKey, {
       gradeKey: input.gradeKey,
-      termKey: input.termKey,
+      part: input.part,
       edition: input.edition,
     });
 
