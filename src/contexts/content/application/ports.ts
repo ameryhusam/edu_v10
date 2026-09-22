@@ -450,6 +450,7 @@ export interface AdoptionRow {
   readonly schoolKey: string;
   readonly schoolName: string;
   readonly academicYearKey: string;
+  readonly termKey: string;
   readonly adoptedAt: Date;
 }
 
@@ -596,6 +597,7 @@ export interface TextbookAdministrationRepository {
   textbookExists(textbookKey: string): Promise<boolean>;
   schoolExists(schoolKey: string): Promise<boolean>;
   academicYearExists(academicYearKey: string): Promise<boolean>;
+  termExists(termKey: string): Promise<boolean>;
 }
 
 export interface ContentAssetRecord {
