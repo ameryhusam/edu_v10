@@ -24,6 +24,7 @@ Usage examples:
 import sys
 import os
 import argparse
+import json
 import re
 import shutil
 import tempfile
@@ -39,7 +40,7 @@ from ..pdf.vision_ocr import (
     extract_edition_from_cover,
     extract_book_front_matter,
 )
-from ..pdf.segmentation import LessonSegmenter
+from ..pdf.segmentation import LessonSegmenter, compute_sha256
 from ..ai.registry import AIProviderRegistry
 from ..ai.content_service import ContentAIService
 from ..validation.evidence_validator import EvidenceValidator
@@ -70,7 +71,7 @@ def main():
     p_prep.add_argument("--part", default=None, choices=["PART_1", "PART_2", "BOTH"],
                         help="Physical textbook part: PART_1, PART_2, or BOTH")
     p_prep.add_argument("--edition", default=None,
-                        help="Printed textbook edition; if omitted, extract from first ten pages")
+                        help="Printed textbook edition; if omitted, extract from the initial analysis window")
     p_prep.add_argument("--title", default=None, help="Textbook title")
     p_prep.add_argument("--model", default=None,
                         help=(
@@ -358,10 +359,13 @@ def _cmd_prepare(args):
                     if part_name == "PART_1"
                     else boundary["part2"]["startPdfPage"]
                 )
-                local_mapper = build_local_page_mapping(
-                    original_mapper,
-                    source_start_pdf_page=source_start,
-                )
+                local_mapper = PageMappingEngine(part_reader)
+                local_mapper.detect_mapping()
+                if not local_mapper.mapping:
+                    local_mapper = build_local_page_mapping(
+                        original_mapper,
+                        source_start_pdf_page=source_start,
+                    )
                 part_book_key = textbook_key(subject_key, grade_number, part_name, edition)
                 if args.workspace:
                     supplied_root = Path(args.workspace).expanduser().resolve()
@@ -560,13 +564,17 @@ def _prepare_single_reader(
         import json
         source_manifest = ws_path / "book-source-manifest.json"
         data = json.loads(source_manifest.read_text(encoding="utf-8"))
+        original_sha256 = compute_sha256(source_pdf)
+        data["sourceInput"]["sha256"] = original_sha256
         data["sourceInput"]["originalSourceFile"] = source_pdf.name
-        data["sourceInput"]["originalSourceSha256"] = compute_sha256(source_pdf)
+        data["sourceInput"]["originalSourceSha256"] = original_sha256
         data["sourceInput"]["combinedSource"] = True
         data["sourceInput"]["originalPdfPageRange"] = {
             "start": int(source_page_range["startPdfPage"]),
             "end": int(source_page_range["endPdfPage"]),
         }
+        data["sourceInput"]["physicalPart"] = part
+        data["sourceInput"]["boundaryStatus"] = "DETECTED"
         data["sourceInput"]["combinedBoundaryEvidence"] = source_boundary
         source_manifest.write_text(
             json.dumps(data, ensure_ascii=False, indent=2),
