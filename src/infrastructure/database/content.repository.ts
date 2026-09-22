@@ -660,7 +660,7 @@ export class PrismaContentRepository implements ContentRepository {
         status: true,
         subject: { select: { key: true } },
         grade: { select: { key: true } },
-        term: { select: { key: true } },
+        part: true,
         units: {
           select: {
             key: true,
@@ -940,7 +940,7 @@ export class PrismaContentRepository implements ContentRepository {
         key: book.key,
         subjectKey: book.subject.key,
         gradeKey: book.grade.key,
-        termKey: book.term.key,
+        part: book.part,
         title: book.title,
         edition: book.edition,
         description: book.description,
