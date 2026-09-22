@@ -325,3 +325,79 @@ Do not silently solve this by documentation only. Before implementing cross-year
 5. verify TextbookAdoption remains the owner of school/year deployment.
 
 Until that gate is approved, import code must resolve against the current schema rather than assuming the target separation already exists.
+
+
+## 26. Two-part source book segmentation
+
+A source PDF may contain Part 1 and Part 2. Preparation resolves the physical-part boundary before unit/lesson artifacts are committed to Workspace.
+
+Evidence order:
+
+    publisher metadata
+      → TOC/index
+      → printed-page ranges and structural boundaries
+      → deterministic rules
+      → AI proposal using the TOC/index and configurable first-page window
+      → review on conflict/low confidence
+
+The default first-page analysis window is approximately the first 15 PDF pages and is configurable.
+
+Validated routing:
+
+    PART_1 → Workspace/P1/<grade>/<subject>/<edition>
+    PART_2 → Workspace/P2/<grade>/<subject>/<edition>
+    BOTH/shared → Workspace/PB/<grade>/<subject>/<edition>
+
+P1/P2/PB are physical-part coordinates only. T1/T01 remain term identity aliases and must never be used as substitutes for P1/P2.
+
+The part assignment is recorded in the package/lesson manifest and provenance. AI may propose the boundary, but unresolved conflicts block automatic canonical import.
+
+## 27. Page classification as routing metadata
+
+Page filenames remain stable and represent page evidence only. A page can serve more than one downstream use.
+
+The validated page_classification.json records, per page:
+
+    printedPageNumber
+    pdfPageIndex
+    contentType
+    branch
+    lessonType
+    questionRole
+    questionBlocks[]
+    lessonContent
+    unitAssessment
+    includeInLessonView
+    includeInQuestionExtraction
+    includeInUnitAssessment
+    confidence
+    evidence[]
+    source
+
+A MIXED page may have lessonContent=true and questionBlocks[]. The same page can therefore be referenced by the lesson view and question extraction without renaming or duplicating the image.
+
+## 28. Configuration contract
+
+The classification configuration is versioned and owns:
+
+- TOC/index page detection;
+- first-page analysis window;
+- Part 1/Part 2 boundary signals;
+- contentType vocabulary;
+- subject/branch and lessonType vocabulary;
+- questionRole vocabulary;
+- unit-assessment roles;
+- mixed-page policy;
+- AI confidence and review thresholds;
+- classification precedence.
+
+Precedence is:
+
+    explicit validated manifest
+      > validated deterministic mapping
+      > TOC/index evidence
+      > subject/branch profile
+      > AI proposal
+      > unresolved/review
+
+The active configuration version is included in preparation provenance. Exact storage location and schema are implementation details; do not add Prisma fields unless the schema/domain gate approves them.
