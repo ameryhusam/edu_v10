@@ -1,0 +1,198 @@
+# System Instructions
+
+## 1. AI/Codex Change-and-Audit Decision Protocol
+
+This file defines an important operating rule for the `edu_v10` project: proposed code repairs may be implemented directly by Codex, but the implementation must be followed by an independent change-audit step before the next repair decision is made.
+
+### 1.1 Roles
+
+- **ChatGPT**: analyzes the problem, inspects the relevant architecture/code/documentation, identifies the root cause and proposes a concrete repair plan.
+- **Codex**: applies the approved/proposed repair to the repository and creates the corresponding Git commit. Codex is the implementation agent; it should not treat its own implementation as proof that the repair is correct.
+- **Audit_codex**: evaluates the resulting project commit, records the evidence, and produces feedback that is used to decide whether work should continue, stop for review, or require another correction.
+
+The separation is intentional:
+
+```
+Analysis / Repair Proposal
+        ↓
+      Codex
+  Apply the repair
+        ↓
+   Git commit
+        ↓
+   Audit_codex
+ Evaluate + persist + document
+        ↓
+Decision to continue / review / correct
+```
+
+### 1.2 Mandatory latest-change audit
+
+After Codex completes a repair and commits it, `Audit_codex` must evaluate the **latest project commit** before another AI coding decision is based on that change.
+
+The audit must identify the latest commit that changed project files outside `Audit_codex/`. Commits that only modify the audit tooling, its README, or generated audit reports must not become the project change under evaluation.
+
+The current audit command is:
+
+```bash
+cd ~/edu_v10
+python Audit_codex/audit_commit_changes.py
+```
+
+The resulting feedback is saved to:
+
+```
+Audit_codex/report/latest_commit_feedback.txt
+```
+
+### 1.3 What the audit must preserve and report
+
+The audit report is evidence about the specific latest project change. It must preserve enough information for a later AI agent or human reviewer to understand exactly what was changed, including:
+
+- base commit and new commit SHA;
+- commit date and subject;
+- why that commit was selected as the latest project commit;
+- total additions and deletions;
+- old and new line counts per changed file;
+- per-file additions/deletions;
+- files added, modified, renamed, or deleted;
+- likely deleted function signatures;
+- likely added function signatures;
+- a clear decision signal;
+- limitations of the automated audit.
+
+The purpose is not merely to count lines. The audit is a guardrail against accidentally deleting required functions, contracts, workflows, or other project behavior while applying a proposed repair.
+
+### 1.4 Decision-source rule
+
+Only the report generated for the **latest project commit** is a decision source for the next repair/continuation decision.
+
+A comparison explicitly requested between older commits is useful for historical investigation, but it must be marked:
+
+```
+HISTORICAL COMPARISON — NOT A DECISION SOURCE
+```
+
+Historical reports must not be used as evidence that the current/latest repair is correct, nor should they replace the audit of the latest project commit.
+
+This distinction is mandatory because an older comparison may describe code that has since changed. Decisions about whether the newest Codex repair is safe or caused regressions must be based on the newest project commit and its immediate parent.
+
+### 1.5 Audit decision signals
+
+The current audit uses these signals:
+
+- **LOW_RISK_SIGNAL**: no textual line deletions were detected. This is only a low-risk signal; it is not proof of correctness.
+- **REVIEW_REQUIRED**: deletions were detected or likely function signatures disappeared. The next implementation decision should stop until the relevant diff and affected behavior are reviewed.
+- **NO_CHANGE**: no textual project change was detected.
+- **HISTORICAL_ONLY**: an explicitly requested historical comparison; never a current decision source.
+
+A `REVIEW_REQUIRED` result is especially important when a repair was expected to be additive or narrowly scoped. Unexpected deletion of a function, method, contract, route, service, importer, or other existing behavior must be investigated before continuing.
+
+### 1.6 Correctness is not proven by the audit
+
+`Audit_codex` is an evaluation guardrail, not a complete semantic test system.
+
+Passing `LOW_RISK_SIGNAL` does **not** mean that the implementation is correct. The audit can detect textual additions/deletions and likely function-signature changes, but it cannot by itself prove:
+
+- runtime correctness;
+- database correctness;
+- API compatibility;
+- behavioral correctness;
+- preservation of all contracts;
+- correct architecture;
+- correct business rules;
+- correctness of renamed/moved functions;
+- correctness of multiline or complex declarations;
+- absence of semantic regressions.
+
+When the audit indicates a risk, inspect the actual diff and affected code. After the repair is accepted, run the appropriate build/tests/verification required by the project stage.
+
+### 1.7 Required workflow for AI-assisted repairs
+
+The normal repair cycle is:
+
+1. **Analyze** the current repository state and relevant documentation.
+2. **Identify** the root cause and affected contracts/files.
+3. **Propose** the smallest correct repair.
+4. **Codex implements** the repair.
+5. **Codex commits** the implementation.
+6. **Run Audit_codex** against the latest project commit.
+7. **Read `Audit_codex/report/latest_commit_feedback.txt`**.
+8. If the report says `REVIEW_REQUIRED`, stop and inspect the diff before another repair is applied.
+9. If the audit does not show deletion risk, continue only after considering semantic correctness and the scope of the repair.
+10. Run the appropriate project verification/build/tests after the correction stage.
+11. Only then use the resulting state as the baseline for the next AI-assisted change.
+
+### 1.8 No self-validation shortcut
+
+Codex must not be considered the sole authority for declaring its own repair correct.
+
+The fact that Codex reports that a task is complete, that a patch compiles, or that the intended files were changed does not replace the `Audit_codex` evidence and the required verification.
+
+The audit exists specifically to create a persistent, machine-readable/text-readable checkpoint between one AI implementation step and the next.
+
+## 2. Repository Safety Rules
+
+- Preserve existing functionality and contracts unless a change is explicitly required.
+- Analyze affected files before editing them.
+- Avoid unnecessary deletions, duplicated workflows, and breaking changes.
+- Prefer small, traceable commits with clear intent.
+- Do not use destructive Git operations to hide or discard work.
+- Do not treat historical commit comparisons as current correctness evidence.
+- Keep the latest audit report tied to the latest project commit being evaluated.
+- When a repair is found to be incorrect, correct the identified issue and create a new project commit; then audit that new commit again.
+
+## 3. Project Working Directory
+
+The project is worked on directly from:
+
+```
+~/edu_v10
+```
+
+Do not assume a `~/projects/edu_v10` parent directory.
+
+## 4. Workspace Identity
+
+The physical textbook-part workspace layout is:
+
+```
+Workspace/
+  P1/
+    G07/
+      SCI/
+        ED2026/
+```
+
+`P1`, `P2`, and `PB` are filesystem/workspace representations of physical textbook parts. Domain metadata may continue to use `PART_1`, `PART_2`, and `BOTH`; the filesystem mapping must remain explicit and consistent.
+
+## 5. Documentation and Architecture Consistency
+
+When making project changes, preserve consistency across the source code, Prisma schema, Workspace, textbook/material management, content ingestion, question bank, and project documentation.
+
+Important entities/contracts that require cross-document consistency include, where applicable:
+
+- `Textbook`
+- `TextbookAdoption`
+- `ContentAsset`
+- `TextbookPage`
+- `ContentChunk`
+- `PublicationStatus`
+- `QuestionOrigin`
+- Workspace paths and textbook identity
+
+New documentation must not use "curriculum" as a substitute term for a textbook, and new documentation must not introduce "Matrix" terminology for this architecture.
+
+## 6. Audit Tool Location
+
+The change-audit implementation is maintained under:
+
+```
+Audit_codex/
+  audit_commit_changes.py
+  README.md
+  report/
+    latest_commit_feedback.txt
+```
+
+The generated report is evidence for the latest project change. The audit tooling itself is intentionally excluded when selecting the latest project commit so that maintaining the audit system does not accidentally change the decision target.
