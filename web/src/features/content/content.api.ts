@@ -43,8 +43,7 @@ export interface TextbookSummary {
   readonly subjectName: string;
   readonly gradeKey: string;
   readonly gradeName: string;
-  readonly termKey: string;
-  readonly termName: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly edition: string;
   readonly status: PublicationStatus;
   readonly adoptionCount: number;
@@ -80,7 +79,7 @@ export interface CreatedContentNode {
 export interface CreateTextbookInput {
   readonly subjectKey: string;
   readonly gradeKey: string;
-  readonly termKey: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly title: string;
   readonly edition: string;
   readonly isbn?: string | null;
@@ -92,7 +91,7 @@ export interface CreateTextbookInput {
 
 export interface EnsureTextbooksResult {
   readonly gradeKey: string;
-  readonly termKey: string;
+  readonly part: 'PART_1' | 'PART_2' | 'BOTH';
   readonly edition: string;
   readonly created: number;
   readonly unchanged: number;
@@ -421,7 +420,7 @@ export const textbookAdministrationApi = {
   },
   ensureForGrade: (input: {
     gradeKey: string;
-    termKey: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     edition: string;
     issuer?: string | null;
     publishYear?: number | null;
@@ -509,7 +508,7 @@ export const textbookAdministrationApi = {
   /** Workspace operations */
   workspacePrepareUpload: (input: {
     file: File;
-    term: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     grade: string;
     subject: string;
     edition?: string;
