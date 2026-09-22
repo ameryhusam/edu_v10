@@ -342,7 +342,7 @@ export class WorkspaceImporterService {
         subject: detected.subjectKey,
         grade: detected.gradeKey,
         part: 'BOTH',
-        edition: detected.edition,
+        edition: detectedEdition,
         title: detected.title ?? input.declared?.title,
         timeoutMs: this.engineTimeoutMs,
       });
@@ -375,7 +375,7 @@ export class WorkspaceImporterService {
       part: parts[0]!,
       grade: detected.gradeKey,
       subject: detected.subjectKey,
-      edition: detected.edition,
+      edition: detectedEdition,
       title: detected.title ?? input.declared?.title,
       pdfBuffer: input.pdfBuffer,
       autoSegment: true,
