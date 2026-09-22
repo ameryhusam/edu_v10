@@ -345,6 +345,8 @@ def transform(path: str, text: str) -> str:
     elif path.endswith("textbook-administration.repository.ts"):
         # Academic term remains an API filter. Resolve it to physical parts at
         # the repository boundary because Textbook has no academic-term relation.
+        # Keep repository documentation aligned with the new canonical physical key.
+        out = out.replace("EDU-MATH-G07-T1-ED2026", "EDU-MATH-G07-P1-ED2026")
         old_where = """    const where = {
       ...(search ? { title: { contains: search, mode: 'insensitive' as const } } : {}),
       ...(query.subjectKey ? { subject: { key: query.subjectKey } } : {}),
