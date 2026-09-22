@@ -199,8 +199,8 @@ def transform(path: str, text: str) -> str:
             if old not in out:
                 stop(path + ": expected source-catalog anchor missing: " + old.splitlines()[0][:100])
             out = out.replace(old, new, 1)
-        if "termOrdinal" in out or "termByOrdinal" in out or "term.ordinal" in out:
-            stop(path + ": source catalogue still derives physical part from academic term")
+        # Do not stop here. The global audit must inspect every transformed
+        # target and report all remaining compatibility/term-derived patterns.
 
     elif path.endswith("yemen-moe-textbook-sources.json"):
         try:
@@ -593,46 +593,83 @@ def book_workspace(subject: str, grade: int, part: str, edition: str) -> Path:
     guard_isbn(text, out, path)
     return out
 
-def validate(files: dict[str, tuple[str, str]]) -> None:
-    combined = "\n".join(after for _, after in files.values())
-    leftovers = sorted(set(OLD_KEY.findall(combined)))
-    if leftovers:
-        stop("Old physical textbook keys remain:\n" + "\n".join(leftovers[:20]))
+def collect_physical_part_issues(files: dict[str, tuple[str, str]]) -> list[str]:
+    issues: list[str] = []
 
-    if "createTextbook(input: {" not in combined:
-        stop("createTextbook contract is missing")
-    if "part: 'PART_1' | 'PART_2' | 'BOTH';" not in combined:
-        stop("Physical part type contract is missing")
-
-    physical_residue = [
-        "termId: input.termId",
-        "termId: resolved.term.id",
-        "readonly termKey: string;",
-        "pkg.textbook." + "termKey",
-        '"termKey": term',
+    checks = [
+        (
+            "PHYSICAL_PART_DERIVED_FROM_TERM_ORDINAL",
+            re.compile(r"term\\.ordinal\\s*===\\s*[12][\\s\\S]{0,180}?PART_(?:1|2|BOTH)"),
+        ),
+        (
+            "PHYSICAL_PART_DERIVED_FROM_TERMORDINAL",
+            re.compile(r"(?:source\\.)?termOrdinal\\s*===\\s*[12][\\s\\S]{0,180}?PART_(?:1|2|BOTH)"),
+        ),
+        (
+            "PHYSICAL_PART_FROM_TERM_CONDITIONAL",
+            re.compile(r"(?:termOrdinal|term\\.ordinal)[\\s\\S]{0,220}(?:PART_1|PART_2|PART_3|BOTH)"),
+        ),
+        (
+            "OLD_PHYSICAL_T1_T2_KEY",
+            re.compile(r"EDU-[A-Z0-9]+-G\\d{2}-T[12]-ED[A-Z0-9-]+", re.I),
+        ),
+        ("TERM_KEY_PHYSICAL_RESIDUE", re.compile(r"\\btermKey\\b")),
+        ("TERM_ID_PHYSICAL_RESIDUE", re.compile(r"\\btermId\\b")),
+        ("TERM_BY_ORDINAL_PHYSICAL_RESIDUE", re.compile(r"\\btermByOrdinal\\b")),
+        (
+            "PHYSICAL_CREATE_RESOLVES_ACADEMIC_TERM",
+            re.compile(r"createTextbook[\\s\\S]{0,3000}?resolveTextbookCoordinates"),
+        ),
     ]
-    for marker in physical_residue:
-        if marker in combined:
-            stop("Physical migration residue remains: " + marker)
 
-    if re.search(r"buildTextbookKey\([\s\S]{0,500}?term\s*:", combined):
-        stop("A physical textbook key is still built from term")
-    if re.search(r"EDU-[^\n]*-T[12]-ED", combined, re.I):
-        stop("A T1/T2 physical-key compatibility path remains")
-    if re.search(r"createTextbook[\s\S]{0,3000}?resolveTextbookCoordinates", combined):
-        stop("Physical createTextbook still resolves academic term")
-    if re.search(r"term\.ordinal\s*===\s*[12][\s\S]{0,120}?PART_", combined):
-        stop("Physical part is still derived from academic term ordinal")
+    for path, (_, after) in files.items():
+        for name, pattern in checks:
+            for match in pattern.finditer(after):
+                line = after.count("\\n", 0, match.start()) + 1
+                start = max(0, match.start() - 160)
+                end = min(len(after), match.end() + 160)
+                snippet = after[start:end].replace("\\n", " ").strip()
+                issues.append(f"{path}:{line}: {name}: {snippet}")
 
-    workspace = "\n".join(
+    workspace = "\\n".join(
         after for path, (_, after) in files.items()
         if "workspace" in path.lower()
     )
-    if workspace and ("T01" in workspace or re.search(r"\bT[12]\b", workspace)):
-        stop("Workspace still contains a physical T1/T01 identity")
+    if "T01" in workspace or re.search(r"\\bT[12]\\b", workspace):
+        issues.append("WORKSPACE_PHYSICAL_T1_T2_IDENTITY: workspace still contains T1/T2 physical identity")
+
+    return issues
+
+
+def validate(files: dict[str, tuple[str, str]]) -> None:
+    issues: list[str] = []
+
+    combined = "\\n".join(after for _, after in files.values())
+
+    leftovers = sorted(set(OLD_KEY.findall(combined)))
+    if leftovers:
+        issues.append(
+            "OLD_PHYSICAL_TEXTBOOK_KEYS: " + ", ".join(leftovers[:50])
+        )
+
+    if "createTextbook(input: {" not in combined:
+        issues.append("Missing createTextbook contract")
+
+    if "part: 'PART_1' | 'PART_2' | 'BOTH';" not in combined:
+        issues.append("Missing physical part type contract")
+
+    issues.extend(collect_physical_part_issues(files))
 
     for path, (before, after) in files.items():
-        guard_isbn(before, after, path)
+        try:
+            guard_isbn(before, after, path)
+        except MigrationIssue as exc:
+            issues.append(str(exc))
+
+    if issues:
+        for issue in issues:
+            AUDIT_ISSUES.append(issue)
+        raise MigrationIssue(f"{len(issues)} audit blocker(s) found")
 
 def show_diff(files: dict[str, tuple[str, str]]) -> None:
     changed = 0
@@ -704,13 +741,13 @@ def main() -> None:
             proposed[path] = (before, before)
 
     if MODE == "audit":
-        if not AUDIT_ISSUES:
-            try:
-                validate(proposed)
-            except MigrationIssue as exc:
-                AUDIT_ISSUES.append(str(exc))
-            except Exception as exc:
-                AUDIT_ISSUES.append("validation: unexpected error: " + str(exc))
+        try:
+            validate(proposed)
+        except MigrationIssue:
+            # validate() has already collected every discovered blocker.
+            pass
+        except Exception as exc:
+            AUDIT_ISSUES.append("validation: unexpected error: " + str(exc))
         show_diff(proposed)
         print("\n" + "=" * 72)
         print("FINAL AUDIT EVALUATION")
