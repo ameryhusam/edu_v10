@@ -324,18 +324,59 @@ export class WorkspaceImporterService {
       }
     }
 
-    const workspaceRoot = detected.part === 'BOTH'
-      ? path.resolve(this.workspaceManager.getWorkspaceDir({ part: 'PART_1', grade: detected.gradeKey, subject: detected.subjectKey, edition: detected.edition }), '../../../../')
-      : this.workspaceManager.getWorkspaceDir({ part: parts[0]!, grade: detected.gradeKey, subject: detected.subjectKey, edition: detected.edition });
+    if (detected.part === 'BOTH') {
+      const workspaceRoot = path.resolve(
+        this.workspaceManager.getWorkspaceDir({
+          part: 'PART_1',
+          grade: detected.gradeKey,
+          subject: detected.subjectKey,
+          edition: detected.edition,
+        }),
+        '../../../../',
+      );
+      const engineResult = await this.contentEngine.prepare({
+        pdf: input.pdfBuffer,
+        workspaceDir: workspaceRoot,
+        subject: detected.subjectKey,
+        grade: detected.gradeKey,
+        part: 'BOTH',
+        edition: detected.edition,
+        title: detected.title ?? input.declared?.title,
+        timeoutMs: this.engineTimeoutMs,
+      });
+      const workspaces = parts.map((part) => {
+        const workspaceDir = this.workspaceManager.getWorkspaceDir({
+          part,
+          grade: detected.gradeKey!,
+          subject: detected.subjectKey!,
+          edition: detected.edition!,
+        });
+        return { workspaceDir, part, indexManifest: null, package: null };
+      });
+      for (const workspace of workspaces) {
+        workspace.indexManifest = await this.workspaceManager.readIndexManifest(workspace.workspaceDir);
+        workspace.package = await this.workspaceManager.readContentPackage(workspace.workspaceDir);
+        if (!workspace.indexManifest || !workspace.package) {
+          throw new DomainErrorException(
+            Errors.internal('workspace.engine_output_invalid', 'The content engine did not produce a valid P1/P2 workspace package.', {
+              workspaceDir: workspace.workspaceDir,
+              stdout: engineResult.stdout.slice(-4000),
+              stderr: engineResult.stderr.slice(-4000),
+            }),
+          );
+        }
+      }
+      return { status: 'PREPARED' as const, proposal, conflicts, textbooks, workspaces };
+    }
+
     const prepared = await this.prepareWorkspace({
-      part: detected.part === 'BOTH' ? 'BOTH' as any : parts[0]!,
+      part: parts[0]!,
       grade: detected.gradeKey,
       subject: detected.subjectKey,
       edition: detected.edition,
       title: detected.title ?? input.declared?.title,
       pdfBuffer: input.pdfBuffer,
       autoSegment: true,
-      workspaceRootOverride: workspaceRoot,
     });
     return { status: 'PREPARED' as const, proposal, conflicts, textbooks, ...prepared };
   }
