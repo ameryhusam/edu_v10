@@ -532,7 +532,7 @@ async function main(): Promise<void> {
         academicYearId: year.id,
       },
     },
-    create: { textbookId: juniorBook.id, schoolId: school.id, academicYearId: year.id },
+    create: { textbookId: juniorBook.id, schoolId: school.id, academicYearId: year.id, termId: term.id },
     update: {},
   });
 
@@ -773,8 +773,6 @@ async function main(): Promise<void> {
     const templateBook = await seedTextbookFromSpec(
       prisma,
       {
-        termId: term.id,
-        termKey: term.key,
         academicYearId: year.id,
         schoolId: school.id,
       },
