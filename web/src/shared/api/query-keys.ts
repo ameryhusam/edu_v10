@@ -159,7 +159,7 @@ export const queryKeys = {
     overview: () => ['administration', 'overview'] as const,
     /** The audit trail, newest first. */
     activity: (limit = 12) => ['administration', 'activity', limit] as const,
-    catalogue: (collection: string) => ['administration', 'catalogue', collection] as const,
+    catalogue: (collection: string, scope?: string) => ['administration', 'catalogue', collection, scope ?? ''] as const,
     /** The grade × subject matrix. Invalidated with `all` like the rest. */
     matrix: () => ['administration', 'catalogue', 'grade-subjects'] as const,
     /** Schools left the catalogue tabs for a surface of their own. */
