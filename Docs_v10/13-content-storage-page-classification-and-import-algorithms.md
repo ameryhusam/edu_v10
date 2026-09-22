@@ -53,20 +53,18 @@ A successful operation records which Workspace artifact produced each canonical 
 ## 3. Alias normalization
 
 Accepted aliases include:
-- T1 ↔ T01
-- T2 ↔ T02
 - G4 ↔ G04
-- G5 ↔ G05
+- P1 ↔ PART_1
+- P2 ↔ PART_2
 
 Normalization occurs before Workspace path resolution, textbook-key generation, database lookup, ZIP validation and comparison.
 
 Canonical persisted conventions remain:
-- filesystem term coordinate: T01, T02, ...
-- filesystem grade coordinate: G04, G05, ...
-- textbook key term token: T1, T2, ...
-- textbook key example: EDU-SCI-G04-T1-ED2026
+- Workspace physical part: P1, P2
+- grade coordinate: G04, G05, ...
+- textbook key examples: EDU-SCI-G04-P1-ED2026 and EDU-SCI-G04-P2-ED2026
 
-T01 and T1 are therefore compatible but retain distinct meanings. G4 and G04 resolve to one canonical Grade row.
+T01/T02 are academic-term coordinates only. G4 and G04 resolve to one canonical Grade row.
 
 ## 4. Page filenames
 
@@ -312,19 +310,9 @@ A package is importable only when:
 
 ## 16. Schema gate: Textbook and academic-year coupling
 
-The current Prisma schema must be treated as the persisted-data source of truth during implementation review. It currently defines Textbook.termId, and Term belongs to AcademicYear; Textbook also has a uniqueness constraint over subjectId + gradeId + termId + edition.
+The Prisma contract is now aligned to the adopted identity: `Textbook` is keyed by subject + grade + P1/P2 part + printed edition, while `TextbookAdoption` carries `academicYearId` and the explicit `termId`. The migration backfills term from the textbook part and rejects unsupported historical term ordinals rather than guessing.
 
-Therefore the target rule that a printed textbook identity is reusable across academic years is a **target decision, not a current schema fact**. TextbookAdoption already models school + academic year usage, but the existing Textbook.termId relation still couples the current row to a Term/AcademicYear.
-
-Do not silently solve this by documentation only. Before implementing cross-year reuse, perform a dedicated schema/domain gate:
-
-1. decide whether Textbook should remain term-scoped;
-2. if not, define the smallest compatible schema change;
-3. migrate existing keys/data without creating duplicate textbooks;
-4. update canonical key resolution and import reconciliation;
-5. verify TextbookAdoption remains the owner of school/year deployment.
-
-Until that gate is approved, import code must resolve against the current schema rather than assuming the target separation already exists.
+Import reconciliation must therefore resolve textbook identity without academic term. Adoption logic derives term 1 for P1 and term 2 for P2 within the selected academic year.
 
 
 ## 26. Two-part source book segmentation
@@ -346,9 +334,10 @@ Validated routing:
 
     PART_1 → Workspace/P1/<grade>/<subject>/<edition>
     PART_2 → Workspace/P2/<grade>/<subject>/<edition>
-    BOTH/shared → Workspace/PB/<grade>/<subject>/<edition>
 
-P1/P2/PB are physical-part coordinates only. T1/T01 remain term identity aliases and must never be used as substitutes for P1/P2.
+There is no PB Workspace package. A combined source is split into independent P1/P2 packages before canonical import. Any temporary shared/ambiguous marker is internal preparation state only and must resolve before Workspace emission.
+
+P1/P2 are physical-part coordinates only. T01/T02 are academic-term coordinates and must never be used as substitutes for P1/P2.
 
 The part assignment is recorded in the package/lesson manifest and provenance. AI may propose the boundary, but unresolved conflicts block automatic canonical import.
 
