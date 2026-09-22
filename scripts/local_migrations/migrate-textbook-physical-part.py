@@ -220,12 +220,17 @@ def transform(path: str, text: str) -> str:
         out = out.replace("termId: term.id,", "part: input.part,")
         out = out.replace("termId: resolved.term.id,", "part: input.part,")
     elif path.endswith("textbook-administration.service.ts"):
-        # Physical part is explicit; academic term is never converted to part.
-        out = out.replace("termKey?: string | undefined;", "part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;", 1)
+        # Textbook administration is a physical-book capability.
+        # Academic term is never converted into a physical part.
+        out = out.replace("    termKey?: string | undefined;\n", "    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;\n")
+        out = out.replace("      termKey: string;\n", "      part: 'PART_1' | 'PART_2' | 'BOTH';\n")
+        out = out.replace("      termKey?: string | undefined;\n", "      part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;\n")
+        out = out.replace("        termKey: input.termKey,\n", "        part: input.part,\n")
+        out = out.replace("      termKey: input.termKey,\n", "      part: input.part,\n")
         out = out.replace("...(query.termKey ? { termKey: query.termKey } : {}),", "...(query.part ? { part: query.part } : {}),")
-        out = out.replace("termKey: input.termKey,", "part: input.part,")
-        out = out.replace("termKey?: string | undefined", "part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined")
-        if "termKey: input.termKey" in out:
+        out = out.replace("termKey: input.termKey", "part: input.part")
+        out = out.replace("termKey: query.termKey", "part: query.part")
+        if "termKey" in out:
             stop(path + ": textbook administration still derives physical identity from academic term")
     elif path.endswith("domain/authoring.ts"):
         old_sig = """export function checkTitleDoesNotRepeatPlacement(
@@ -443,17 +448,10 @@ def transform(path: str, text: str) -> str:
       orderBy: { key: 'asc' },
     });
   }"""
-        out = re.sub(r'(async findTextbookByCoordinates\\(input: \\{\\n    subjectKey: string;\\n    gradeKey: string;\\n)    termKey: string,', r"\\1    part: 'PART_1' | 'PART_2' | 'BOTH',", out)
-        out = re.sub(r'    const academicTerm = await this\\.db\\.term\\.findUnique\\(\\{\\n      where: \\{ key: input\\.termKey \\},[\\s\\S]*?    if \\(!academicTerm\\) return null;\\n', '', out, count=1)
-        out = re.sub(r'    const physicalParts: Array<\\x27PART_1\\x27 \\| \\x27PART_2\\x27 \\| \\x27BOTH\\x27> =\\n      academicTerm\\.ordinal === 1 \\? \\[\\x27PART_1\\x27, \\x27BOTH\\x27\\] :\\n        academicTerm\\.ordinal === 2 \\? \\[\\x27PART_2\\x27, \\x27BOTH\\x27\\] :\\n        \\[\\x27BOTH\\x27\\];\\n', '', out, count=1)
-        out = out.replace("part: { in: physicalParts },", "part: input.part,", 1)
-        out = re.sub(r'(async textbooksForGrade\\(input: \\{\\n    gradeKey: string;\\n)    termKey\\?: string \\| undefined;', r"\\1    part?: 'PART_1' | 'PART_2' | 'BOTH' | undefined;", out)
-        out = re.sub(r'    const academicTerm = input\\.termKey[\\s\\S]*?    if \\(input\\.termKey && !academicTerm\\) return \\[\\];\\n', '', out, count=1)
-        out = re.sub(r'    const physicalParts: Array<\\x27PART_1\\x27 \\| \\x27PART_2\\x27 \\| \\x27BOTH\\x27> = academicTerm[\\s\\S]*?\\n    return this\\.db\\.textbook\\.findMany', '    return this.db.textbook.findMany', out, count=1)
-        out = out.replace("where: { grade: { key: input.gradeKey }, part: { in: physicalParts } },", "where: { grade: { key: input.gradeKey }, ...(input.part ? { part: input.part } : {}) },", 1)
-        if "academicTerm.ordinal" in out: stop(path + ": academic term still derives physical part")
         if old_grade not in out: stop(path + ": grade textbook lookup anchor not found")
         out=out.replace(old_grade,new_grade)
+        if "academicTerm" in out or "physicalParts" in out or "term.ordinal" in out:
+            stop(path + ": physical textbook identity still depends on academic term")
     elif "edu7-content-engine" in path and path.endswith(".py"):
         if path.endswith("workspace_layout.py"):
             # Replace the complete identity/workspace functions so no academic
