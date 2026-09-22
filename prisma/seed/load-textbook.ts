@@ -74,7 +74,7 @@ type UnitSpec = {
 export interface TextbookSpec {
   subjectKey: string;
   gradeKey: string;
-  part: 'PART_1' | 'PART_2' | 'BOTH';
+  part: 'PART_1' | 'PART_2';
   edition: string;
   title: string;
   issuer?: string;
@@ -129,6 +129,9 @@ export async function seedTextbookFromSpec(
     }),
   );
 
+  const termOrdinal = spec.part === 'PART_1' ? 1 : 2;
+  const term = await prisma.term.findFirstOrThrow({ where: { academicYearId: ctx.academicYearId, ordinal: termOrdinal } });
+
   const textbook = await prisma.textbook.upsert({
     where: { key: tbKey },
     create: {
@@ -154,7 +157,7 @@ export async function seedTextbookFromSpec(
         academicYearId: ctx.academicYearId,
       },
     },
-    create: { textbookId: textbook.id, schoolId: ctx.schoolId, academicYearId: ctx.academicYearId },
+    create: { textbookId: textbook.id, schoolId: ctx.schoolId, academicYearId: ctx.academicYearId, termId: term.id },
     update: {},
   });
 
