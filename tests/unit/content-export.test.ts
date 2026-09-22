@@ -20,7 +20,7 @@ import {
   type ContentPackage,
 } from '../../src/contexts/content/domain/export-profile.js';
 
-const TB = 'EDU-MATH-G07-T1-ED2026';
+const TB = 'EDU-MATH-G07-P1-ED2026';
 
 function exportable(overrides: Partial<ExportableTextbook> = {}): ExportableTextbook {
   return {
@@ -28,7 +28,7 @@ function exportable(overrides: Partial<ExportableTextbook> = {}): ExportableText
       key: TB,
       subjectKey: 'MATH',
       gradeKey: 'G07',
-      termKey: '2026-2027-T01',
+      part: 'PART_1',
       title: 'Mathematics',
       edition: '2026',
       description: null,
