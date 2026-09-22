@@ -370,9 +370,9 @@ def transform(path: str, text: str) -> str:
                           "  readonly part: string;\n")
 
     elif path.endswith("workspace-manager.ts"):
-        # Workspace remains academic-term based:
-        # Workspace/<term>/<grade>/<subject_part>/<edition>
-        # Example: Workspace/T01/G07/SCI_P1/ED2026
+        # Workspace is physical-textbook based:
+        # Workspace/<part>/<grade>/<subject>/<edition>
+        # Example: Workspace/P1/G07/SCI/ED2026
         out = out.replace("  readonly term: string;\n  readonly grade: string;\n  readonly subject: string;\n  readonly edition?: string | undefined;",
                           "  readonly term: string;\n  readonly grade: string;\n  readonly subject: string;\n  readonly part?: 'PART_1' | 'PART_2' | 'BOTH';\n  readonly edition?: string | undefined;", 1)
         const_old = """    const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -381,19 +381,16 @@ def transform(path: str, text: str) -> str:
     const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectNorm);"""
         if const_old not in out:
             stop(path + ": expected workspace path block not found")
-        out = out.replace(const_old, """    const termNorm = coords.term.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-    const partNorm = coords.part
-      ? coords.part.trim().toUpperCase().replace(/[^A-Z0-9]/g, '')
-      : '';
+        out = out.replace(const_old, """    const partNorm = coords.part.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
     const partSegment =
       partNorm === 'PART_1' ? 'P1' :
       partNorm === 'PART_2' ? 'P2' :
       partNorm === 'BOTH' ? 'PB' :
       '';
-    const subjectSegment = partSegment ? subjectNorm + '_' + partSegment : subjectNorm;
-    const base = path.join(this.workspaceBaseDir, termNorm, gradeNorm, subjectSegment);""", 1)
+    if (!partSegment) throw new Error('Physical part must be PART_1, PART_2, or BOTH.');
+    const gradeNorm = coords.grade.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const subjectNorm = coords.subject.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const base = path.join(this.workspaceBaseDir, partSegment, gradeNorm, subjectNorm);""", 1)
         const_old_key = 'const match = /^EDU-(.+?)-G\\d+?-T(\\d+)-ED(.+)$/i.exec(textbookKey.trim());'
         if const_old_key not in out:
             # accept the actual migration-script spelling
