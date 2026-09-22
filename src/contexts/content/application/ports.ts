@@ -59,14 +59,12 @@ export interface ContentRepository {
    * ordinals too, because the key is built from them and the caller must not
    * have to parse `G07` itself.
    */
-  resolveTextbookCoordinates(input: {
+  resolveTextbookPlacement(input: {
     subjectKey: string;
     gradeKey: string;
-    termKey: string;
   }): Promise<{
     subject: { id: string; key: string; name: string } | null;
     grade: { id: string; key: string; ordinal: number; name: string } | null;
-    term: { id: string; key: string; ordinal: number; name: string } | null;
   }>;
 
   /** True when a textbook with this key already exists. */
@@ -76,7 +74,7 @@ export interface ContentRepository {
     key: string;
     subjectId: string;
     gradeId: string;
-    termId: string;
+    part: 'PART_1' | 'PART_2' | 'BOTH';
     title: string;
     edition: string;
     description?: string | null;
