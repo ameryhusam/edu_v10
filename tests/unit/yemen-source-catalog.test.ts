@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
 interface SourceRow {
   readonly gradeKey: string;
   readonly subjectKey: string;
-  readonly termOrdinal: number;
+  readonly part: 'PART_1' | 'PART_2';
   readonly coverage: 'TERM' | 'FULL_YEAR';
   readonly role: string;
   readonly title: string;
@@ -35,7 +35,7 @@ describe('Yemeni Ministry source catalogue', () => {
     for (const row of catalog.TextbookSource) {
       expect(row.gradeKey).toMatch(/^G\d{2}$/);
       expect(row.subjectKey).toMatch(/^[A-Z0-9]+$/);
-      expect([1, 2]).toContain(row.termOrdinal);
+      expect(['PART_1', 'PART_2']).toContain(row.part);
       expect(row.title.length).toBeGreaterThan(4);
       expect(row.resourceTitle.length).toBeGreaterThan(4);
       expect(row.landingPage).toMatch(/^http:\/\/e-learning-moe\.edu\.ye\/Class/);
@@ -48,8 +48,8 @@ describe('Yemeni Ministry source catalogue', () => {
   it('contains the reviewed seventh-grade science source for both terms', () => {
     expect(catalog.TextbookSource).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ gradeKey: 'G07', subjectKey: 'SCI', termOrdinal: 1 }),
-        expect.objectContaining({ gradeKey: 'G07', subjectKey: 'SCI', termOrdinal: 2 }),
+        expect.objectContaining({ gradeKey: 'G07', subjectKey: 'SCI', part: 'PART_1' }),
+        expect.objectContaining({ gradeKey: 'G07', subjectKey: 'SCI', part: 'PART_2' }),
       ]),
     );
   });
