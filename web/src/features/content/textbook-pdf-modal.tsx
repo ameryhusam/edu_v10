@@ -132,7 +132,12 @@ export function TextbookPdfModal({
       }
     },
     onSuccess: async (result) => {
-      if (result?.state === 'CONFIRM_REQUIRED') return;
+      if (result?.state === 'CONFIRM_REQUIRED') {
+        setIdentityConfirmation(result.result);
+        setErrorMsg(null);
+        setSuccessMsg(null);
+        return;
+      }
       setSuccessMsg(t('textbookAdmin.pdfSaveSuccess'));
       setErrorMsg(null);
       setPdfUrl('');
@@ -141,12 +146,6 @@ export function TextbookPdfModal({
       setSelectedFileName(null);
       setSelectedFileSize(null);
       await refetch();
-      if (result?.state === 'CONFIRM_REQUIRED') {
-        setIdentityConfirmation(result.result);
-        setErrorMsg(null);
-        setSuccessMsg(null);
-        return;
-      }
       setIdentityConfirmation(null);
       await queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
       onSaved?.();
