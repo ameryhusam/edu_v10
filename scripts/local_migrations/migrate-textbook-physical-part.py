@@ -631,12 +631,33 @@ def collect_physical_part_issues(files: dict[str, tuple[str, str]]) -> list[str]
                 snippet = after[start:end].replace("\\n", " ").strip()
                 issues.append(f"{path}:{line}: {name}: {snippet}")
 
-    workspace = "\\n".join(
-        after for path, (_, after) in files.items()
+    # Workspace physical identity is allowed to mention academic terms only
+    # when they are explicitly academic metadata. Block only legacy physical
+    # coordinate/path/key forms, not legitimate prose or academic Term usage.
+    workspace_files = {
+        path: after
+        for path, (_, after) in files.items()
         if "workspace" in path.lower()
-    )
-    if "T01" in workspace or re.search(r"\\bT[12]\\b", workspace):
-        issues.append("WORKSPACE_PHYSICAL_T1_T2_IDENTITY: workspace still contains T1/T2 physical identity")
+    }
+
+    workspace_patterns = [
+        ("T01_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T01(?![A-Z0-9])")),
+        ("T02_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T02(?![A-Z0-9])")),
+        ("T1_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T1(?![A-Z0-9])")),
+        ("T2_PATH_SEGMENT", re.compile(r"(?<![A-Z0-9])T2(?![A-Z0-9])")),
+        ("LEGACY_PHYSICAL_KEY", re.compile(r"EDU-[A-Z0-9]+-G\\d{2}-T[12]-ED[A-Z0-9-]+", re.I)),
+    ]
+
+    for path, text in workspace_files.items():
+        for name, pattern in workspace_patterns:
+            for match in pattern.finditer(text):
+                line = text.count("\\n", 0, match.start()) + 1
+                start = max(0, match.start() - 120)
+                end = min(len(text), match.end() + 120)
+                snippet = text[start:end].replace("\\n", " ").strip()
+                issues.append(
+                    f"{path}:{line}: WORKSPACE_{name}: {snippet}"
+                )
 
     return issues
 
