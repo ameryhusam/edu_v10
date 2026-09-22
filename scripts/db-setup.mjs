@@ -97,15 +97,7 @@ async function main() {
     (!force && fs.existsSync(path.join(DATA_DIR, 'PG_VERSION')) && fs.existsSync(path.join(DATA_DIR, 'base')));
 
   if (isInitialized && !force) {
-    console.log('[db:setup] database already initialized; skipping migrations and seed.');
-    if (!fs.existsSync(SETUP_MARKER)) {
-      try {
-        fs.writeFileSync(SETUP_MARKER, new Date().toISOString(), 'utf8');
-      } catch {
-        // ignore
-      }
-    }
-    return;
+    console.log('[db:setup] database already initialized; reconciling migrations and seed.');
   }
 
   let child = null;
