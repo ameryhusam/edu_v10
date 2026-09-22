@@ -151,8 +151,8 @@ function requireAdoptionAdmin(
 const createTextbookInput = z.object({
   subjectKey: z.string().min(1),
   gradeKey: z.string().min(1),
-  termKey: z.string().min(1),
-  title: z.string().min(1).max(300),
+  part: z.enum(['PART_1', 'PART_2', 'BOTH']),
+  title: z.string().min(1).max(300);
   edition: z.string().min(1).max(40),
   description: z.string().max(4000).nullish(),
   issuer: z.string().max(200).nullish(),
@@ -229,7 +229,7 @@ const textbookKeyInput = z.object({ textbookKey: z.string().min(1) });
 
 const ensureTextbooksInput = z.object({
   gradeKey: z.string().min(1).max(8),
-  termKey: z.string().min(1).max(32),
+  part: z.enum(['PART_1', 'PART_2', 'BOTH']),
   edition: z.string().min(1).max(40),
   issuer: z.string().max(200).nullish(),
   publishYear: z.number().int().min(1900).max(2200).nullish(),
@@ -245,7 +245,7 @@ const textbookListInput = z.object({
   search: z.string().trim().min(1).max(120).optional(),
   subjectKey: z.string().min(1).max(24).optional(),
   gradeKey: z.string().min(1).max(8).optional(),
-  termKey: z.string().min(1).max(32).optional(),
+  part: z.enum(['PART_1', 'PART_2', 'BOTH']).optional(),
   status: z.enum(PUBLICATION_STATES).optional(),
   limit: z.coerce.number().int().positive().max(100).optional(),
   offset: z.coerce.number().int().min(0).optional(),
@@ -269,7 +269,6 @@ const adoptionInput = z.object({
  */
 const gradeAdoptionInput = z.object({
   gradeKey: z.string().min(1).max(8),
-  termKey: z.string().min(1).max(32).optional(),
   textbookKey: z.string().min(1).optional(),
   schoolKey: z.string().min(1).max(32),
   academicYearKey: z.string().min(1).max(16),
@@ -313,7 +312,7 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
         if (!admin.ok) return admin;
         return deps.textbookAdministration.ensureTextbooksForGrade(admin.value, {
           gradeKey: input.gradeKey,
-          termKey: input.termKey,
+          part: input.part,
           edition: input.edition,
           issuer: input.issuer ?? null,
           publishYear: input.publishYear ?? null,
