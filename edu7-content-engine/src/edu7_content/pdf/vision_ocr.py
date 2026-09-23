@@ -34,10 +34,10 @@ def _contains_any(text: str, patterns: list[str]) -> bool:
     return any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in patterns)
 
 
-def _first_ten_page_text(reader) -> list[dict[str, Any]]:
+def _first_ten_page_text(reader, max_pages: int = 15) -> list[dict[str, Any]]:
     pages = []
 
-    for index in range(min(10, reader.page_count)):
+    for index in range(min(max(1, max_pages), reader.page_count)):
         text = reader.extract_page_text(index) or ""
         pages.append({
             "pdfPage": index + 1,
@@ -114,14 +114,16 @@ def extract_book_front_matter(
     Extract physical textbook identity evidence and TOC evidence.
 
     Deterministic extraction is performed first.
-    Gemini receives the same first-ten-page evidence for semantic validation.
+    Gemini receives the same initial analysis window for semantic validation.
+    If the active PDF backend is pypdf, the original PDF is also provided to
+    Gemini because pypdf intentionally does not render page images.
 
     AI never becomes the canonical source of truth.
     """
 
-    max_pages = min(max(1, max_pages), 10)
+    max_pages = min(max(1, max_pages), reader.page_count, 15)
 
-    page_texts = _first_ten_page_text(reader)
+    page_texts = _first_ten_page_text(reader, max_pages=max_pages)
 
     part_evidence = _deterministic_part_evidence(page_texts)
     toc_evidence = _deterministic_toc_evidence(page_texts)
@@ -177,6 +179,7 @@ def extract_book_front_matter(
                 ai_result = service.extract_book_front_matter(
                     page_texts=page_texts,
                     images_b64=images,
+                    pdf_path=reader.pdf_path if getattr(reader, "backend", None) == "pypdf" else None,
                 )
 
         except Exception as err:
