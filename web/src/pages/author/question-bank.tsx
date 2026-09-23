@@ -131,7 +131,7 @@ export function AuthorQuestionBankPage(): ReactNode {
             <SelectFilter label={t('questionBank.origin')} value={origin} onChange={(value) => { setOrigin(value as QuestionOrigin | ''); setOffset(0); }} options={QUESTION_ORIGINS} labelFor={(value) => t(`question.origin.${value}` as MessageKey)} />
             <SelectFilter label={t('catalogue.state')} value={status} onChange={(value) => { setStatus(value as PublicationStatus | ''); setOffset(0); }} options={PUBLICATION_STATUSES} labelFor={(value) => t(`publication.${value}` as MessageKey)} />
             <SelectFilter label={t('questionBank.visibility')} value={visibility} onChange={(value) => { setVisibility(value as QuestionVisibility | ''); setOffset(0); }} options={QUESTION_VISIBILITIES} labelFor={(value) => t(`question.visibility.${value}` as MessageKey)} />
-            <SelectFilter label={t('content.grade')} value={gradeKey} onChange={(value) => { setGradeKey(value); setOffset(0); }} options={QUESTION_BANK_SUPPORTED_GRADES} labelFor={(value) => value} />
+            <SelectFilter label={t('examBuilder.grade')} value={gradeKey} onChange={(value) => { setGradeKey(value); setOffset(0); }} options={QUESTION_BANK_SUPPORTED_GRADES} labelFor={(value) => value} />
           </div>
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_9rem_9rem_auto]">
             <label className="space-y-1.5">
