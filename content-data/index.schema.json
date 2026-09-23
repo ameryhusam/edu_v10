@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "edu7.textbook-index/1.0",
+  "title": "Edu7 Textbook Index",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "textbook", "units"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "profileVersion", "scope", "exportedAt"],
+      "properties": {
+        "profile": { "const": "edu7.textbook-index" },
+        "profileVersion": { "const": "1.0" },
+        "scope": { "const": "FULL" },
+        "exportedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "textbook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "subjectKey", "gradeKey", "part", "title", "edition"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^EDU-[A-Z0-9_]+-G[0-9]{2}-P[12]-ED[0-9]{4}$" },
+        "subjectKey": { "type": "string", "pattern": "^[A-Z0-9_]+$" },
+        "gradeKey": { "type": "string", "pattern": "^G[0-9]{2}$" },
+        "part": { "enum": ["PART_1", "PART_2"] },
+        "title": { "type": "string", "minLength": 1 },
+        "edition": { "type": "string", "minLength": 1 }
+      }
+    },
+    "units": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["slug", "name", "orderIndex", "startPage", "endPage", "lessons"],
+        "properties": {
+          "slug": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "orderIndex": { "type": "integer", "minimum": 1 },
+          "startPage": { "type": ["integer", "null"], "minimum": 1 },
+          "endPage": { "type": ["integer", "null"], "minimum": 1 },
+          "lessons": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["slug", "name", "orderIndex", "startPage", "endPage"],
+              "properties": {
+                "slug": { "type": "string", "minLength": 1 },
+                "name": { "type": "string", "minLength": 1 },
+                "orderIndex": { "type": "integer", "minimum": 1 },
+                "startPage": { "type": ["integer", "null"], "minimum": 1 },
+                "endPage": { "type": ["integer", "null"], "minimum": 1 }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
