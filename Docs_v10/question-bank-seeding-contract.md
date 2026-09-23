@@ -16,6 +16,21 @@ The product is a lightweight learner-evaluation system. It keeps the textbook ca
 - The database is the canonical runtime store.
 - The seed runner is not an alternative domain service and must not duplicate canonical application services where an existing service is suitable.
 
+## Supported grade scope
+
+The current Question Bank workstream supports grades **G04 through G09**:
+
+- G04 — الصف الرابع
+- G05 — الصف الخامس
+- G06 — الصف السادس
+- G07 — الصف السابع
+- G08 — الصف الثامن
+- G09 — الصف التاسع
+
+This is a Question Bank scope decision, not a change to the canonical `Grade` catalogue. The catalogue may contain other grades, while this workstream accepts and exposes only G04–G09. No placeholder or copied questions are created for grades that do not yet have an authoritative package.
+
+The machine-readable scope is `seeding/question_bank/supported-grades.json`.
+
 ## Textbook catalogue
 
 A textbook record must contain enough identity to resolve a stable bookKey, subject, grade, physical part when applicable, edition, title, issuer/publisher, and publication year when known.
