@@ -183,7 +183,7 @@ export function AcademicStructurePage(): ReactNode {
                   size="sm"
                   className="gap-1.5"
                   disabled={!canWrite}
-                  onClick={() => setDistributionGrade(null)}
+                  onClick={() => setDistributionGrade(filteredGrades[0] ?? grades.data?.[0] ?? null)}
                 >
                   <SlidersHorizontal className="size-4" />
                   {t('matrix.saveDistribution')}
