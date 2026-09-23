@@ -31,7 +31,8 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "postinstall": "node scripts/setup-schema-engine.mjs && node scripts/prisma-generate.mjs && node scripts/install-web-deps.mjs",
-    "db:setup": "node scripts/db-setup.mjs"
+    "db:setup": "node scripts/db-setup.mjs",
+    "content:import": "tsx scripts/content-import.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed/seed.ts"
