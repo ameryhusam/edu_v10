@@ -10,8 +10,9 @@ class FakeReader:
     doc = [FakePage() for _ in range(page_count)]
 
     def extract_page_blocks(self, index):
-        # page 6 carries printed page 1; later pages continue with the same offset.
-        printed = max(1, index - 5)
+        if index < 5:
+            return []
+        printed = index - 4
         return [{"bbox": (250, 720, 300, 790), "text": str(printed), "fontSize": 10}]
 
     def get_page_size(self, index):
