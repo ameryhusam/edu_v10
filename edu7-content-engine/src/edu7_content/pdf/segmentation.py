@@ -7,6 +7,9 @@ from typing import Any, Dict, List, Optional
 from .page_mapping import PageMappingEngine
 from .reader import PdfReader
 from .workspace_validation import validate_segmentation_input
+from .semantic_blocks import extract_page_semantic_blocks
+from .question_extraction import extract_question_blocks, group_cross_page_questions
+from .lesson_detection import reconcile_lesson_range
 
 
 def slugify(text: str, fallback: str = "item") -> str:
@@ -131,6 +134,22 @@ class LessonSegmenter:
         )
 
         processed_units: List[Dict[str, Any]] = []
+        all_page_semantics: List[Dict[str, Any]] = []
+        (workspace_dir / "printed_pdf_mapping.json").write_text(
+            json.dumps(
+                {
+                    "schemaVersion": "1.0",
+                    "detectedOffset": self.mapper.detected_offset,
+                    "offsetConsistency": getattr(self.mapper, "offset_consistency", None),
+                    "reviewRequired": getattr(self.mapper, "mapping_review_required", False),
+                    "observations": getattr(self.mapper, "offset_observations", []),
+                    "formula": "pdfPage = printedPage + detectedOffset",
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         flat_lessons_pkg: List[Dict[str, Any]] = []
         flat_units_pkg: List[Dict[str, Any]] = []
         assets_registry: List[Dict[str, Any]] = []
@@ -211,6 +230,23 @@ class LessonSegmenter:
 
                 start_p = les.get("startPage", unit_start_page)
                 end_p = les.get("endPage", start_p)
+                next_lesson = lessons[l_idx] if l_idx < len(lessons) else None
+                next_lesson_pdf = (
+                    self.mapper.get_pdf_page(int(next_lesson.get("startPage")))
+                    if next_lesson and next_lesson.get("startPage") is not None
+                    else None
+                )
+                boundary_evidence = reconcile_lesson_range(
+                    self.reader,
+                    toc_start_pdf=self.mapper.get_pdf_page(int(start_p)),
+                    toc_end_pdf=self.mapper.get_pdf_page(int(end_p)),
+                    next_lesson_start_pdf=next_lesson_pdf,
+                    expected_title=str(l_title),
+                )
+                (l_dir / "boundary_evidence.json").write_text(
+                    json.dumps(boundary_evidence, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
                 printed_pages = list(range(start_p, end_p + 1))
                 pdf_pages = [self.mapper.get_pdf_page(p) for p in printed_pages]
 
@@ -224,11 +260,21 @@ class LessonSegmenter:
                 aggregated_text = []
                 grounding_pages = []
                 grounding_chunks = []
+                lesson_page_semantics: List[Dict[str, Any]] = []
 
                 for p_print, p_pdf in zip(printed_pages, pdf_pages):
                     pdf_idx = p_pdf - 1
                     if 0 <= pdf_idx < self.reader.page_count:
                         p_text = self.reader.extract_page_text(pdf_idx)
+                        page_semantics = extract_page_semantic_blocks(
+                            self.reader,
+                            pdf_idx,
+                            printed_page=p_print,
+                            toc_titles=[str(les.get("title", ""))],
+                        )
+                        page_semantics["questionBlocks"] = extract_question_blocks(page_semantics)
+                        lesson_page_semantics.append(page_semantics)
+                        all_page_semantics.append(page_semantics)
                         grounding_pages.append({
                             "printedPage": p_print,
                             "pdfPage": p_pdf,
@@ -285,6 +331,42 @@ class LessonSegmenter:
                     "version": 1,
                 })
 
+                question_groups = group_cross_page_questions(lesson_page_semantics)
+                (l_dir / "segments.json").write_text(
+                    json.dumps(
+                        {
+                            "schemaVersion": "1.0",
+                            "printedPageIsCanonical": True,
+                            "pdfPageIsPhysical": True,
+                            "pages": lesson_page_semantics,
+                            "questionGroups": question_groups,
+                            "review": any(p.get("review") for p in lesson_page_semantics),
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+                (l_dir / "questions.json").write_text(
+                    json.dumps(
+                        {
+                            "schemaVersion": "1.0",
+                            "pages": [
+                                {
+                                    "pdfPage": p.get("pdfPage"),
+                                    "printedPage": p.get("printedPage"),
+                                    "blocks": p.get("questionBlocks", []),
+                                }
+                                for p in lesson_page_semantics
+                            ],
+                            "groups": question_groups,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+
                 (l_dir / "lesson_full_text.txt").write_text("\n\n".join(aggregated_text), encoding="utf-8")
                 grounding_manifest = {
                     "schemaVersion": "1.0",
@@ -331,6 +413,18 @@ class LessonSegmenter:
                     ],
                     "resourceDir": f"{u_dir_name}/{l_dir_name}/resource",
                     "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
+                    "boundaryEvidenceFile": f"{u_dir_name}/{l_dir_name}/boundary_evidence.json",
+                    "boundaryStatus": boundary_evidence.get("status"),
+                    "boundaryReviewReasons": boundary_evidence.get("reviewReasons", []),
+                    "segmentsFile": f"{u_dir_name}/{l_dir_name}/segments.json",
+                    "questionsFile": f"{u_dir_name}/{l_dir_name}/questions.json",
+                    "semanticStructure": {
+                        "pageCount": len(lesson_page_semantics),
+                        "segmentCount": sum(len(p.get("segments", [])) for p in lesson_page_semantics),
+                        "questionBlockCount": sum(len(p.get("questionBlocks", [])) for p in lesson_page_semantics),
+                        "crossPageQuestionGroupCount": len(question_groups),
+                        "reviewRequired": any(p.get("review") for p in lesson_page_semantics),
+                    },
                     "grounding": {
                         "pageCount": len(grounding_pages),
                         "chunkCount": len(grounding_chunks),
@@ -373,7 +467,38 @@ class LessonSegmenter:
             )
             processed_units.append(unit_manifest)
 
-        # 3. Master workspace index.json
+        # 3. Persist the structured TOC contract separately from page semantics.
+        toc_manifest = {
+            "schemaVersion": "1.0",
+            "detection": "deterministic_toc",
+            "units": [
+                {
+                    "number": u.get("number"),
+                    "title": u.get("title"),
+                    "startPage": u.get("startPage"),
+                    "endPage": u.get("endPage"),
+                    "lessons": [
+                        {
+                            "number": l.get("number"),
+                            "title": l.get("title"),
+                            "startPage": l.get("startPage"),
+                            "endPage": l.get("endPage"),
+                            "branchHint": l.get("branch"),
+                        }
+                        for l in u.get("lessons", [])
+                    ],
+                }
+                for u in units
+            ],
+        }
+        (workspace_dir / "toc.json").write_text(
+            json.dumps(toc_manifest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        question_groups = group_cross_page_questions(all_page_semantics)
+
+        # 4. Master workspace index.json
         index_manifest = {
             "schemaVersion": "1.1",
             "textbookKey": textbook_key,
@@ -403,6 +528,15 @@ class LessonSegmenter:
                 "reconstruction": "lesson PDFs in manifest order",
             },
             "sourceManifest": "book-source-manifest.json",
+            "tocFile": "toc.json",
+            "semanticStructure": {
+                "schemaVersion": "1.0",
+                "pageCount": len(all_page_semantics),
+                "segmentCount": sum(len(p.get("segments", [])) for p in all_page_semantics),
+                "questionBlockCount": sum(len(p.get("questionBlocks", [])) for p in all_page_semantics),
+                "crossPageQuestionGroupCount": len(question_groups),
+                "reviewPageCount": sum(1 for p in all_page_semantics if p.get("review")),
+            },
         }
         (workspace_dir / "index.json").write_text(
             json.dumps(index_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
