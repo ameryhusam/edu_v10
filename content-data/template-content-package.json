@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "profile": "edu7.textbook-content",
+    "profileVersion": "1.1",
+    "scope": "FULL",
+    "exportedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "textbook": {
+    "key": "SCI-G07-PART_1-ED2026",
+    "subjectKey": "SCI",
+    "gradeKey": "G07",
+    "part": "PART_1",
+    "title": "مثال — العلوم الصف السابع الجزء الأول",
+    "edition": "ED2026",
+    "description": null,
+    "issuer": "SANAA",
+    "isbn": null,
+    "publishYear": 2026,
+    "totalPages": null,
+    "status": "DRAFT"
+  },
+  "units": [],
+  "lessons": [],
+  "concepts": [],
+  "prerequisites": [],
+  "misconceptions": [],
+  "learningResources": [],
+  "questions": []
+}
