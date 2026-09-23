@@ -31,6 +31,8 @@ PART_1_PATTERNS = (
     re.compile(r"الجزء\s*[-:]?\s*(?:الأول|الاول|1|١)", re.IGNORECASE),
     re.compile(r"\b(?:PART|VOLUME)\s*[-:]?\s*(?:1|I|ONE)\b", re.IGNORECASE),
     re.compile(r"\b(?:FIRST\s+)?SEMESTER\s*(?:1|I|ONE)\b", re.IGNORECASE),
+    re.compile(r"\bPUPIL(?:'S|’S)?\s+BOOK\s*(?:1|I|ONE)\b", re.IGNORECASE),
+    re.compile(r"\bBOOK\s*(?:1|I|ONE)\b", re.IGNORECASE),
 )
 
 PART_2_PATTERNS = (
@@ -46,6 +48,8 @@ PART_2_PATTERNS = (
     re.compile(r"الجزء\s*[-:]?\s*(?:الثاني|الثانى|2|٢)", re.IGNORECASE),
     re.compile(r"\b(?:PART|VOLUME)\s*[-:]?\s*(?:2|II|TWO)\b", re.IGNORECASE),
     re.compile(r"\b(?:SECOND\s+)?SEMESTER\s*(?:2|II|TWO)\b", re.IGNORECASE),
+    re.compile(r"\bPUPIL(?:'S|’S)?\s+BOOK\s*(?:2|II|TWO)\b", re.IGNORECASE),
+    re.compile(r"\bBOOK\s*(?:2|II|TWO)\b", re.IGNORECASE),
 )
 
 
@@ -180,11 +184,10 @@ def detect_combined_part_boundary(
         )
 
     if not p1_initial and not p2_initial:
-        result["bothIndicator"] = True
-        result["indicatorReason"] = (
-            "Neither first/second semester nor first/second part was identified "
-            "in the first five pages; the source is treated as a possible combined book."
-        )
+        # Absence of an early marker is not evidence of BOTH. The detector
+        # remains UNKNOWN until TOC/content evidence establishes the mode.
+        result["bothIndicator"] = False
+        result["indicatorReason"] = "No early part marker; no inference is made from absence."
 
     p1_pages = [p["pdfPage"] for p in all_evidence if p["part1"]]
     p2_pages = [p["pdfPage"] for p in all_evidence if p["part2"]]
