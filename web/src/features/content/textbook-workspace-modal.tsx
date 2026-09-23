@@ -54,11 +54,8 @@ export function TextbookWorkspaceModal({
   const zipInputRef = useRef<HTMLInputElement>(null);
 
   // Form coordinates
-  const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH'>(initialCoordinates?.part || 'PART_1');
   const [grade, setGrade] = useState(initialCoordinates?.grade || '');
   const [subject, setSubject] = useState(initialCoordinates?.subject || '');
-  const [edition, setEdition] = useState(initialCoordinates?.edition || '');
-  const [title, setTitle] = useState(initialCoordinates?.title || '');
 
   // File Upload State
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -128,7 +125,6 @@ export function TextbookWorkspaceModal({
       setActionError(null);
       setActionSuccess(null);
       if (!selectedFile) throw new Error('يرجى اختيار ملف PDF للكتاب');
-      const validPart: 'PART_1' | 'PART_2' = part === 'BOTH' ? 'PART_1' : part;
       const res = await textbookAdministrationApi.workspacePrepareUpload({
         file: selectedFile,
         grade: grade.trim(),
