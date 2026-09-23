@@ -5,15 +5,20 @@
 # With uv:  uv pip install -r requirements.txt
 #
 # FREE extraction path:
-#   PyMuPDF (text layer + image rendering) → ALWAYS works, no setup
-#   PyMuPDF + Tesseract OCR               → works after Tesseract install
-#   Ollama local vision model              → works after Ollama + model pull
-#   Gemini Vision free tier                → works after API key setup
+#   pypdf + Gemini API                    → supported primary fallback path
+#   PyMuPDF (optional) + Gemini           → local rendering + visual evidence
+#   PyMuPDF + Tesseract OCR               → optional local OCR
+#   Ollama local vision model             → optional explicit local adapter
+#
+# PyMuPDF is intentionally OPTIONAL. The engine must remain installable and
+# usable on Android/Termux where PyMuPDF wheels may be unavailable.
 
 # ── Core: PDF Processing (REQUIRED) ──────────────────────────────────
-pymupdf>=1.24.0          # Primary PDF engine: text, images, OCR, rendering
-pypdf>=5.0.0             # Secondary PDF reader (metadata fallback)
+pypdf>=5.0.0             # Required PDF reader/writer/metadata/text extraction
 openpyxl>=3.1.0          # Excel (.xlsx) export
+
+# ── Optional local PDF renderer ──────────────────────────────────────
+pymupdf>=1.24.0          # Optional: rendering/geometry when a compatible wheel exists
 
 # ── NO OTHER PIP PACKAGES REQUIRED for basic extraction ──────────────
 # Ollama: install separately from https://ollama.ai (no pip package)
