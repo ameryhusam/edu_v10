@@ -64,3 +64,31 @@ UPDATE never bypasses domain guards. Published/frozen content or questions with 
 - JSON `key` fields are informational/output fields; do not invent database ids.
 - Question identity is the question stem within its lesson. Keeping the same stem allows UPDATE; changing the stem creates a new question identity.
 - Re-running APPEND_DEDUP is safe: existing content is reported as unchanged instead of duplicated.
+
+
+## Canonical index.json
+
+كل المواد تستخدم قالب فهرس واحد ثابت، مستقل عن الأسئلة والمفاهيم:
+
+```text
+Textbook
+└── Unit
+    ├── Lesson
+    ├── Lesson
+    └── ...
+```
+
+القواعد:
+- الوحدة عنصر علوي فقط؛ لا يوجد `parentUnitSlug` ولا طبقة فرع داخل الوحدة.
+- الدرس يُضاف مباشرة تحت الوحدة التي يثبتهـا الفهرس المطبوع.
+- `index.json` يحتوي على البنية والصفحات فقط: الكتاب → الوحدات → الدروس.
+- المفاهيم والأسئلة لا تدخل في `index.json`.
+- ملف الأسئلة مستقل ويمكن تقسيمه إلى `questions-01.json`, `questions-02.json` ثم دمجهما عبر `APPEND_DEDUP`.
+- نفس قالب الفهرس يُستخدم للرياضيات والعلوم والعربية والإنجليزية وغيرها.
+- صفحات الوحدة مشتقة من مدى دروسها بعد التحقق؛ صفحات الدرس مأخوذة من الفهرس ولا تُخمن عند وجود دليل أقوى.
+
+الملفات:
+- `index.json`: الهيكل المرجعي.
+- `textbook.json`: بيانات الكتاب.
+- `concepts.json`: المفاهيم.
+- `questions-*.json`: بنك الأسئلة.
