@@ -289,3 +289,21 @@ The synchronization contract is:
       → Workspace commit
 
 This is controlled synchronization, not an unrestricted filesystem watcher or live two-way mirror.
+
+
+## 11A. Physical part detection contract
+
+The Python preparation engine must resolve the physical textbook part before creating the canonical Workspace coordinate.
+
+- Inspect the first five PDF pages as the cover/front-matter identity window.
+- الفصل الدراسي الأول or الجزء الأول identifies PART_1.
+- الفصل الدراسي الثاني or الجزء الثاني identifies PART_2.
+- If both first/second semester or part terms appear in the early source/TOC, identify the source as BOTH.
+- If neither term appears in the first five pages, record a bothIndicator. This is a signal for further investigation, not proof of BOTH and not permission to split automatically.
+- A TOC that explicitly lists الفصل الدراسي الأول and الفصل الدراسي الثاني is strong combined-book evidence.
+- The exact P1/P2 physical boundary must still be established from a later structural heading or equivalent validated evidence before the PDF is split.
+- A TOC mention of الجزء الثاني alone must not be used as the physical split page.
+- BOTH without a validated boundary remains review-only.
+- Once a boundary is validated, the source is split temporarily into PART_1 and PART_2, and each part is prepared into its own P1/P2 Workspace. BOTH is never a canonical Textbook identity.
+
+The detection result must preserve detectedPart, confidence, evidence pages, boundaryPdfPage when known, and a human-readable reason.
