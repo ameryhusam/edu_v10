@@ -192,17 +192,21 @@ def _cmd_identify(args):
     evidence = list(front_matter.get("evidence") or [])
     conflicts = list(front_matter.get("conflicts") or [])
 
-    # Deterministic physical-part evidence is authoritative for BOTH detection.
+    # Deterministic physical-part evidence is authoritative for physical part identity.
     # AI remains a proposal for semantic identity facts.
     try:
         boundary = detect_combined_part_boundary(reader, analysis_pages=analysis_pages)
     except Exception as err:
-        boundary = {"status": "REVIEW", "confidence": 0.0, "error": str(err)}
-    if boundary.get("status") == "DETECTED":
-        identity["part"] = "BOTH"
-        evidence.append({"type": "combined_part_boundary", "value": boundary})
-    elif identity.get("part") == "BOTH":
-        conflicts.append("AI proposed BOTH but deterministic boundary evidence did not establish a combined source.")
+        boundary = {"status": "REVIEW", "detectedPart": "UNKNOWN", "confidence": 0.0, "error": str(err)}
+
+    detected_part = boundary.get("detectedPart")
+    if detected_part in {"PART_1", "PART_2", "BOTH"}:
+        identity["part"] = detected_part
+        evidence.append({"type": "physical_part_detection", "value": boundary})
+        if detected_part == "BOTH" and boundary.get("status") != "DETECTED":
+            conflicts.append("Combined-book evidence exists, but the physical P1/P2 boundary still requires review.")
+    elif identity.get("part") in {"PART_1", "PART_2", "BOTH"}:
+        conflicts.append("AI proposed a physical part, but deterministic part detection did not establish it.")
         identity["part"] = None
 
     result = {
