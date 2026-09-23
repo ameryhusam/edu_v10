@@ -1,0 +1,1221 @@
+{
+  "grades": [
+    {
+      "id": "G07",
+      "level": 7,
+      "nameAr": "الصف السابع الأساسي",
+      "nameEn": "Grade 7"
+    }
+  ],
+  "subjects": [
+    {
+      "id": "SCI",
+      "code": "SCI",
+      "nameAr": "العلوم",
+      "nameEn": "Science"
+    }
+  ],
+  "gradeSubjects": [
+    {
+      "id": "G07-SCI",
+      "gradeId": "G07",
+      "subjectId": "SCI"
+    }
+  ],
+  "books": [
+    {
+      "key": "EDU-SCI-G07-P1-ED2026",
+      "gradeSubjectId": "G07-SCI",
+      "titleAr": "العلوم - الصف السابع (الفصل الأول)",
+      "titleEn": "Science - Grade 7 (Part 1)",
+      "part": 1,
+      "edition": "2026"
+    }
+  ],
+  "units": [
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U01",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 1,
+      "nameAr": "تركيب المادة",
+      "startPage": 8,
+      "endPage": 19,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة تركيب المادة لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U02",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 2,
+      "nameAr": "المواد من حولنا",
+      "startPage": 22,
+      "endPage": 36,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة المواد من حولنا لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U03",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 3,
+      "nameAr": "المواد النقية وغير النقية",
+      "startPage": 40,
+      "endPage": 56,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة المواد النقية وغير النقية لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U04",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 4,
+      "nameAr": "خواص الأجسام وقياساتها",
+      "startPage": 59,
+      "endPage": 83,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة خواص الأجسام وقياساتها لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U05",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 5,
+      "nameAr": "الحرارة",
+      "startPage": 87,
+      "endPage": 102,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة الحرارة لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U06",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 6,
+      "nameAr": "تنوع الكائنات الحية",
+      "startPage": 105,
+      "endPage": 123,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة تنوع الكائنات الحية لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U07",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 7,
+      "nameAr": "البيئة والكائنات الحية",
+      "startPage": 120,
+      "endPage": 142,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة البيئة والكائنات الحية لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U08",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 8,
+      "nameAr": "الخلايا والأنسجة",
+      "startPage": 145,
+      "endPage": 155,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة الخلايا والأنسجة لطلاب الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U09",
+      "bookKey": "EDU-SCI-G07-P1-ED2026",
+      "orderIndex": 9,
+      "nameAr": "الحركة والإحساس",
+      "startPage": 158,
+      "endPage": 170,
+      "description": "دراسة تكيفية شاملة لمحتويات وحدة الحركة والإحساس لطلاب الصف السابع الأساسي."
+    }
+  ],
+  "lessons": [
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U01-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U01",
+      "orderIndex": 1,
+      "nameAr": "الجزيء والذرة",
+      "startPage": 8,
+      "endPage": 11
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U01-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U01",
+      "orderIndex": 2,
+      "nameAr": "العناصر",
+      "startPage": 12,
+      "endPage": 19
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U02-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U02",
+      "orderIndex": 1,
+      "nameAr": "الحالة الصلبة",
+      "startPage": 22,
+      "endPage": 24
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U02-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U02",
+      "orderIndex": 2,
+      "nameAr": "الحالة السائلة",
+      "startPage": 25,
+      "endPage": 27
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U02-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U02",
+      "orderIndex": 3,
+      "nameAr": "الحالة الغازية",
+      "startPage": 28,
+      "endPage": 31
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U02-L04",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U02",
+      "orderIndex": 4,
+      "nameAr": "تحولات حالات المادة",
+      "startPage": 32,
+      "endPage": 36
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U03-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U03",
+      "orderIndex": 1,
+      "nameAr": "المادة النقية وغير النقية",
+      "startPage": 40,
+      "endPage": 47
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U03-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U03",
+      "orderIndex": 2,
+      "nameAr": "طرق فصل وتنقية المواد",
+      "startPage": 48,
+      "endPage": 54
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U03-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U03",
+      "orderIndex": 3,
+      "nameAr": "تطبيقات على طرق تنقية مياه الشرب",
+      "startPage": 55,
+      "endPage": 56
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U04-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U04",
+      "orderIndex": 1,
+      "nameAr": "حجوم الأجسام وقياساتها",
+      "startPage": 59,
+      "endPage": 64
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U04-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U04",
+      "orderIndex": 2,
+      "nameAr": "كتلة الأجسام وقياسها",
+      "startPage": 65,
+      "endPage": 68
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U04-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U04",
+      "orderIndex": 3,
+      "nameAr": "الوزن وقياسه",
+      "startPage": 69,
+      "endPage": 72
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U04-L04",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U04",
+      "orderIndex": 4,
+      "nameAr": "الكثافة وقياسها",
+      "startPage": 73,
+      "endPage": 76
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U04-L05",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U04",
+      "orderIndex": 5,
+      "nameAr": "أنواع الحركة",
+      "startPage": 77,
+      "endPage": 83
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U05-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U05",
+      "orderIndex": 1,
+      "nameAr": "الحرارة تنتقل",
+      "startPage": 87,
+      "endPage": 90
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U05-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U05",
+      "orderIndex": 2,
+      "nameAr": "قياس درجة الحرارة وتقدير كميتها",
+      "startPage": 91,
+      "endPage": 95
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U05-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U05",
+      "orderIndex": 3,
+      "nameAr": "الحرارة تؤثر على أطوال وحجوم الأجسام",
+      "startPage": 96,
+      "endPage": 102
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U06-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U06",
+      "orderIndex": 1,
+      "nameAr": "البدائيات",
+      "startPage": 105,
+      "endPage": 107
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U06-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U06",
+      "orderIndex": 2,
+      "nameAr": "الطلائعيات",
+      "startPage": 108,
+      "endPage": 113
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U06-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U06",
+      "orderIndex": 3,
+      "nameAr": "الفطريات",
+      "startPage": 114,
+      "endPage": 117
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U06-L04",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U06",
+      "orderIndex": 4,
+      "nameAr": "النباتات",
+      "startPage": 118,
+      "endPage": 119
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U06-L05",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U06",
+      "orderIndex": 5,
+      "nameAr": "الحيوانات",
+      "startPage": 120,
+      "endPage": 123
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U07-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U07",
+      "orderIndex": 1,
+      "nameAr": "مم يتكون النظام البيئي؟",
+      "startPage": 120,
+      "endPage": 123
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U07-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U07",
+      "orderIndex": 2,
+      "nameAr": "نباتات وحيوانات تكيفت المعيشة الصحراء",
+      "startPage": 124,
+      "endPage": 129
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U07-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U07",
+      "orderIndex": 3,
+      "nameAr": "نباتات وحيوانات تكيفت للمعيشة في الماء",
+      "startPage": 130,
+      "endPage": 134
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U07-L04",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U07",
+      "orderIndex": 4,
+      "nameAr": "نباتات وحيوانات برية متنوعة",
+      "startPage": 135,
+      "endPage": 142
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U08-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U08",
+      "orderIndex": 1,
+      "nameAr": "مكونات جسم الكائن الحي",
+      "startPage": 145,
+      "endPage": 148
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U08-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U08",
+      "orderIndex": 2,
+      "nameAr": "أنسجة الحماية والنقل في جسمك",
+      "startPage": 149,
+      "endPage": 152
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U08-L03",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U08",
+      "orderIndex": 3,
+      "nameAr": "أنسجة الحركة والاتصال",
+      "startPage": 153,
+      "endPage": 155
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U09-L01",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U09",
+      "orderIndex": 1,
+      "nameAr": "الدعامة والحركة",
+      "startPage": 158,
+      "endPage": 163
+    },
+    {
+      "key": "EDU-SCI-G07-P1-ED2026-U09-L02",
+      "unitKey": "EDU-SCI-G07-P1-ED2026-U09",
+      "orderIndex": 2,
+      "nameAr": "الإحساس بما حولنا",
+      "startPage": 164,
+      "endPage": 170
+    }
+  ],
+  "concepts": [
+    {
+      "key": "SCI-G07-C-MATTER",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L01",
+      "orderIndex": 1,
+      "nameAr": "المادة",
+      "description": "كل ما يشغل حيزاً من الفراغ وله كتلة، ويمكن إدراكه بحاسة أو أكثر.",
+      "difficultyHint": 0.2
+    },
+    {
+      "key": "SCI-G07-C-MOLECULE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L01",
+      "orderIndex": 2,
+      "nameAr": "الجزيء",
+      "description": "أصغر جزء من المادة يمكن أن يوجد منفرداً ويحتفظ بخواص المادة الأصلية.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-ATOM",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L01",
+      "orderIndex": 3,
+      "nameAr": "الذرة",
+      "description": "أصغر جزء من العنصر غير قابل للانقسام (أثناء التفاعلات الكيميائية الاعتيادية)، ويمكن أن يشترك في التفاعلات الكيميائية.",
+      "difficultyHint": 0.6
+    },
+    {
+      "key": "SCI-G07-C-ELECTROLYSIS-OF-WATER",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L01",
+      "orderIndex": 4,
+      "nameAr": "التحليل الكهربائي للماء",
+      "description": "عملية كيميائية يتم فيها تفكيك جزيء الماء بالتيار الكهربائي لغازي الهيدروجين والأكسجين.",
+      "difficultyHint": 0.65
+    },
+    {
+      "key": "SCI-G07-C-ELEMENT",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L02",
+      "orderIndex": 1,
+      "nameAr": "العنصر",
+      "description": "أبسط مادة نقية لا يمكن تحليلها إلى مواد أبسط منها بالطرق الكيميائية والفيزيائية العادية.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-METALS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L02",
+      "orderIndex": 2,
+      "nameAr": "الفلزات",
+      "description": "عناصر صلبة (عدا الزئبق السائل)، لها بريق ولمعان، قابلة للطرق والسحب، وموصلة جيدة للحرارة والكهرباء.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "SCI-G07-C-NON-METALS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L02",
+      "orderIndex": 3,
+      "nameAr": "اللافلزات",
+      "description": "عناصر توجد في حالات صلبة أو سائلة أو غازية، ليس لها بريق، هشة عند الطرق، ورديئة التوصيل للحرارة والكهرباء.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-CHEMICAL-SYMBOLS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L02",
+      "orderIndex": 4,
+      "nameAr": "الرموز الكيميائية",
+      "description": "اختصار كتابي دولي متفق عليه لتمثيل ذرة واحدة من العنصر باستخدام الحروف اللاتينية أو الإنجليزية.",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-VALENCY",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U01-L02",
+      "orderIndex": 5,
+      "nameAr": "التكافؤ الكيميائي",
+      "description": "عدد ذرات الهيدروجين التي تتحد مع أو تحل محلها ذرة واحدة من العنصر لتشكيل روابط كيميائية.",
+      "difficultyHint": 0.75
+    },
+    {
+      "key": "SCI-G07-C-SOLID-STATE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L01",
+      "orderIndex": 1,
+      "nameAr": "الحالة الصلبة للمادة",
+      "description": "حالة فيزيائية تتميز بوجود شكل وحجم ثابتين للمادة نتيجة قوة تماسك جزيئاتها العالية وتقاربها.",
+      "difficultyHint": 0.25
+    },
+    {
+      "key": "SCI-G07-C-CRYSTALLINE-SOLIDS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L01",
+      "orderIndex": 2,
+      "nameAr": "المواد الصلبة البلورية",
+      "description": "مواد تتناسق جزيئاتها لتشكل بناءً هندسياً منتظماً له أسطح محددة وزوايا متساوية مثل الياقوت وملح الطعام.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-AMORPHOUS-SOLIDS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L01",
+      "orderIndex": 3,
+      "nameAr": "المواد الصلبة غير البلورية",
+      "description": "مواد جزيئاتها غير متناسقة وغير مرتبة، وبالتالي فإن أشكالها الخارجية غير منتظمة هندسياً مثل الفحم والزجاج.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-LIQUID-STATE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L02",
+      "orderIndex": 1,
+      "nameAr": "الحالة السائلة للمادة",
+      "description": "حالة فيزيائية للمادة تتميز بحجم ثابت ولكن ليس لها شكل ثابت بل تأخذ شكل الإناء الذي يحتويها.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "SCI-G07-C-FLUIDITY-FLOWING",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L02",
+      "orderIndex": 2,
+      "nameAr": "الانسياب",
+      "description": "خاصية فيزيائية مميزة للسوائل تعني جريانها وتدفقها التلقائي من الأماكن المرتفعة إلى الأماكن المنخفضة.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "SCI-G07-C-INTERMOLECULAR-INTERPENETRATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L02",
+      "orderIndex": 3,
+      "nameAr": "تداخل الجزيئات في السوائل",
+      "description": "ظاهرة تؤدي إلى نقصان حجم مخلوط من سائلين مختلفين مقارنة بمجموع حجميهما الحسابي قبل الخلط نتيجة تداخل الجزيئات.",
+      "difficultyHint": 0.6
+    },
+    {
+      "key": "SCI-G07-C-GASEOUS-STATE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L03",
+      "orderIndex": 1,
+      "nameAr": "الحالة الغازية للمادة",
+      "description": "حالة فيزيائية للمادة تتميز بعدم ثبات الشكل والحجم، وتتحرك جزيئاتها بسرعة وعشوائية وتباعد كبير.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "SCI-G07-C-GAS-PRESSURE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L03",
+      "orderIndex": 2,
+      "nameAr": "الضغط الحجمي للغاز",
+      "description": "الضغط الناتج عن تصادم جزيئات الغاز السريعة بجدران الإناء، والذي يزداد بتقلص الحجم وانخفاضه.",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-EVAPORATION-AND-BOILING",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L04",
+      "orderIndex": 1,
+      "nameAr": "التبخر والغليان",
+      "description": "تحول المادة من الحالة السائلة إلى الغازية باكتساب الحرارة، والتحول الكامل يحدث عند نقطة الغليان الثابتة.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-CONDENSATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L04",
+      "orderIndex": 2,
+      "nameAr": "التكثيف",
+      "description": "تحول المادة من الحالة الغازية إلى السائلة بفقدان الحرارة (التبريد) عند نقطة التكثف.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-FREEZING",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L04",
+      "orderIndex": 3,
+      "nameAr": "التجمد",
+      "description": "تحول المادة من الحالة السائلة إلى الحالة الصلبة بالتبريد وفقدان الحرارة عند درجة التجمد الثابتة.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-MELTING",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U02-L04",
+      "orderIndex": 4,
+      "nameAr": "الانصهار",
+      "description": "تحول المادة من الحالة الصلبة إلى السائلة بالتسخين واكتساب الطاقة عند درجة الانصهار.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-CHEMICAL-COMPOUND",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L01",
+      "orderIndex": 1,
+      "nameAr": "المركب الكيميائي",
+      "description": "مادة ناتجة من اتحاد عنصرين أو أكثر بنسبة وزنية ثابتة بتغير كيميائي، وتختلف خواصها الكلية عن خواص العناصر المكونة لها.",
+      "difficultyHint": 0.65
+    },
+    {
+      "key": "SCI-G07-C-MIXTURE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L01",
+      "orderIndex": 2,
+      "nameAr": "المخلوط",
+      "description": "مادة ناتجة من اختلاط عدة مواد مع بعضها بأي نسبة كانت دون حدوث تفاعل كيميائي، وتحتفظ كل مادة بخواصها الأصلية.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-PURE-AND-IMPURE-SUBSTANCE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L01",
+      "orderIndex": 3,
+      "nameAr": "المادة النقية والمادة غير النقية",
+      "description": "المادة النقية تتكون بالكامل من نفس النوع من الجزيئات أو الذرات، بينما غير النقية تحتوي على شوائب وتداخل لمواد كيميائية أخرى.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-FILTRATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L02",
+      "orderIndex": 1,
+      "nameAr": "الترشيح",
+      "description": "طريقة لفصل المواد الصلبة غير الذائبة العالقة بالسائل باستخدام وسط مسامي (ورق ترشيح أو قطن).",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-DISTILLATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L02",
+      "orderIndex": 2,
+      "nameAr": "التقطير",
+      "description": "عملية فصل فيزيائية متكاملة تعتمد على تبخير السائل وتكثيف البخار الناتج للحصول على مادة سائلة نقية خالية من الأملاح.",
+      "difficultyHint": 0.6
+    },
+    {
+      "key": "SCI-G07-C-CRYSTALLIZATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L02",
+      "orderIndex": 3,
+      "nameAr": "التبلور",
+      "description": "فصل مادة صلبة ذائبة بكمية كبيرة في محلول مشبع على هيئة بلورات هندسية نقية بفعل التبريد التدريجي أو التبخير البطيء.",
+      "difficultyHint": 0.65
+    },
+    {
+      "key": "SCI-G07-C-MUNICIPAL-WATER-PURIFICATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U03-L03",
+      "orderIndex": 1,
+      "nameAr": "تصفية مياه المدن الكبرى",
+      "description": "المراحل الهندسية المتبعة في محطات المياه لتنقية المياه وجعلها صالحة للشرب وتشمل الغربلة، التعقيم بالكلور، التلبد، الترويق، والترشيح الرملي.",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-VOLUME",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L01",
+      "orderIndex": 1,
+      "nameAr": "الحجم الفيزيائي",
+      "description": "مقدار الحيز من الفراغ الذي يشغله الجسم المادي، ويقاس بالنظام الدولي بالمتر المكعب (م³).",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "SCI-G07-C-IRREGULAR-OBJECT-VOLUME",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L01",
+      "orderIndex": 2,
+      "nameAr": "حساب حجم جسم غير منتظم",
+      "description": "طريقة عملية لقياس حجم جسم معوج هندسياً باستخدام مخبار مدرج به سائل لا يذوب فيه الجسم (طريقة الإزاحة).",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-MASS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L02",
+      "orderIndex": 1,
+      "nameAr": "الكتلة",
+      "description": "مقدار ما يحويه الجسم المادي من جزيئات ومادة، وهي قيمة ثابتة ومستقلة لا تتأثر بتغير المكان في الكون.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "SCI-G07-C-WEIGHT",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L03",
+      "orderIndex": 1,
+      "nameAr": "الوزن",
+      "description": "مقدار قوة الجاذبية الكونية التي تجذب الجسم باتجاه مركز الأرض أو الكوكب، ويقاس بالنيوتن باستخدام الميزان الزنبركي.",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-DENSITY",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L04",
+      "orderIndex": 1,
+      "nameAr": "الكثافة",
+      "description": "كتلة وحدة الحجوم من المادة، وتساوي برمجياً الكتلة مقسومة على الحجم (جم/سم³).",
+      "difficultyHint": 0.6
+    },
+    {
+      "key": "SCI-G07-C-MOTION-AND-SPEED",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L05",
+      "orderIndex": 1,
+      "nameAr": "الحركة والسرعة",
+      "description": "تغير موضعي مستمر للجسم بمرور الزمن في مسافة معينة، والسرعة هي معدل تغير المسافة بالنسبة للزمن (السرعة = المسافة / الزمن).",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-TYPES-OF-MOTION-PATHS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U04-L05",
+      "orderIndex": 2,
+      "nameAr": "أنواع المسارات الحركية",
+      "description": "تصنيفات الحركة حسب المسار الفراغي وتتضمن: حركة مستقيمة، دائرية، اهتزازية (البندول)، وبيضاوية (الأرض حول الشمس).",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-THERMAL-CONDUCTION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L01",
+      "orderIndex": 1,
+      "nameAr": "التوصيل الحراري",
+      "description": "طريقة انتقال الحرارة في الأجسام الصلبة (المعادن خاصة) عبر اهتزاز الجزيئات دون انتقالها الفعلي من مكانها.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-THERMAL-CONVECTION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L01",
+      "orderIndex": 2,
+      "nameAr": "الحمل الحراري",
+      "description": "انتقال الحرارة في السوائل والغازات عبر صعود جزيئات المادة الساخنة (الأقل كثافة) لأعلى، وهبوط الجزيئات الباردة لأسفل.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-THERMAL-RADIATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L01",
+      "orderIndex": 3,
+      "nameAr": "الإشعاع الحراري",
+      "description": "انتقال الطاقة الحرارية في الفراغ أو الأوساط الشفافة على هيئة أشعة حرارية كهرومغناطيسية دون الحاجة لوسط مادي ناقل.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-MAXIMUM-AND-MINIMUM-THERMOMETERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L02",
+      "orderIndex": 1,
+      "nameAr": "ترمومترات الحرارة الجوية",
+      "description": "أجهزة لقياس الحرارة الجوية؛ ترمومتر النهاية العظمى (بالزئبق) لقياس أعلى درجة، والنهاية الصغرى (بالكحول) لقياس أدنى درجة.",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-FACTORS-OF-HEAT-QUANTITY",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L02",
+      "orderIndex": 2,
+      "nameAr": "العوامل المؤثرة في كمية الحرارة",
+      "description": "المتغيرات المحددة لكمية الحرارة التي يكتسبها أو يفقدها الجسم وهي: كتلة الجسم، مقدار التغير في درجة الحرارة، ونوع المادة.",
+      "difficultyHint": 0.6
+    },
+    {
+      "key": "SCI-G07-C-THERMAL-EXPANSION-AND-CONTRACTION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L03",
+      "orderIndex": 1,
+      "nameAr": "التمدد والانكماش الحراري",
+      "description": "تغير أبعاد المادة المادية بالزيادة بالتسخين (تمدد) أو بالنقصان بالتبريد (انكماش)، والغازات أكثرها تمدداً.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-ANOMALOUS-EXPANSION-OF-WATER",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U05-L03",
+      "orderIndex": 2,
+      "nameAr": "شذوذ الماء",
+      "description": "سلوك شاذ وخاص بالماء في المدى بين (0 و4 درجات مئوية)، حيث يتمدد بالتبريد وتقل كثافته، وينكمش بالتسخين وتزداد كثافته.",
+      "difficultyHint": 0.7
+    },
+    {
+      "key": "SCI-G07-C-KINGDOM-MONERA---BACTERIA",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U06-L01",
+      "orderIndex": 1,
+      "nameAr": "مملكة البدائيات والبكتيريا",
+      "description": "كائنات مجهرية دقيقة وحيدة الخلية، تمتاز بنواة بدائية بسيطة وغير محاطة بغلاف نووي.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-KINGDOM-PROTISTA---PROTOZOA-AND-ALGAE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U06-L02",
+      "orderIndex": 1,
+      "nameAr": "الطلائعيات الأولية والطلائعيات الطحلبية",
+      "description": "كائنات حية نواتها واضحة ومحاطة بغلاف نووي، تنقسم لطلائعيات أولية تتغذى تغذية حيوانية جاهزة (كاليوجلينا)، وطلائعيات طحلبية تصنع غذاءها (كالسبيروجيرا).",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-KINGDOM-FUNGI",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U06-L03",
+      "orderIndex": 1,
+      "nameAr": "مملكة الفطريات",
+      "description": "كائنات غير ذاتية التغذية خالية من الكلوروفيل، منها وحيد الخلية (كالخميرة) ومنها عديد الخلايا (كعفن الخبز وعش الغراب).",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-PLANT-KINGDOM-CLASSIFICATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U06-L04",
+      "orderIndex": 1,
+      "nameAr": "تصنيف المملكة النباتية",
+      "description": "تصنيف النباتات كائنات ذاتية التغذية تحتوي على الكلوروفيل، وتنقسم لنباتات بذرية (مغطاة البذور كالذرة والفول، وعاريات البذور كالصنوبر) ونباتات لازهرية كالحزازيات والسراخس.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-VERTEBRATES-AND-INVERTEBRATES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U06-L05",
+      "orderIndex": 1,
+      "nameAr": "الفقاريات واللافقاريات",
+      "description": "تقسيم المملكة الحيوانية؛ اللافقاريات ليس لها عمود فقري وتشكل 95% من الأنواع (كالحشرات)، والفقاريات تمتاز بعمود فقري (كالأسماك، الزواحف، الطيور، والثدييات).",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "SCI-G07-C-ECOSYSTEM-AND-BALANCE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U07-L01",
+      "orderIndex": 1,
+      "nameAr": "البيئة والنظام البيئي المتزن",
+      "description": "البيئة هي موطن الكائن وتلبي احتياجاته، والنظام البيئي وحدة طبيعية تشمل مكونات حية (منتجة، مستهلكة، ومحللة) ومكونات غير حية تتفاعل متزنة في مسار دائري.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "SCI-G07-C-DESERT-ADAPTATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U07-L02",
+      "orderIndex": 1,
+      "nameAr": "التكيف لبيئة الصحراء الجافة",
+      "description": "التكيفات الجسدية والسلوكية للكائنات لمواجهة الحرارة الشديدة ونقص المياه مثل تحور أوراق التين الشوكي لأشواك وجذور نبات السنط الطويلة.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-AQUATIC-ADAPTATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U07-L03",
+      "orderIndex": 1,
+      "nameAr": "التكيف للبيئة المائية",
+      "description": "الصفات التشريحية المسهلة للعيش بالماء كجسم السمكة الانسيابي والزعانف والخياشيم والمثانة الهوائية، ولين أوراق وسيقان النباتات المائية.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-BIODIVERSITY-AND-ECOLOGICAL-BALANCE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U07-L04",
+      "orderIndex": 1,
+      "nameAr": "التنوع الحيوي والتوازن البيئي",
+      "description": "مجموع أعداد وأنواع الكائنات الحية التي تعيش في بيئة معينة والتفاعل المتزن للأخذ والعطاء بينها لحماية البيئة من التصحر والانقراض.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "SCI-G07-C-PLANT-AND-ANIMAL-CELLS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U08-L01",
+      "orderIndex": 1,
+      "nameAr": "الخلية النباتية والخلية الحيوانية",
+      "description": "وحدة البناء والوظيفة في الكائن الحي؛ وتنفرد النباتية بجدار خلوي صلب وبلاستيدات خضراء وفجوة عصارية مركزية كبيرة ونواة جانبية.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-EPITHELIAL-AND-CONNECTIVE-TISSUES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U08-L02",
+      "orderIndex": 1,
+      "nameAr": "الأنسجة الطلائية والضامة",
+      "description": "مجموعة خلايا متشابهة؛ الأنسجة الطلائية تبطن الأعضاء وتمتص الغذاء وتحمي الجسم كبشرة الجلد. والأنسجة الضامة تدعم الأعضاء كالعظام والغضاريف والدم السائل.",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-MUSCLE-AND-NERVOUS-TISSUES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U08-L03",
+      "orderIndex": 1,
+      "nameAr": "الأنسجة العضلية والأنسجة العصبية",
+      "description": "النسيج العضلي يمكننا من الحركة وينقسم لهيكلي إرادي وأملس وقلبي لاإراديين. والنسيج العصبي (الخلية العصبية) ينظم وينسق إشارات الجسم والدماغ.",
+      "difficultyHint": 0.6
+    },
+    {
+      "key": "SCI-G07-C-SKELETAL-SYSTEM-JOINTS-AND-TENDONS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U09-L01",
+      "orderIndex": 1,
+      "nameAr": "الجهاز الهيكلي والمفاصل والأوتار",
+      "description": "الهيكل العظمي الذي يحمي الأعضاء الداخلية (كالجمجمة والقفص الصدري) ويرتبط بمفاصل ليفية، غضروفية، أو زيتية، بينما تربط الأوتار العضلات بالعظام.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "SCI-G07-C-SENSE-ORGANS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U09-L02",
+      "orderIndex": 1,
+      "nameAr": "أعضاء الحس الخمسة والتكامل الحسي",
+      "description": "الأعضاء المسؤولة عن استقبال المؤثرات وتتضمن: العين (الإبصار)، الأذن (السمع بقناة إستاكيوس لمعادلة الضغط)، الأنف (الشم)، اللسان (التذوق عبر الحلمات)، والجلد (مستقبلات اللمس والضغط والألم).",
+      "difficultyHint": 0.55
+    },
+    {
+      "key": "SCI-G07-C-REFLEX-ACTION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-SCI-G07-P1-ED2026-U09-L02",
+      "orderIndex": 2,
+      "nameAr": "رد الفعل المنعكس",
+      "description": "استجابة سريعة ولاإرادية ومباشرة من الحبل الشوكي لحماية الجسم والابتعاد عن مواطن الخطر المفاجئ.",
+      "difficultyHint": 0.6
+    }
+  ],
+  "conceptPrerequisites": [
+    {
+      "conceptKey": "SCI-G07-C-MOLECULE",
+      "prerequisiteKey": "SCI-G07-C-MATTER",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-ATOM",
+      "prerequisiteKey": "SCI-G07-C-MOLECULE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-ELECTROLYSIS-OF-WATER",
+      "prerequisiteKey": "SCI-G07-C-ATOM",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-METALS",
+      "prerequisiteKey": "SCI-G07-C-ELEMENT",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-NON-METALS",
+      "prerequisiteKey": "SCI-G07-C-METALS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-CHEMICAL-SYMBOLS",
+      "prerequisiteKey": "SCI-G07-C-NON-METALS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-VALENCY",
+      "prerequisiteKey": "SCI-G07-C-CHEMICAL-SYMBOLS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-CRYSTALLINE-SOLIDS",
+      "prerequisiteKey": "SCI-G07-C-SOLID-STATE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-AMORPHOUS-SOLIDS",
+      "prerequisiteKey": "SCI-G07-C-CRYSTALLINE-SOLIDS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-FLUIDITY-FLOWING",
+      "prerequisiteKey": "SCI-G07-C-LIQUID-STATE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-INTERMOLECULAR-INTERPENETRATION",
+      "prerequisiteKey": "SCI-G07-C-FLUIDITY-FLOWING",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-GAS-PRESSURE",
+      "prerequisiteKey": "SCI-G07-C-GASEOUS-STATE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-CONDENSATION",
+      "prerequisiteKey": "SCI-G07-C-EVAPORATION-AND-BOILING",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-FREEZING",
+      "prerequisiteKey": "SCI-G07-C-CONDENSATION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-MELTING",
+      "prerequisiteKey": "SCI-G07-C-FREEZING",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-MIXTURE",
+      "prerequisiteKey": "SCI-G07-C-CHEMICAL-COMPOUND",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-PURE-AND-IMPURE-SUBSTANCE",
+      "prerequisiteKey": "SCI-G07-C-MIXTURE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-DISTILLATION",
+      "prerequisiteKey": "SCI-G07-C-FILTRATION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-CRYSTALLIZATION",
+      "prerequisiteKey": "SCI-G07-C-DISTILLATION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-IRREGULAR-OBJECT-VOLUME",
+      "prerequisiteKey": "SCI-G07-C-VOLUME",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-TYPES-OF-MOTION-PATHS",
+      "prerequisiteKey": "SCI-G07-C-MOTION-AND-SPEED",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-THERMAL-CONVECTION",
+      "prerequisiteKey": "SCI-G07-C-THERMAL-CONDUCTION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-THERMAL-RADIATION",
+      "prerequisiteKey": "SCI-G07-C-THERMAL-CONVECTION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-FACTORS-OF-HEAT-QUANTITY",
+      "prerequisiteKey": "SCI-G07-C-MAXIMUM-AND-MINIMUM-THERMOMETERS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-ANOMALOUS-EXPANSION-OF-WATER",
+      "prerequisiteKey": "SCI-G07-C-THERMAL-EXPANSION-AND-CONTRACTION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-REFLEX-ACTION",
+      "prerequisiteKey": "SCI-G07-C-SENSE-ORGANS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "SCI-G07-C-ELEMENT",
+      "prerequisiteKey": "SCI-G07-C-MATTER",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-LIQUID-STATE",
+      "prerequisiteKey": "SCI-G07-C-SOLID-STATE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-GASEOUS-STATE",
+      "prerequisiteKey": "SCI-G07-C-LIQUID-STATE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-EVAPORATION-AND-BOILING",
+      "prerequisiteKey": "SCI-G07-C-GASEOUS-STATE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-FILTRATION",
+      "prerequisiteKey": "SCI-G07-C-CHEMICAL-COMPOUND",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-MUNICIPAL-WATER-PURIFICATION",
+      "prerequisiteKey": "SCI-G07-C-FILTRATION",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-MASS",
+      "prerequisiteKey": "SCI-G07-C-VOLUME",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-WEIGHT",
+      "prerequisiteKey": "SCI-G07-C-MASS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-DENSITY",
+      "prerequisiteKey": "SCI-G07-C-WEIGHT",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-MOTION-AND-SPEED",
+      "prerequisiteKey": "SCI-G07-C-DENSITY",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-MAXIMUM-AND-MINIMUM-THERMOMETERS",
+      "prerequisiteKey": "SCI-G07-C-THERMAL-CONDUCTION",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-THERMAL-EXPANSION-AND-CONTRACTION",
+      "prerequisiteKey": "SCI-G07-C-MAXIMUM-AND-MINIMUM-THERMOMETERS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-KINGDOM-PROTISTA---PROTOZOA-AND-ALGAE",
+      "prerequisiteKey": "SCI-G07-C-KINGDOM-MONERA---BACTERIA",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-KINGDOM-FUNGI",
+      "prerequisiteKey": "SCI-G07-C-KINGDOM-PROTISTA---PROTOZOA-AND-ALGAE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-PLANT-KINGDOM-CLASSIFICATION",
+      "prerequisiteKey": "SCI-G07-C-KINGDOM-FUNGI",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-VERTEBRATES-AND-INVERTEBRATES",
+      "prerequisiteKey": "SCI-G07-C-PLANT-KINGDOM-CLASSIFICATION",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-DESERT-ADAPTATION",
+      "prerequisiteKey": "SCI-G07-C-ECOSYSTEM-AND-BALANCE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-AQUATIC-ADAPTATION",
+      "prerequisiteKey": "SCI-G07-C-DESERT-ADAPTATION",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-BIODIVERSITY-AND-ECOLOGICAL-BALANCE",
+      "prerequisiteKey": "SCI-G07-C-AQUATIC-ADAPTATION",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-EPITHELIAL-AND-CONNECTIVE-TISSUES",
+      "prerequisiteKey": "SCI-G07-C-PLANT-AND-ANIMAL-CELLS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-MUSCLE-AND-NERVOUS-TISSUES",
+      "prerequisiteKey": "SCI-G07-C-EPITHELIAL-AND-CONNECTIVE-TISSUES",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-SENSE-ORGANS",
+      "prerequisiteKey": "SCI-G07-C-SKELETAL-SYSTEM-JOINTS-AND-TENDONS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-SOLID-STATE",
+      "prerequisiteKey": "SCI-G07-C-MATTER",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-CHEMICAL-COMPOUND",
+      "prerequisiteKey": "SCI-G07-C-SOLID-STATE",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-VOLUME",
+      "prerequisiteKey": "SCI-G07-C-CHEMICAL-COMPOUND",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-THERMAL-CONDUCTION",
+      "prerequisiteKey": "SCI-G07-C-VOLUME",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-KINGDOM-MONERA---BACTERIA",
+      "prerequisiteKey": "SCI-G07-C-THERMAL-CONDUCTION",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-ECOSYSTEM-AND-BALANCE",
+      "prerequisiteKey": "SCI-G07-C-KINGDOM-MONERA---BACTERIA",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-PLANT-AND-ANIMAL-CELLS",
+      "prerequisiteKey": "SCI-G07-C-ECOSYSTEM-AND-BALANCE",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "SCI-G07-C-SKELETAL-SYSTEM-JOINTS-AND-TENDONS",
+      "prerequisiteKey": "SCI-G07-C-PLANT-AND-ANIMAL-CELLS",
+      "strength": 0.5,
+      "requiredMastery": 0.75
+    }
+  ]
+}
