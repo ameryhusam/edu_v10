@@ -216,7 +216,7 @@ This is the invariant the workspace/import implementation must preserve.
 
 ## 11. Page classification manifest
 
-When automatic rules are insufficient, a lesson may contain page_classification.json at the lesson root. A unit-level classification manifest may provide defaults; lesson values override them.
+When automatic rules are insufficient, a lesson may contain `page_classification.json` at the lesson root. Branch/domain classification is owned by the lesson, while page-level `branch` remains per-page routing/classification metadata. There is no Unit-owned branch value; Unit remains structural.
 
 Example:
 
