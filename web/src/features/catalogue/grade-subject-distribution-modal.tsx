@@ -126,7 +126,7 @@ export function GradeSubjectDistributionModal({
               loading={save.isPending}
               onClick={() => save.mutate()}
             >
-              {t('matrix.saveDistribution')}
+              {t('catalogue.distribution')}
             </Button>
           </div>
         </div>
