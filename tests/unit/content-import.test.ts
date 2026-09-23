@@ -178,6 +178,65 @@ function pkg(over: Partial<ContentPackage> = {}): ContentPackage {
   } as ContentPackage;
 }
 
+describe('ready-made textbook index JSON', () => {
+  it('imports unit -> lesson structure directly without the Python engine or question data', async () => {
+    const authoring = new SpyAuthoring();
+    authoring.textbookPresent = false;
+    const itemBank = new SpyItemBank();
+    const service = new ContentImportService(authoring as any, itemBank as any);
+
+    const result = await service.importPackage(
+      CTX,
+      {
+        meta: {
+          profile: 'edu7.textbook-index',
+          profileVersion: '1.0',
+          scope: 'FULL',
+          exportedAt: '2026-09-23T00:00:00.000Z',
+        },
+        textbook: {
+          key: TB,
+          subjectKey: 'MATH',
+          gradeKey: 'G07',
+          part: 'PART_1',
+          title: 'Mathematics',
+          edition: '2026',
+        },
+        units: [
+          {
+            slug: 'ALGEBRA',
+            name: 'الجبر',
+            orderIndex: 1,
+            startPage: 9,
+            endPage: 32,
+            lessons: [
+              {
+                slug: 'INTRO',
+                name: 'مقدمة',
+                orderIndex: 1,
+                startPage: 10,
+                endPage: 14,
+              },
+            ],
+          },
+        ],
+      },
+      { dryRun: false, mode: 'APPEND_DEDUP' },
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.applied).toBe(true);
+    expect(result.value.problems).toHaveLength(0);
+    expect(authoring.calls.map((c) => c.method)).toEqual([
+      'createTextbook',
+      'createUnit',
+      'createLesson',
+    ]);
+    expect(itemBank.calls).toHaveLength(0);
+  });
+});
+
 const setup = () => {
   const authoring = new SpyAuthoring();
   const itemBank = new SpyItemBank();
