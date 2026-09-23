@@ -1,18 +1,12 @@
-/**
- * The content browser — one curriculum, one outline, two audiences.
- *
- * The administrator triages the catalogue with it (content setup), the author
- * prepares a book with it, and the teacher prepares class material with it.
- * Complete LMS-grade CRUD support for units, lessons, concepts, and resources,
- * with package import, export, search filtering, and state controls.
- */
-
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { BookOpen, Download, FileUp, FolderTree, Plus, Search, Sparkles } from 'lucide-react';
+import { PageHeader } from '../../design-system/patterns/page-header';
 import { Button } from '../../design-system/ui/button';
-import { Card, CardContent } from '../../design-system/ui/card';
 import { Input } from '../../design-system/ui/input';
+import { Badge } from '../../design-system/ui/badge';
+import { LoadingState, ErrorState, EmptyState } from '../../design-system/patterns/data-states';
 import { QuestionLinkModal } from '../../education/authoring/question-link-modal';
 import { ConceptDetailDrawer } from './concept-detail-drawer';
 import { ContentNodeCreateModal, type ContentNodeCreateTarget } from './content-node-create-modal';
@@ -20,354 +14,62 @@ import { ContentNodeEditModal, type ContentNodeEditTarget } from './content-node
 import { ContentImportModal } from './content-import-modal';
 import { TextbookResourcesModal } from './textbook-resources-modal';
 import { UnitOutlineSection } from './unit-outline-section';
+import { LessonMaterialsDrawer } from './lesson-materials-drawer';
 import { PublicationBadge } from './publication-badge';
-import { EmptyState, ErrorState, LoadingState } from '../../design-system/patterns/data-states';
-import { PageHeader } from '../../design-system/patterns/page-header';
-import { textbookLabelParts, textbookSubtitleParts } from '../../design-system/patterns/textbook-label';
+import { ContentMetric, ReadinessPanel } from './content-readiness-panel';
 import { textbookAdministrationApi, type TextbookSummary } from './content.api';
 import { queryKeys } from '../../shared/api/query-keys';
 import { useI18n } from '../../shared/i18n/i18n';
 import type { MessageKey } from '../../shared/i18n/messages';
-import { ContentMetric, ReadinessPanel } from './content-readiness-panel';
-import { LessonMaterialsDrawer } from './lesson-materials-drawer';
 import { exportCurriculumPackage } from './curriculum-export';
 
-export function ContentOutlineBrowser({
-  titleKey,
-  subtitleKey,
-}: {
-  readonly titleKey: MessageKey;
-  readonly subtitleKey: MessageKey;
-}): ReactNode {
+export function ContentOutlineBrowser({ titleKey, subtitleKey }: { readonly titleKey: MessageKey; readonly subtitleKey: MessageKey }): ReactNode {
   const { t } = useI18n();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const selectedTextbookParam = searchParams.get('textbook') ?? '';
-  const [textbookKey, setTextbookKey] = useState(selectedTextbookParam);
-  const [openLesson, setOpenLesson] = useState<string | null>(null);
-  const [linkLesson, setLinkLesson] = useState<string | null>(null);
-  const [createTarget, setCreateTarget] = useState<ContentNodeCreateTarget | null>(null);
-  const [editTarget, setEditTarget] = useState<ContentNodeEditTarget | null>(null);
-  const [conceptKey, setConceptKey] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
+  const [bookKey, setBookKey] = useState(params.get('textbook') ?? '');
+  const [search, setSearch] = useState('');
+  const [create, setCreate] = useState<ContentNodeCreateTarget | null>(null);
+  const [edit, setEdit] = useState<ContentNodeEditTarget | null>(null);
+  const [lesson, setLesson] = useState<string | null>(null);
+  const [concept, setConcept] = useState<string | null>(null);
+  const [link, setLink] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const qc = useQueryClient();
 
-  const queryClient = useQueryClient();
+  const books = useQuery({ queryKey: queryKeys.textbookAdministration.textbooks({}), queryFn: () => textbookAdministrationApi.textbooks({}) });
+  const outline = useQuery({ queryKey: queryKeys.content.outline(bookKey), queryFn: () => textbookAdministrationApi.outline(bookKey), enabled: Boolean(bookKey) });
+  const readiness = useQuery({ queryKey: queryKeys.content.readiness(bookKey), queryFn: () => textbookAdministrationApi.readiness(bookKey), enabled: Boolean(bookKey) });
+  const reorder = useMutation({ mutationFn: (x: {kind:'unit'|'lesson'|'concept'; parentKey:string; orderedKeys:readonly string[]}) => textbookAdministrationApi.reorder(x), onSuccess: () => qc.invalidateQueries({queryKey: queryKeys.content.outline(bookKey)}) });
 
-  const reorder = useMutation({
-    mutationFn: (input: { kind: 'unit' | 'lesson' | 'concept'; parentKey: string; orderedKeys: readonly string[] }) =>
-      textbookAdministrationApi.reorder(input),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.content.outline(textbookKey) });
-    },
-  });
+  useEffect(() => { const next = params.get('textbook') ?? ''; setBookKey(next); setSearch(''); }, [params]);
+  const selected = (books.data?.rows ?? []).find((b: TextbookSummary) => b.key === bookKey);
+  const units = useMemo(() => [...(outline.data ?? [])].sort((a,b) => a.orderIndex-b.orderIndex).map(u => ({...u, lessons:[...u.lessons].sort((a,b)=>a.orderIndex-b.orderIndex)})), [outline.data]);
+  const filtered = useMemo(() => { const q=search.trim().toLowerCase(); if(!q)return units; return units.map(u => { const um=u.name.toLowerCase().includes(q); const lessons=u.lessons.filter(l=>l.name.toLowerCase().includes(q)||(l.concepts??[]).some(c=>c.name.toLowerCase().includes(q))); return um?u:lessons.length?{...u,lessons}:null; }).filter((u):u is (typeof units)[number] => Boolean(u)); }, [units,search]);
+  const stats = useMemo(() => { const lessons=units.flatMap(u=>u.lessons); return {units:units.length,lessons:lessons.length,concepts:lessons.reduce((n,l)=>n+l.conceptCount,0),materials:lessons.reduce((n,l)=>n+l.resourceCount,0)}; }, [units]);
 
-  const textbooks = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({}),
-    queryFn: () => textbookAdministrationApi.textbooks({}),
-  });
+  if (books.isPending) return <LoadingState />;
+  if (books.isError) return <ErrorState error={books.error} onRetry={() => books.refetch()} />;
 
-  const outline = useQuery({
-    queryKey: queryKeys.content.outline(textbookKey),
-    queryFn: () => textbookAdministrationApi.outline(textbookKey),
-    enabled: textbookKey !== '',
-  });
-
-  const readiness = useQuery({
-    queryKey: queryKeys.content.readiness(textbookKey),
-    queryFn: () => textbookAdministrationApi.readiness(textbookKey),
-    enabled: textbookKey !== '',
-  });
-
-  useEffect(() => {
-    setTextbookKey(selectedTextbookParam);
-    setOpenLesson(null);
-    setLinkLesson(null);
-    setCreateTarget(null);
-    setSearchQuery('');
-  }, [selectedTextbookParam]);
-
-  const units = useMemo(
-    () =>
-      [...(outline.data ?? [])]
-        .sort((a, b) => a.orderIndex - b.orderIndex)
-        .map((unit) => ({
-          ...unit,
-          lessons: [...unit.lessons].sort((a, b) => a.orderIndex - b.orderIndex),
-        })),
-    [outline.data],
-  );
-
-  const filteredUnits = useMemo(() => {
-    if (!searchQuery.trim()) return units;
-    const query = searchQuery.trim().toLowerCase();
-    return units
-      .map((unit) => {
-        const unitMatches = unit.name.toLowerCase().includes(query);
-        const matchingLessons = unit.lessons.filter(
-          (lesson) =>
-            lesson.name.toLowerCase().includes(query) ||
-            (lesson.concepts ?? []).some((c) => c.name.toLowerCase().includes(query)),
-        );
-        if (unitMatches) return unit;
-        if (matchingLessons.length > 0) {
-          return { ...unit, lessons: matchingLessons };
-        }
-        return null;
-      })
-      .filter((u): u is (typeof units)[0] => u !== null);
-  }, [units, searchQuery]);
-
-  const summary = useMemo(() => {
-    const lessons = units.flatMap((unit) => unit.lessons);
-    return {
-      unitCount: units.length,
-      lessonCount: lessons.length,
-      conceptCount: lessons.reduce((sum, lesson) => sum + lesson.conceptCount, 0),
-      resourceCount: lessons.reduce((sum, lesson) => sum + lesson.resourceCount, 0),
-    };
-  }, [units]);
-
-  const selected = (textbooks.data?.rows ?? []).find((book: TextbookSummary) => book.key === textbookKey);
-
-  const handleExport = (): void => {
-    if (!selected) return;
-    exportCurriculumPackage(selected, units);
-  };
-
-  return (
-    <div className="space-y-6">
-      <PageHeader title={t(titleKey)} subtitle={t(subtitleKey)} />
-
-      {/* Textbook Selector & Top bar */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <label className="block max-w-md flex-1 space-y-1.5">
-          <span className="block text-xs font-medium text-text-muted">{t('content.textbook')}</span>
-          <select
-            value={textbookKey}
-            onChange={(e) => {
-              const next = e.target.value;
-              setTextbookKey(next);
-              setSearchParams(next ? { textbook: next } : {});
-              setOpenLesson(null);
-              setLinkLesson(null);
-              setCreateTarget(null);
-              setSearchQuery('');
-            }}
-            className="h-10 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text"
-          >
-            <option value="">{t('content.pickTextbook')}</option>
-            {(textbooks.data?.rows ?? []).map((book: TextbookSummary) => (
-              <option key={book.key} value={book.key}>
-                {textbookLabelParts({ title: book.title, subjectName: book.subjectName, gradeName: book.gradeName }).join(
-                  ' — ',
-                )}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {selected ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() =>
-                setCreateTarget({
-                  kind: 'unit',
-                  textbookKey: selected.key,
-                  parentName: selected.title,
-                })
-              }
-            >
-              + {t('content.addUnit')}
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
-              📥 {t('contentImport.title')}
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => setResourcesOpen(true)}>
-              📚 {t('content.allResources')}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={handleExport}>
-              📤 {t('content.exportPackage')}
-            </Button>
-          </div>
-        ) : null}
+  return <div className="space-y-6 pb-8">
+    <PageHeader title={t(titleKey)} subtitle={t(subtitleKey)} actions={selected ? <div className="flex flex-wrap gap-2"><Button variant="primary" size="sm" onClick={() => setCreate({kind:'unit',textbookKey:selected.key,parentName:selected.title})}><Plus className="size-4"/>وحدة جديدة</Button><Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}><FileUp className="size-4"/>استيراد</Button><Button variant="ghost" size="sm" onClick={() => resourcesOpen || setResourcesOpen(true)}><BookOpen className="size-4"/>المصادر</Button></div> : null} />
+    <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+        <label className="space-y-1.5"><span className="text-xs font-bold text-text">الكتاب</span><select value={bookKey} onChange={e=>{setBookKey(e.target.value);setParams(e.target.value?{textbook:e.target.value}:{});}} className="h-11 w-full rounded-xl border border-border bg-surface-subtle px-3 text-sm text-text"><option value="">اختر الكتاب</option>{(books.data?.rows??[]).map(b=><option key={b.key} value={b.key}>{b.title} · {b.gradeName} · {b.subjectName}</option>)}</select></label>
+        <div className="flex items-end"><Button variant="secondary" size="sm" onClick={() => selected && exportCurriculumPackage(selected,units)} disabled={!selected}><Download className="size-4"/>تصدير</Button></div>
       </div>
-
-      {textbooks.isPending ? <LoadingState /> : null}
-      {textbooks.isError ? <ErrorState error={textbooks.error} onRetry={() => textbooks.refetch()} /> : null}
-
-      {textbooks.isSuccess && textbookKey === '' ? (
-        <EmptyState title={t('content.pickFirst')} body={t('content.pickFirstBody')} />
-      ) : null}
-
-      {textbookKey !== '' && outline.isPending ? <LoadingState /> : null}
-      {textbookKey !== '' && outline.isError ? (
-        <ErrorState error={outline.error} onRetry={() => outline.refetch()} />
-      ) : null}
-
-      {/* Selected Textbook Control Card */}
-      {selected ? (
-        <Card elevation="flat">
-          <CardContent className="pt-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-base font-bold text-text">{selected.title}</p>
-                  <PublicationBadge status={selected.status} />
-                </div>
-                <p className="text-xs text-text-muted">
-                  {textbookSubtitleParts({
-                    title: selected.title,
-                    subjectName: selected.subjectName,
-                    gradeName: selected.gradeName,
-                    extra: [selected.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')],
-                  }).join(' · ')}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() =>
-                    setCreateTarget({
-                      kind: 'unit',
-                      textbookKey: selected.key,
-                      parentName: selected.title,
-                    })
-                  }
-                >
-                  + {t('content.addUnit')}
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
-                  📥 {t('contentImport.title')}
-                </Button>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-4">
-              <ContentMetric label={t('textbookAdmin.unitsCount')} value={summary.unitCount} />
-              <ContentMetric label={t('content.lessons')} value={summary.lessonCount} />
-              <ContentMetric label={t('content.concepts')} value={summary.conceptCount} />
-              <ContentMetric label={t('content.materials')} value={summary.resourceCount} />
-            </div>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {textbookKey !== '' && readiness.isSuccess ? (
-        <ReadinessPanel ready={readiness.data.ready} issues={readiness.data.issues} />
-      ) : null}
-
-      {/* Outline Search & Filters */}
-      {textbookKey !== '' && outline.isSuccess && units.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface p-3">
-          <div className="flex-1 max-w-sm">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('content.filterOutline')}
-            />
-          </div>
-          <div className="text-xs text-text-muted">
-            {filteredUnits.length} {t('textbookAdmin.unitsCount')}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Empty Outline State */}
-      {textbookKey !== '' && outline.isSuccess && units.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center space-y-4">
-          <div className="text-4xl">📖</div>
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-text">{t('content.emptyOutline')}</h3>
-            <p className="text-xs text-text-muted max-w-md mx-auto">{t('content.emptyOutlineBody')}</p>
-          </div>
-          {selected ? (
-            <div className="flex justify-center gap-3 pt-2">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() =>
-                  setCreateTarget({
-                    kind: 'unit',
-                    textbookKey: selected.key,
-                    parentName: selected.title,
-                  })
-                }
-              >
-                + {t('content.addUnit')}
-              </Button>
-              <Button variant="secondary" size="sm" onClick={() => setImportOpen(true)}>
-                📥 {t('contentImport.title')}
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {/* Units List */}
-      {textbookKey !== '' && outline.isSuccess && filteredUnits.length > 0 ? (
-        <div className="space-y-4">
-          {filteredUnits.map((unit, unitIndex) => (
-            <UnitOutlineSection
-              key={unit.key}
-              unit={unit}
-              unitIndex={unitIndex}
-              units={filteredUnits}
-              textbookKey={textbookKey}
-              reorderPending={reorder.isPending}
-              onReorder={(input) => reorder.mutate(input)}
-              onEdit={setEditTarget}
-              onCreate={setCreateTarget}
-              onOpenConcept={setConceptKey}
-              onOpenLesson={setOpenLesson}
-              onLinkLesson={setLinkLesson}
-            />
-          ))}
-        </div>
-      ) : null}
-
-      {/* Modals & Drawers */}
-      {linkLesson !== null ? (
-        <QuestionLinkModal lessonKey={linkLesson} onClose={() => setLinkLesson(null)} />
-      ) : null}
-
-      {createTarget !== null ? (
-        <ContentNodeCreateModal target={createTarget} onClose={() => setCreateTarget(null)} />
-      ) : null}
-
-      {editTarget !== null ? (
-        <ContentNodeEditModal target={editTarget} onClose={() => setEditTarget(null)} />
-      ) : null}
-
-      {conceptKey !== null ? (
-        <ConceptDetailDrawer conceptKey={conceptKey} onClose={() => setConceptKey(null)} />
-      ) : null}
-
-      {importOpen ? (
-        <ContentImportModal
-          open={importOpen}
-          onClose={() => setImportOpen(false)}
-          textbookKey={textbookKey}
-        />
-      ) : null}
-
-      {resourcesOpen && selected ? (
-        <TextbookResourcesModal
-          open={resourcesOpen}
-          onClose={() => setResourcesOpen(false)}
-          textbookKey={selected.key}
-          textbookTitle={selected.title}
-        />
-      ) : null}
-
-      {openLesson !== null ? (
-        <LessonMaterialsDrawer
-          lessonKey={openLesson}
-          onClose={() => setOpenLesson(null)}
-        />
-      ) : null}
-    </div>
-  );
+    </section>
+    {!selected ? <EmptyState title="اختر كتاباً للبدء" body="اعرض بنية الوحدات والدروس والمواد بعد تحديد الكتاب." /> : <><section className="rounded-2xl border border-border bg-surface p-4 sm:p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-black text-text">{selected.title}</h2><PublicationBadge status={selected.status}/></div><p className="mt-1 text-xs text-text-muted">{selected.gradeName} · {selected.subjectName} · {selected.part === 'PART_1' ? 'الجزء الأول' : 'الجزء الثاني'}</p></div><div className="flex flex-wrap gap-2"><ContentMetric label="وحدات" value={stats.units}/><ContentMetric label="دروس" value={stats.lessons}/><ContentMetric label="مفاهيم" value={stats.concepts}/><ContentMetric label="مواد" value={stats.materials}/></div></div></section>
+    {readiness.isSuccess ? <ReadinessPanel ready={readiness.data.ready} issues={readiness.data.issues}/> : null}
+    <section className="rounded-2xl border border-border bg-surface p-3"><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="relative min-w-0 flex-1"><Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-text-muted"/><Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث في الوحدات والدروس والمفاهيم" className="ps-9"/></div><Badge tone="neutral">{filtered.length} وحدات</Badge></div></section>
+    {outline.isPending ? <LoadingState/> : outline.isError ? <ErrorState error={outline.error} onRetry={()=>outline.refetch()}/> : filtered.length === 0 ? <EmptyState title="لا توجد نتائج" body="جرّب تغيير عبارة البحث."/> : <div className="space-y-3">{filtered.map((unit,i)=><UnitOutlineSection key={unit.key} unit={unit} unitIndex={i} units={filtered} textbookKey={bookKey} reorderPending={reorder.isPending} onReorder={x=>reorder.mutate(x)} onEdit={setEdit} onCreate={setCreate} onOpenConcept={setConcept} onOpenLesson={setLesson} onLinkLesson={setLink}/>)}</div>}
+    </>}
+    {create ? <ContentNodeCreateModal target={create} onClose={()=>setCreate(null)}/> : null}
+    {edit ? <ContentNodeEditModal target={edit} onClose={()=>setEdit(null)}/> : null}
+    {concept ? <ConceptDetailDrawer conceptKey={concept} onClose={()=>setConcept(null)}/> : null}
+    {link ? <QuestionLinkModal lessonKey={link} onClose={()=>setLink(null)}/> : null}
+    {importOpen ? <ContentImportModal open={importOpen} onClose={()=>setImportOpen(false)} textbookKey={bookKey}/> : null}
+    {resourcesOpen && selected ? <TextbookResourcesModal open={resourcesOpen} onClose={()=>setResourcesOpen(false)} textbookKey={selected.key} textbookTitle={selected.title}/> : null}
+    {lesson ? <LessonMaterialsDrawer lessonKey={lesson} onClose={()=>setLesson(null)}/> : null}
+  </div>;
 }

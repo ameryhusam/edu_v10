@@ -1,28 +1,14 @@
-/**
- * TextbookPdfModal — modal for attaching, managing, and inspecting
- * digital PDF copies of textbooks.
- */
-
-import { useState, useRef, type ReactNode } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  FileText,
-  CheckCircle2,
-  AlertCircle,
-  UploadCloud,
-  Link2,
-} from 'lucide-react';
-import { ActionModal, ActionStepCard } from '../../design-system/patterns/action-modal';
+import { useRef, useState, type ReactNode } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { AlertCircle, CheckCircle2, FileText, Link2, UploadCloud, X } from 'lucide-react';
+import { ActionModal } from '../../design-system/patterns/action-modal';
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';
 import { Textarea } from '../../design-system/ui/textarea';
 import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
+import { Badge } from '../../design-system/ui/badge';
 import { useI18n } from '../../shared/i18n/i18n';
-import {
-  textbookAdministrationApi,
-  type TextbookSummary,
-  type ResourceRecord,
-} from './content.api';
+import { textbookAdministrationApi, type ResourceRecord, type TextbookSummary } from './content.api';
 import { TextbookPdfAttachedList } from './textbook-pdf-attached-list';
 
 export interface TextbookPdfModalProps {
@@ -32,392 +18,112 @@ export interface TextbookPdfModalProps {
   readonly onSaved?: () => void;
 }
 
-export function TextbookPdfModal({
-  open,
-  textbook,
-  onClose,
-  onSaved,
-}: TextbookPdfModalProps): ReactNode {
+export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookPdfModalProps): ReactNode {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-
-  const [inputMode, setInputMode] = useState<'URL' | 'FILE'>('URL');
-  const [pdfUrl, setPdfUrl] = useState('');
-  const [pdfTitle, setPdfTitle] = useState('');
-  const [totalPages, setTotalPages] = useState<string>('');
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<'FILE' | 'URL'>('FILE');
+  const [file, setFile] = useState<File | null>(null);
+  const [url, setUrl] = useState('');
+  const [title, setTitle] = useState('');
+  const [pages, setPages] = useState('');
   const [notes, setNotes] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
-  const [selectedFileSize, setSelectedFileSize] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [retireTarget, setRetireTarget] = useState<ResourceRecord | null>(null);
-  const [identityConfirmation, setIdentityConfirmation] = useState<any | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [conflict, setConflict] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [retire, setRetire] = useState<ResourceRecord | null>(null);
 
-  // Fetch current resources for this textbook
-  const {
-    data: resources = [],
-    isLoading,
-    refetch,
-  } = useQuery({
+  const resources = useQuery({
     queryKey: ['admin-textbook-resources', textbook?.key],
-    queryFn: () => (textbook ? textbookAdministrationApi.textbookResources(textbook.key) : Promise.resolve([])),
-    enabled: open && !!textbook?.key,
+    queryFn: () => textbook ? textbookAdministrationApi.textbookResources(textbook.key) : Promise.resolve([]),
+    enabled: open && Boolean(textbook),
   });
+  const pdfs = (resources.data ?? []).filter((r) => r.kind === 'TEXTBOOK_PAGE' || r.url?.toLowerCase().endsWith('.pdf'));
 
-  // Identify existing PDF resources
-  const pdfResources = resources.filter(
-    (r) =>
-      r.kind === 'TEXTBOOK_PAGE' ||
-      r.url?.toLowerCase().endsWith('.pdf') ||
-      r.title.toLowerCase().includes('pdf') ||
-      r.title.includes('كتاب') ||
-      r.title.includes('نسخة'),
-  );
+  const prepare = async (confirmDetectedIdentity: boolean): Promise<any> => {
+    if (!textbook || !file) throw new Error('يرجى اختيار ملف PDF.');
+    const result = await textbookAdministrationApi.workspacePrepareUpload({
+      file, grade: textbook.gradeKey, subject: textbook.subjectKey, autoSegment: true, confirmDetectedIdentity,
+    });
+    if (result?.status === 'CONFIRM_REQUIRED') return result;
+    if (result?.status !== 'PREPARED') throw new Error('تعذر تجهيز ملف الكتاب.');
+    await textbookAdministrationApi.workspaceImport({ workspaceDir: result.workspaceDir, dryRun: true, syncAssets: true });
+    await textbookAdministrationApi.workspaceImport({ workspaceDir: result.workspaceDir, dryRun: false, syncAssets: true });
+    return result;
+  };
 
-  const saveMutation = useMutation({
+  const save = useMutation({
     mutationFn: async () => {
-      if (!textbook) throw new Error('No textbook selected');
-      const finalTitle = pdfTitle.trim() || textbook.title;
-
-      if (inputMode === 'FILE') {
-        if (!selectedFile) throw new Error('يرجى اختيار ملف PDF');
-        const prepared = await textbookAdministrationApi.workspacePrepareUpload({
-          file: selectedFile,
-          part: textbook.part,
-          grade: textbook.gradeKey,
-          subject: textbook.subjectKey,
-          edition: textbook.edition,
-          title: finalTitle,
-          autoSegment: true,
-          confirmDetectedIdentity: false,
-        });
-        if (prepared?.status === 'CONFIRM_REQUIRED') {
-          return { state: 'CONFIRM_REQUIRED', result: prepared };
-        }
-        if (prepared?.status === 'NEEDS_REVIEW') {
-          throw new Error('تعذر التحقق من هوية الكتاب. راجع بيانات الصف والمادة والجزء والطبعة قبل الاستيراد.');
-        }
-        await textbookAdministrationApi.workspaceImport({
-          workspaceDir: prepared.workspaceDir,
-          dryRun: true,
-          syncAssets: true,
-        });
-        await textbookAdministrationApi.workspaceImport({
-          workspaceDir: prepared.workspaceDir,
-          dryRun: false,
-          syncAssets: true,
-        });
+      setError(null); setSuccess(null);
+      if (!textbook) throw new Error('لم يتم اختيار كتاب.');
+      if (mode === 'FILE') {
+        const result = await prepare(false);
+        if (result?.status === 'CONFIRM_REQUIRED') return result;
       } else {
-        const finalUrl = pdfUrl.trim();
-        if (!finalUrl) throw new Error(t('textbookAdmin.pdfSourceUrlHint'));
+        if (!url.trim()) throw new Error('أدخل رابط PDF صالحاً.');
         await textbookAdministrationApi.createLearningResource({
-          textbookKey: textbook.key,
-          kind: 'TEXTBOOK_PAGE',
-          title: finalTitle,
-          url: finalUrl,
-          body: notes.trim() || null,
-          orderIndex: 1,
+          textbookKey: textbook.key, kind: 'TEXTBOOK_PAGE',
+          title: title.trim() || textbook.title, url: url.trim(), body: notes.trim() || null, orderIndex: 1,
         });
       }
-
-      const pagesNum = parseInt(totalPages, 10);
-      if (!Number.isNaN(pagesNum) && pagesNum > 0) {
-        await textbookAdministrationApi.updateNode({
-          kind: 'textbook',
-          key: textbook.key,
-          patch: { totalPages: pagesNum },
-        });
+      const pageCount = Number(pages);
+      if (Number.isInteger(pageCount) && pageCount > 0) {
+        await textbookAdministrationApi.updateNode({ kind: 'textbook', key: textbook.key, patch: { totalPages: pageCount } });
       }
+      return null;
     },
     onSuccess: async (result) => {
-      if (result?.state === 'CONFIRM_REQUIRED') {
-        setIdentityConfirmation(result.result);
-        setErrorMsg(null);
-        setSuccessMsg(null);
-        return;
-      }
-      setSuccessMsg(t('textbookAdmin.pdfSaveSuccess'));
-      setErrorMsg(null);
-      setPdfUrl('');
-      setPdfTitle('');
-      setSelectedFile(null);
-      setSelectedFileName(null);
-      setSelectedFileSize(null);
-      await refetch();
-      setIdentityConfirmation(null);
-      await queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
-      onSaved?.();
+      if (result?.status === 'CONFIRM_REQUIRED') { setConflict(result); return; }
+      setSuccess('تم حفظ مصدر الكتاب وتجهيز المحتوى بنجاح.');
+      setFile(null); setUrl(''); setTitle(''); setPages(''); setNotes('');
+      await resources.refetch(); await queryClient.invalidateQueries({ queryKey: queryKeysCompat() }); onSaved?.();
     },
-    onError: (err: unknown) => {
-      setErrorMsg(err instanceof Error ? err.message : t('catalogue.saveFailed'));
-      setSuccessMsg(null);
-    },
+    onError: (e: unknown) => { setError(e instanceof Error ? e.message : 'فشل حفظ ملف الكتاب.'); },
   });
 
   const retireMutation = useMutation({
-    mutationFn: async (resourceKey: string) => {
-      await textbookAdministrationApi.retireResource(resourceKey);
-    },
-    onSuccess: async () => {
-      setRetireTarget(null);
-      await refetch();
-      await queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
-    },
+    mutationFn: (key: string) => textbookAdministrationApi.retireResource(key),
+    onSuccess: async () => { setRetire(null); await resources.refetch(); onSaved?.(); },
   });
 
   if (!open || !textbook) return null;
-
-  const handleFileSelect = (file: File) => {
-    setSelectedFile(file);
-    setSelectedFileName(file.name);
-    const sizeKb = Math.round(file.size / 1024);
-    setSelectedFileSize(sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} MB` : `${sizeKb} KB`);
-    if (!pdfTitle) {
-      setPdfTitle(file.name.replace(/\.[^/.]+$/, ''));
-    }
-    // In a browser environment without a dedicated multipart server route,
-    // we generate an object URL or simulate cloud path for instant preview
-    const objectUrl = URL.createObjectURL(file);
-    setPdfUrl(objectUrl);
+  const chooseFile = (next: File | null) => {
+    if (!next) return;
+    if (next.type !== 'application/pdf' && !next.name.toLowerCase().endsWith('.pdf')) { setError('الملف يجب أن يكون PDF.'); return; }
+    setFile(next); setError(null); if (!title) setTitle(next.name.replace(/\\.[^/.]+$/, ''));
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
-  };
+  return <>
+    <ActionModal kind="textbook" icon={<FileText className="size-5" />} title="ملف الكتاب ومصدره"
+      subtitle={`${textbook.title} · ${textbook.gradeName} · ${textbook.subjectName}`} onClose={onClose}
+      footer={<div className="flex w-full items-center justify-between gap-2"><Button variant="ghost" onClick={onClose}>إغلاق</Button><Button variant="primary" disabled={save.isPending || (mode === 'FILE' ? !file : !url.trim())} loading={save.isPending} onClick={() => save.mutate()}>حفظ وتجهيز</Button></div>}>
+      <div className="space-y-5">
+        {success ? <Notice tone="success" icon={<CheckCircle2 className="size-4" />}>{success}</Notice> : null}
+        {error ? <Notice tone="danger" icon={<AlertCircle className="size-4" />}>{error}</Notice> : null}
+        {conflict ? <section className="rounded-2xl border border-warning/30 bg-warning-subtle p-4">
+          <div className="flex items-start justify-between gap-3"><div><h3 className="text-sm font-black text-text">تعارض في هوية الملف</h3><p className="mt-1 text-xs text-text-muted">الملف يحتوي على هوية مختلفة. لن يتم اعتمادها إلا بعد تأكيدك.</p></div><button type="button" onClick={() => setConflict(null)} aria-label="إغلاق"><X className="size-4 text-text-muted"/></button></div>
+          <div className="mt-3 space-y-2">{(conflict.conflicts ?? []).map((c: any) => <div key={c.field} className="rounded-xl border border-border bg-surface p-3 text-xs"><span className="font-bold">{c.field}</span><span className="mx-2 text-text-muted">{c.declared ?? '—'} ← {c.detected ?? '—'}</span></div>)}</div>
+          <div className="mt-3 flex flex-wrap gap-2"><Button variant="primary" size="sm" onClick={async () => { try { const result = await prepare(true); if (result?.status === 'PREPARED') { setConflict(null); setSuccess('تم اعتماد الهوية المكتشفة وتجهيز Workspace.'); await resources.refetch(); onSaved?.(); } } catch (e) { setError(e instanceof Error ? e.message : 'فشل التأكيد.'); } }}>متابعة بالهوية المكتشفة</Button><Button variant="ghost" size="sm" onClick={() => setConflict(null)}>إلغاء</Button></div>
+        </section> : null}
 
-  return (
-    <>
-      <ActionModal
-        kind="textbook"
-        icon={<FileText className="size-5" />}
-        title={t('textbookAdmin.pdfModalTitle')}
-        subtitle={`${textbook.gradeName} · ${textbook.subjectName} · ${textbook.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')} · ${t('textbookAdmin.edition')} ${textbook.edition}`}
-        onClose={onClose}
-        footer={
-          <div className="flex w-full items-center justify-between gap-3">
-            <Button variant="ghost" onClick={onClose}>
-              {t('common.close')}
-            </Button>
-            <Button
-              variant="primary"
-              disabled={saveMutation.isPending || (inputMode === 'URL' ? !pdfUrl.trim() : !selectedFile)}
-              onClick={() => saveMutation.mutate()}
-            >
-              {saveMutation.isPending ? t('common.working') : t('catalogue.save')}
-            </Button>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {/* Notifications */}
-          {successMsg && (
-            <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success-subtle p-3 text-xs font-semibold text-success">
-              <CheckCircle2 className="size-4 shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-          {errorMsg && (
-            <div className="flex items-center gap-2 rounded-xl border border-danger/30 bg-danger-subtle p-3 text-xs font-semibold text-danger">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+        <TextbookPdfAttachedList textbook={textbook} pdfResources={pdfs} isLoading={resources.isPending} onRetire={setRetire} />
 
-          {identityConfirmation && (
-            <div className="space-y-3 rounded-xl border border-warning/30 bg-warning-subtle p-4 text-sm">
-              <div className="font-semibold text-text">بيانات PDF مختلفة عن الكتاب المحدد</div>
-              <div className="text-xs text-text-muted">
-                تم التعرف على هوية مختلفة. لن يتم تعديل هوية الكتاب الحالية؛ سيُستخدم الكتاب المكتشف فقط بعد تأكيدك.
-              </div>
-              <div className="grid gap-2 text-xs">
-                {(identityConfirmation.conflicts ?? []).map((item: any) => (
-                  <div key={item.field} className="rounded-lg border border-border bg-surface p-2">
-                    <span className="font-semibold">{item.field}: </span>
-                    <span>{item.declared ?? '—'} → {item.detected ?? '—'}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="primary"
-                  onClick={async () => {
-                    if (!selectedFile || !textbook) return;
-                    const prepared = await textbookAdministrationApi.workspacePrepareUpload({
-                      file: selectedFile,
-                      part: textbook.part,
-                      grade: textbook.gradeKey,
-                      subject: textbook.subjectKey,
-                      edition: textbook.edition,
-                      title: pdfTitle.trim() || textbook.title,
-                      autoSegment: true,
-                      confirmDetectedIdentity: true,
-                    });
-                    if (prepared?.status !== 'PREPARED') throw new Error('تعذر تجهيز الكتاب بعد التأكيد.');
-                    await textbookAdministrationApi.workspaceImport({ workspaceDir: prepared.workspaceDir, dryRun: true, syncAssets: true });
-                    await textbookAdministrationApi.workspaceImport({ workspaceDir: prepared.workspaceDir, dryRun: false, syncAssets: true });
-                    setIdentityConfirmation(null);
-                    setSuccessMsg(t('textbookAdmin.pdfSaveSuccess'));
-                    await refetch();
-                    await queryClient.invalidateQueries({ queryKey: ['admin-textbooks'] });
-                    onSaved?.();
-                  }}
-                >
-                  متابعة بالبيانات المكتشفة
-                </Button>
-                <Button variant="ghost" onClick={() => setIdentityConfirmation(null)}>
-                  إلغاء الاستيراد
-                </Button>
-              </div>
-            </div>
-          )}
+        <section className="rounded-2xl border border-border bg-surface p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-black text-text">إضافة مصدر</h3><p className="mt-1 text-xs text-text-muted">يمكن رفع PDF ليُحلل ويُجهز في Workspace، أو حفظ رابط مصدر خارجي.</p></div>
+          <div className="inline-flex rounded-xl border border-border bg-surface-subtle p-1"><button type="button" onClick={() => setMode('FILE')} className={tab(mode === 'FILE')}>رفع PDF</button><button type="button" onClick={() => setMode('URL')} className={tab(mode === 'URL')}>رابط</button></div></div>
+          {mode === 'FILE' ? <div className="mt-4"><input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => chooseFile(e.target.files?.[0] ?? null)} /><button type="button" onClick={() => fileRef.current?.click()} className="w-full rounded-2xl border-2 border-dashed border-border bg-surface-subtle/40 p-8 text-center hover:border-accent/50"><UploadCloud className="mx-auto size-8 text-accent"/><p className="mt-2 text-sm font-black text-text">{file ? file.name : 'اختر ملف PDF'}</p><p className="mt-1 text-xs text-text-muted">سيتم استخراج الهوية والفهرس وبنية الصفحات آلياً، مع Gemini عند توفره.</p>{file ? <Badge tone="neutral" className="mt-3">{(file.size / 1048576).toFixed(2)} MB</Badge> : null}</button></div>
+          : <div className="mt-4 space-y-3"><label className="block text-xs font-bold text-text">رابط PDF<input value={url} onChange={e => setUrl(e.target.value)} dir="ltr" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text outline-none focus:border-accent"/></label><p className="text-2xs text-text-muted">المعالجة الآلية الكاملة متاحة عند رفع الملف مباشرة.</p></div>}
+          <div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-text">اسم المصدر<Input value={title} onChange={e => setTitle(e.target.value)} placeholder={textbook.title}/></label><label className="text-xs font-bold text-text">عدد الصفحات<Input type="number" min="1" value={pages} onChange={e => setPages(e.target.value)} placeholder={String(textbook.totalPages ?? '')}/></label></div>
+          <label className="mt-3 block text-xs font-bold text-text">ملاحظات<Textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} /></label>
+        </section>
+      </div>
+    </ActionModal>
+    {retire ? <ConfirmDialog title="إزالة مصدر PDF" body="سيتم إخفاء المصدر من قائمة المصادر الحالية دون حذف التاريخ." confirmLabel="إزالة" destructive pending={retireMutation.isPending} onConfirm={() => retireMutation.mutate(retire.key)} onCancel={() => setRetire(null)} /> : null}
+  </>;
 
-          {/* Current Attached PDFs */}
-          <TextbookPdfAttachedList
-            textbook={textbook}
-            pdfResources={pdfResources}
-            isLoading={isLoading}
-            onRetire={(res) => setRetireTarget(res)}
-          />
-
-          {/* Form to Attach or Replace PDF */}
-          <ActionStepCard step={2} title={t('textbookAdmin.pdfAttachNew')}>
-            {/* Input Mode Selector */}
-            <div className="flex gap-2 rounded-lg bg-surface-subtle p-1 border border-border">
-              <button
-                type="button"
-                onClick={() => setInputMode('URL')}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                  inputMode === 'URL'
-                    ? 'bg-surface text-text shadow-xs'
-                    : 'text-text-muted hover:text-text'
-                }`}
-              >
-                <Link2 className="size-3.5" />
-                <span>{t('textbookAdmin.pdfSourceUrl')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setInputMode('FILE')}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-semibold transition-colors ${
-                  inputMode === 'FILE'
-                    ? 'bg-surface text-text shadow-xs'
-                    : 'text-text-muted hover:text-text'
-                }`}
-              >
-                <UploadCloud className="size-3.5" />
-                <span>{t('textbookAdmin.pdfFileUpload')}</span>
-              </button>
-            </div>
-
-            {inputMode === 'URL' ? (
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-text">
-                  {t('textbookAdmin.pdfSourceUrl')} <span className="text-danger">*</span>
-                </label>
-                <Input
-                  type="url"
-                  dir="ltr"
-                  placeholder="https://moe.gov.ye/textbooks/g07-math-t1.pdf"
-                  value={pdfUrl}
-                  onChange={(e) => setPdfUrl(e.target.value)}
-                />
-                <p className="text-2xs text-text-muted">{t('textbookAdmin.pdfSourceUrlHint')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/pdf"
-                  className="hidden"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      handleFileSelect(e.target.files[0]);
-                    }
-                  }}
-                />
-                <div
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="cursor-pointer rounded-xl border-2 border-dashed border-border bg-surface p-6 text-center hover:border-accent hover:bg-surface-subtle"
-                >
-                  <UploadCloud className="mx-auto size-8 text-accent" />
-                  <p className="mt-2 text-xs font-medium text-text">
-                    {t('textbookAdmin.pdfFileDragDrop')}
-                  </p>
-                  <p className="text-2xs text-text-muted">PDF (*.pdf)</p>
-                  {selectedFileName ? (
-                    <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-accent-subtle px-3 py-1.5 text-xs font-semibold text-accent">
-                      <FileText className="size-4" />
-                      <span>{selectedFileName}</span>
-                      {selectedFileSize ? <span className="opacity-70">({selectedFileSize})</span> : null}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            )}
-
-            {/* Additional Fields: Title & Total Pages */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-text">{t('textbookAdmin.pdfTitle')}</label>
-                <Input
-                  type="text"
-                  placeholder="كتاب الطالب — النسخة الرسمية"
-                  value={pdfTitle}
-                  onChange={(e) => setPdfTitle(e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-text">
-                  {t('textbookAdmin.pdfTotalPages')}
-                </label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  placeholder={String(textbook.totalPages || 120)}
-                  value={totalPages}
-                  onChange={(e) => setTotalPages(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-text">{t('catalogue.description')}</label>
-              <Textarea
-                rows={2}
-                placeholder="ملاحظات حول هذه النسخة أو رقم الطبعة..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-          </ActionStepCard>
-        </div>
-      </ActionModal>
-
-      {/* Confirmation to remove / retire PDF */}
-      {retireTarget && (
-        <ConfirmDialog
-          title={t('textbookAdmin.pdfRetire')}
-          body={t('textbookAdmin.pdfRetireConfirm')}
-          confirmLabel={t('catalogue.delete')}
-          destructive
-          pending={retireMutation.isPending}
-          onConfirm={() => {
-            if (retireTarget) retireMutation.mutate(retireTarget.key);
-          }}
-          onCancel={() => setRetireTarget(null)}
-        />
-      )}
-    </>
-  );
+  function tab(active: boolean): string { return `rounded-lg px-3 py-1.5 text-xs font-bold ${active ? 'bg-surface text-text shadow-xs' : 'text-text-muted hover:text-text'}`; }
 }
+function Notice({ tone, icon, children }: { readonly tone: 'success' | 'danger'; readonly icon: ReactNode; readonly children: ReactNode }): ReactNode {
+  return <div className={`flex items-center gap-2 rounded-xl border p-3 text-xs font-semibold ${tone === 'success' ? 'border-success/30 bg-success-subtle text-success' : 'border-danger/30 bg-danger-subtle text-danger'}`}>{icon}{children}</div>;
+}
+function queryKeysCompat(): readonly string[] { return ['admin-textbooks']; }
