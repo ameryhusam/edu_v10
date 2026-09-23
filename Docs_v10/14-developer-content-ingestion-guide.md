@@ -271,3 +271,53 @@ A page classified as MIXED is not duplicated or renamed to make it appear in mul
 The classification configuration must define the TOC/index detector, first-page analysis window, part-boundary signals, subject/branch labels, lesson types, question roles, unit-assessment roles, mixed-page policy and confidence/review thresholds.
 
 Configuration is versioned. The active configuration version is part of preparation provenance.
+## 18. Reusing an already prepared or incomplete Workspace
+
+Do not treat every upload as a request to start PDF extraction again.
+
+### Already prepared package
+
+Use:
+
+    prepared package
+    → fingerprint
+    → manifest/schema validation
+    → identity validation
+    → completeness validation
+    → compare with existing Workspace
+    → REUSE / RECONCILE / REVIEW
+
+If the package is complete, valid and has the same source/preparation fingerprint as the existing Workspace, the correct result is reuse/no-op. Do not re-run TOC extraction, page mapping, segmentation or lesson PDF generation.
+
+### Incomplete Workspace
+
+An incomplete Workspace is resumable.
+
+    existing Workspace
+    → validate manifest/checkpoints
+    → validate source/configuration fingerprints
+    → find first invalid/incomplete stage
+    → reuse valid upstream artifacts
+    → rebuild only invalid stage + downstream dependencies
+    → validate package
+    → READY_FOR_IMPORT
+
+For example, if extraction, TOC, mapping, segmentation and lesson PDFs are valid but grounding is missing, start at grounding. Do not extract the source PDF again.
+
+If only one lesson is incomplete and its parent manifest proves that the source fingerprint and segmentation are unchanged, recovery can target that lesson only.
+
+### When full re-extraction is allowed
+
+Full re-extraction is required only when an upstream dependency makes the existing result invalid, such as:
+
+- source PDF checksum changed;
+- source identity/printed edition changed;
+- relevant preparation configuration or algorithm version changed;
+- required upstream artifact is missing or corrupt;
+- a human explicitly requests a full rebuild.
+
+A later-stage failure never by itself justifies rebuilding earlier valid stages.
+
+### Operational rule
+
+A retry of the same preparation operation must be idempotent. Preserve completed artifacts, operation diagnostics and provenance. Never delete a valid Workspace simply because a later stage failed.
