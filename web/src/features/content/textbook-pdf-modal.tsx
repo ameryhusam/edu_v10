@@ -197,7 +197,7 @@ export function TextbookPdfModal({
         kind="textbook"
         icon={<FileText className="size-5" />}
         title={t('textbookAdmin.pdfModalTitle')}
-        subtitle={`${textbook.title} (${textbook.key})`}
+        subtitle={`${textbook.gradeName} · ${textbook.subjectName} · ${textbook.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')} · ${t('textbookAdmin.edition')} ${textbook.edition}`}
         onClose={onClose}
         footer={
           <div className="flex w-full items-center justify-between gap-3">
