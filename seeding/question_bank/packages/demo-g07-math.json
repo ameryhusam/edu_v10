@@ -1,16 +1,144 @@
 {
-  "schemaVersion":"1.0.0",
-  "packageKey":"DEMO-MATH-G07",
-  "grades":[{"id":"G06","nameAr":"السادس"},{"id":"G07","nameAr":"السابع"}],
-  "subjects":[{"id":"MATH","nameAr":"الرياضيات","iconName":"calculate"}],
-  "gradeSubjects":[{"gradeId":"G06","subjectId":"MATH","isActive":true},{"gradeId":"G07","subjectId":"MATH","isActive":true}],
-  "books":[
-    {"key":"MATH-G06-ED2026","gradeId":"G06","subjectId":"MATH","title":"الرياضيات للصف السادس","part":"PART_1","semester":"SEMESTER_1","edition":"2026","publisher":"وزارة التربية والتعليم - الجمهورية اليمنية","publicationYear":2026,
-      "units":[{"key":"MATH-G06-U01","orderIndex":1,"title":"الكسور","lessons":[{"key":"MATH-G06-U01-L01","orderIndex":1,"title":"أساسيات الكسور","branch":"ARITHMETIC","concepts":[{"key":"MATH-G06-C-FRACTION-BASICS","gradeId":"G06","orderIndex":1,"nameAr":"أساسيات الكسور","description":"فهم البسط والمقام"}],"questions":[]}]}
-    ]},
-    {"key":"MATH-G07-ED2026","gradeId":"G07","subjectId":"MATH","title":"الرياضيات للصف السابع","part":"PART_1","semester":"SEMESTER_1","edition":"2026","publisher":"وزارة التربية والتعليم - الجمهورية اليمنية","publicationYear":2026,
-      "units":[{"key":"MATH-G07-U01","orderIndex":1,"title":"الأعداد والعمليات","lessons":[{"key":"MATH-G07-U01-L01","orderIndex":1,"title":"الكسور","branch":"ARITHMETIC","concepts":[{"key":"MATH-G07-C-FRACTIONS","gradeId":"G07","orderIndex":1,"nameAr":"العمليات على الكسور","description":"إجراء العمليات الأساسية على الكسور"}],"questions":[{"key":"MATH-G07-Q-FR-001","text":"ما ناتج 1/2 + 1/2 ؟","type":"MCQ_SINGLE","options":[{"key":"a","text":"1"},{"key":"b","text":"1/2"},{"key":"c","text":"2"}],"correctAnswer":"a","explanation":"النصف + النصف يساوي واحداً.","difficulty":0.35,"origin":"TEXTBOOK","conceptKeys":["MATH-G07-C-FRACTIONS"]}]}]}]}
-    ]}
+  "schemaVersion": "1.0.0",
+  "packageKey": "DEMO-MATH-G07",
+  "grades": [
+    {
+      "id": "G06",
+      "nameAr": "السادس"
+    },
+    {
+      "id": "G07",
+      "nameAr": "السابع"
+    }
   ],
-  "prerequisites":[{"conceptKey":"MATH-G07-C-FRACTIONS","prerequisiteKey":"MATH-G06-C-FRACTION-BASICS","strength":1,"requiredMastery":0.7}]
+  "subjects": [
+    {
+      "id": "MATH",
+      "nameAr": "الرياضيات",
+      "iconName": "calculate"
+    }
+  ],
+  "gradeSubjects": [
+    {
+      "gradeId": "G06",
+      "subjectId": "MATH",
+      "isActive": true
+    },
+    {
+      "gradeId": "G07",
+      "subjectId": "MATH",
+      "isActive": true
+    }
+  ],
+  "books": [
+    {
+      "key": "EDU-MATH-G06-P1-ED2026",
+      "gradeId": "G06",
+      "subjectId": "MATH",
+      "title": "الرياضيات للصف السادس",
+      "part": "P1",
+      "semester": "S1",
+      "edition": "2026",
+      "publisher": "وزارة التربية والتعليم - الجمهورية اليمنية",
+      "publicationYear": 2026,
+      "units": [
+        {
+          "key": "EDU-MATH-G06-P1-ED2026-U01",
+          "orderIndex": 1,
+          "title": "الكسور",
+          "lessons": [
+            {
+              "key": "EDU-MATH-G06-P1-ED2026-U01-L01",
+              "orderIndex": 1,
+              "title": "أساسيات الكسور",
+              "branch": "ARITHMETIC",
+              "concepts": [
+                {
+                  "key": "MATH-G06-C-FRACTION-BASICS",
+                  "gradeId": "G06",
+                  "orderIndex": 1,
+                  "nameAr": "أساسيات الكسور",
+                  "description": "فهم البسط والمقام",
+                  "difficultyHint": 0.35
+                }
+              ],
+              "questions": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026",
+      "gradeId": "G07",
+      "subjectId": "MATH",
+      "title": "الرياضيات للصف السابع",
+      "part": "P1",
+      "semester": "S1",
+      "edition": "2026",
+      "publisher": "وزارة التربية والتعليم - الجمهورية اليمنية",
+      "publicationYear": 2026,
+      "units": [
+        {
+          "key": "EDU-MATH-G07-P1-ED2026-U01",
+          "orderIndex": 1,
+          "title": "الأعداد والعمليات",
+          "lessons": [
+            {
+              "key": "EDU-MATH-G07-P1-ED2026-U01-L01",
+              "orderIndex": 1,
+              "title": "الكسور",
+              "branch": "ARITHMETIC",
+              "concepts": [
+                {
+                  "key": "MATH-G07-C-FRACTIONS",
+                  "gradeId": "G07",
+                  "orderIndex": 1,
+                  "nameAr": "العمليات على الكسور",
+                  "description": "إجراء العمليات الأساسية على الكسور",
+                  "difficultyHint": 0.5
+                }
+              ],
+              "questions": [
+                {
+                  "key": "MATH-G07-Q-FR-001",
+                  "text": "ما ناتج 1/2 + 1/2 ؟",
+                  "type": "MCQ_SINGLE",
+                  "options": [
+                    {
+                      "key": "a",
+                      "text": "1"
+                    },
+                    {
+                      "key": "b",
+                      "text": "1/2"
+                    },
+                    {
+                      "key": "c",
+                      "text": "2"
+                    }
+                  ],
+                  "correctAnswer": "a",
+                  "explanation": "النصف + النصف يساوي واحداً.",
+                  "difficulty": 0.35,
+                  "origin": "TEXTBOOK",
+                  "conceptKeys": [
+                    "MATH-G07-C-FRACTIONS"
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "prerequisites": [
+    {
+      "conceptKey": "MATH-G07-C-FRACTIONS",
+      "prerequisiteKey": "MATH-G06-C-FRACTION-BASICS",
+      "strength": 1,
+      "requiredMastery": 0.7
+    }
+  ]
 }
