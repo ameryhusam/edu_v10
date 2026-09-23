@@ -38,6 +38,7 @@ export interface GradeMaterialsViewProps {
   readonly onOpenCreateModal: () => void;
   readonly onOpenBulkModal: () => void;
   readonly onNavigateToContentManager: (textbookKey: string) => void;
+  readonly onOpenWorkspaceModal?: () => void;
   readonly canApprove?: boolean;
   readonly canManageDeployment?: boolean;
 }
@@ -70,6 +71,7 @@ export function GradeMaterialsView({
   onOpenCreateModal,
   onOpenBulkModal,
   onNavigateToContentManager,
+  onOpenWorkspaceModal,
   canApprove = false,
   canManageDeployment = false,
 }: GradeMaterialsViewProps): ReactNode {
@@ -122,7 +124,7 @@ export function GradeMaterialsView({
             <button type="button" onClick={() => onSelectPartOrdinal(1)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 1 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.part1')}</button>
             <button type="button" onClick={() => onSelectPartOrdinal(2)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 2 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.part2')}</button>
           </div>
-          <Button variant="primary" size="sm" onClick={onOpenCreateModal} className="gap-1.5 text-xs"><Plus className="size-4" />{t('textbookAdmin.addTextbookButton')}</Button>
+          <Button variant="primary" size="sm" onClick={onOpenCreateModal} className="gap-1.5 text-xs"><Plus className="size-4" />{t('textbookAdmin.addTextbookButton')}</Button>{onOpenWorkspaceModal ? <Button variant="secondary" size="sm" onClick={onOpenWorkspaceModal} className="gap-1.5 text-xs border-primary/30 text-primary"><Upload className="size-3.5" />رفع PDF وتجهيز المحتوى</Button> : null}
           {canManageDeployment ? <Button variant="secondary" size="sm" onClick={onOpenBulkModal} className="gap-1.5 text-xs"><Sparkles className="size-4 text-accent" />{t('textbookAdmin.bulkSetupButton')}</Button> : null}
         </div>
       </div>
