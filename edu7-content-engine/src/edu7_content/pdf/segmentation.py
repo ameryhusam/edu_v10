@@ -431,7 +431,38 @@ class LessonSegmenter:
             )
             processed_units.append(unit_manifest)
 
-        # 3. Master workspace index.json
+        # 3. Persist the structured TOC contract separately from page semantics.
+        toc_manifest = {
+            "schemaVersion": "1.0",
+            "detection": "deterministic_toc",
+            "units": [
+                {
+                    "number": u.get("number"),
+                    "title": u.get("title"),
+                    "startPage": u.get("startPage"),
+                    "endPage": u.get("endPage"),
+                    "lessons": [
+                        {
+                            "number": l.get("number"),
+                            "title": l.get("title"),
+                            "startPage": l.get("startPage"),
+                            "endPage": l.get("endPage"),
+                            "branchHint": l.get("branch"),
+                        }
+                        for l in u.get("lessons", [])
+                    ],
+                }
+                for u in units
+            ],
+        }
+        (workspace_dir / "toc.json").write_text(
+            json.dumps(toc_manifest, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        question_groups = group_cross_page_questions(all_page_semantics)
+
+        # 4. Master workspace index.json
         index_manifest = {
             "schemaVersion": "1.1",
             "textbookKey": textbook_key,
@@ -461,6 +492,15 @@ class LessonSegmenter:
                 "reconstruction": "lesson PDFs in manifest order",
             },
             "sourceManifest": "book-source-manifest.json",
+            "tocFile": "toc.json",
+            "semanticStructure": {
+                "schemaVersion": "1.0",
+                "pageCount": len(all_page_semantics),
+                "segmentCount": sum(len(p.get("segments", [])) for p in all_page_semantics),
+                "questionBlockCount": sum(len(p.get("questionBlocks", [])) for p in all_page_semantics),
+                "crossPageQuestionGroupCount": len(question_groups),
+                "reviewPageCount": sum(1 for p in all_page_semantics if p.get("review")),
+            },
         }
         (workspace_dir / "index.json").write_text(
             json.dumps(index_manifest, ensure_ascii=False, indent=2), encoding="utf-8"
