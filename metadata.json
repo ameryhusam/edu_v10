@@ -1,6 +1,0 @@
-{
-  "name": "Edu7",
-  "description": "Adaptive learning platform with student, teacher, guardian, and administrative dashboards.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
