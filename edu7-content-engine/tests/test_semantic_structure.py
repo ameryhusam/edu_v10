@@ -37,8 +37,29 @@ def test_question_blocks_have_bbox_and_type():
 
 
 def test_cross_page_question_groups_link_sequential_numbers():
-    reader = FakeReader()
-    first = extract_page_semantic_blocks(reader, 0, printed_page=42)
-    second = extract_page_semantic_blocks(reader, 1, printed_page=43)
+    first = {
+        "pdfPage": 1,
+        "printedPage": 42,
+        "segments": [{
+            "segmentId": "q3",
+            "type": "QUESTION_BLOCK",
+            "text": "٣- أجب",
+            "bbox": [1, 1, 10, 10],
+            "confidence": 0.9,
+            "evidence": ["numbered_question"],
+        }],
+    }
+    second = {
+        "pdfPage": 2,
+        "printedPage": 43,
+        "segments": [{
+            "segmentId": "q4",
+            "type": "QUESTION_BLOCK",
+            "text": "٤- أكمل",
+            "bbox": [1, 1, 10, 10],
+            "confidence": 0.9,
+            "evidence": ["numbered_question"],
+        }],
+    }
     groups = group_cross_page_questions([first, second])
     assert any(group["crossPage"] for group in groups)
