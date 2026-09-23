@@ -26,6 +26,7 @@ import { QuestionQuickImportCard } from '../../education/authoring/question-quic
 import { SelectFilter } from '../../education/authoring/select-filter';
 import {
   PUBLICATION_STATUSES,
+  QUESTION_BANK_SUPPORTED_GRADES,
   QUESTION_ORIGINS,
   QUESTION_TYPES,
   QUESTION_VISIBILITIES,
@@ -53,6 +54,7 @@ export function AuthorQuestionBankPage(): ReactNode {
   const [origin, setOrigin] = useState<QuestionOrigin | ''>('');
   const [status, setStatus] = useState<PublicationStatus | ''>('');
   const [visibility, setVisibility] = useState<QuestionVisibility | ''>('');
+  const [gradeKey, setGradeKey] = useState('');
   const [textbookKey, setTextbookKey] = useState('');
   const [sourceRef, setSourceRef] = useState('');
   const [difficultyMin, setDifficultyMin] = useState('');
@@ -66,6 +68,7 @@ export function AuthorQuestionBankPage(): ReactNode {
     ...(origin ? { origin } : {}),
     ...(status ? { status } : {}),
     ...(visibility ? { visibility } : {}),
+    ...(gradeKey ? { gradeKey } : {}),
     ...(textbookKey ? { textbookKey } : {}),
     ...(sourceRef.trim() ? { sourceRef: sourceRef.trim() } : {}),
     ...(Number.isFinite(Number(difficultyMin)) && difficultyMin !== '' ? { difficultyMin: Number(difficultyMin) } : {}),
@@ -97,6 +100,7 @@ export function AuthorQuestionBankPage(): ReactNode {
     setOrigin('');
     setStatus('');
     setVisibility('');
+    setGradeKey('');
     setTextbookKey('');
     setSourceRef('');
     setDifficultyMin('');
@@ -118,7 +122,7 @@ export function AuthorQuestionBankPage(): ReactNode {
 
       <Card elevation="flat">
         <CardContent className="space-y-4 py-4">
-          <div className="grid gap-3 md:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-6">
             <label className="space-y-1.5 md:col-span-2">
               <span className="text-xs font-medium text-text-muted">{t('admin.search')}</span>
               <Input value={search} onChange={(event) => { setSearch(event.target.value); setOffset(0); }} />
@@ -127,6 +131,7 @@ export function AuthorQuestionBankPage(): ReactNode {
             <SelectFilter label={t('questionBank.origin')} value={origin} onChange={(value) => { setOrigin(value as QuestionOrigin | ''); setOffset(0); }} options={QUESTION_ORIGINS} labelFor={(value) => t(`question.origin.${value}` as MessageKey)} />
             <SelectFilter label={t('catalogue.state')} value={status} onChange={(value) => { setStatus(value as PublicationStatus | ''); setOffset(0); }} options={PUBLICATION_STATUSES} labelFor={(value) => t(`publication.${value}` as MessageKey)} />
             <SelectFilter label={t('questionBank.visibility')} value={visibility} onChange={(value) => { setVisibility(value as QuestionVisibility | ''); setOffset(0); }} options={QUESTION_VISIBILITIES} labelFor={(value) => t(`question.visibility.${value}` as MessageKey)} />
+            <SelectFilter label={t('content.grade')} value={gradeKey} onChange={(value) => { setGradeKey(value); setOffset(0); }} options={QUESTION_BANK_SUPPORTED_GRADES} labelFor={(value) => value} />
           </div>
           <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_9rem_9rem_auto]">
             <label className="space-y-1.5">
