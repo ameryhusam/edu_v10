@@ -1,0 +1,182 @@
+{
+  "schema_version": "1.0.0",
+  "package_type": "TEXTBOOK_CATALOG_SEED",
+  "package_key": "EDU-GEO-G07-ED2026",
+  "textbook": {
+    "key": "EDU-GEO-G07-ED2026",
+    "title": "مبادئ الجغرافيا الطبيعية للصف السابع من مرحلة التعليم الأساسي",
+    "subject": "الجغرافيا",
+    "grade": "G07",
+    "part": null,
+    "edition": "1447هـ - 2026م",
+    "publishYear": 2026,
+    "publisher": "وزارة التربية والتعليم والبحث العلمي - الجمهورية اليمنية"
+  },
+  "source": {
+    "file": "geographic_7th (1).pdf",
+    "tocPdfStartPage": 7,
+    "tocPdfEndPage": 7
+  },
+  "toc": [
+    {
+      "order": 1,
+      "text": "الفصل الدراسي الأول",
+      "printedPage": null
+    },
+    {
+      "order": 2,
+      "text": "الوحدة الأولى: الخرائط",
+      "printedPage": 7
+    },
+    {
+      "order": 3,
+      "text": "الدرس الأول: الإحداثيات",
+      "printedPage": 8
+    },
+    {
+      "order": 4,
+      "text": "الدرس الثاني: الخرائط",
+      "printedPage": 14
+    },
+    {
+      "order": 5,
+      "text": "الدرس الثالث: رسم الخرائط",
+      "printedPage": 20
+    },
+    {
+      "order": 6,
+      "text": "الدرس الرابع: الصور الجوية والفضائية",
+      "printedPage": 24
+    },
+    {
+      "order": 7,
+      "text": "تقويم الوحدة الأولى",
+      "printedPage": 29
+    },
+    {
+      "order": 8,
+      "text": "الوحدة الثانية: الأرض والكون",
+      "printedPage": 31
+    },
+    {
+      "order": 9,
+      "text": "الدرس الأول: الكون والمجموعة الشمسية",
+      "printedPage": 32
+    },
+    {
+      "order": 10,
+      "text": "الدرس الثاني: شكل الأرض وأبعادها",
+      "printedPage": 37
+    },
+    {
+      "order": 11,
+      "text": "الدرس الثالث: حركة الأرض",
+      "printedPage": 42
+    },
+    {
+      "order": 12,
+      "text": "الدرس الرابع: القمر وتأثيره على الأرض",
+      "printedPage": 47
+    },
+    {
+      "order": 13,
+      "text": "تقويم الوحدة الثانية",
+      "printedPage": 52
+    },
+    {
+      "order": 14,
+      "text": "الوحدة الثالثة: الغلاف الجوي",
+      "printedPage": 53
+    },
+    {
+      "order": 15,
+      "text": "الدرس الأول: الغلاف الجوي - مكوناته - طبقاته - أهميته",
+      "printedPage": 54
+    },
+    {
+      "order": 16,
+      "text": "الدرس الثاني: المناخ: عناصره، أهميته، العوامل المؤثرة فيه",
+      "printedPage": 58
+    },
+    {
+      "order": 17,
+      "text": "الدرس الثالث: تلوث الهواء الجوي، الاحتباس الحراري، الأمطار الحمضية",
+      "printedPage": 68
+    },
+    {
+      "order": 18,
+      "text": "تقويم الوحدة الثالثة",
+      "printedPage": 75
+    },
+    {
+      "order": 19,
+      "text": "الفصل الدراسي الثاني",
+      "printedPage": null
+    },
+    {
+      "order": 20,
+      "text": "الوحدة الرابعة: الغلاف الصخري",
+      "printedPage": 76
+    },
+    {
+      "order": 21,
+      "text": "الدرس الأول: الغلاف الصخري",
+      "printedPage": 77
+    },
+    {
+      "order": 22,
+      "text": "الدرس الثاني: التربة",
+      "printedPage": 82
+    },
+    {
+      "order": 23,
+      "text": "الدرس الثالث: عوامل تشكيل سطح الأرض",
+      "printedPage": 88
+    },
+    {
+      "order": 24,
+      "text": "الدرس الرابع: أشكال سطح الأرض",
+      "printedPage": 97
+    },
+    {
+      "order": 25,
+      "text": "تقويم الوحدة الرابعة",
+      "printedPage": 107
+    },
+    {
+      "order": 26,
+      "text": "الوحدة الخامسة: الغلاف المائي والحيوي",
+      "printedPage": 108
+    },
+    {
+      "order": 27,
+      "text": "الدرس الأول: الغلاف المائي",
+      "printedPage": 109
+    },
+    {
+      "order": 28,
+      "text": "الدرس الثاني: المياه على سطح الأرض",
+      "printedPage": 114
+    },
+    {
+      "order": 29,
+      "text": "الدرس الثالث: حركة مياه البحار والمحيطات",
+      "printedPage": 117
+    },
+    {
+      "order": 30,
+      "text": "الدرس الرابع: الغلاف الحيوي",
+      "printedPage": 121
+    },
+    {
+      "order": 31,
+      "text": "تقويم الوحدة الخامسة",
+      "printedPage": 125
+    },
+    {
+      "order": 32,
+      "text": "المصادر والمراجع",
+      "printedPage": 126
+    }
+  ]
+}
