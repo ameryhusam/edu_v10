@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "package_type": "QUESTION_BANK_SCOPE",
+  "supported_grades": [
+    "G04",
+    "G05",
+    "G06",
+    "G07",
+    "G08",
+    "G09"
+  ],
+  "notes": [
+    "The question-bank workstream currently targets grades 4 through 9.",
+    "This scope does not change the canonical Grade catalogue, which may contain other grades.",
+    "A textbook/question package must use one of the supported grade keys.",
+    "Question data for a grade is added only from an authoritative prepared package; this manifest does not fabricate content."
+  ]
+}
