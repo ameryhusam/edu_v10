@@ -5,7 +5,6 @@ import { ListTree, Download, ChevronDown, ChevronUp, BookOpen } from 'lucide-rea
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';
 import { LoadingState, ErrorState, EmptyState } from '../../design-system/patterns/data-states';
-import { PublicationBadge } from './publication-badge';
 import { ActionModal, ActionStepCard } from '../../design-system/patterns/action-modal';
 import { textbookAdministrationApi, type TextbookSummary } from './content.api';
 import { queryKeys } from '../../shared/api/query-keys';
