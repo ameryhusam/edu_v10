@@ -7,6 +7,8 @@ from typing import Any, Dict, List, Optional
 from .page_mapping import PageMappingEngine
 from .reader import PdfReader
 from .workspace_validation import validate_segmentation_input
+from .semantic_blocks import extract_page_semantic_blocks
+from .question_extraction import extract_question_blocks, group_cross_page_questions
 
 
 def slugify(text: str, fallback: str = "item") -> str:
@@ -131,6 +133,7 @@ class LessonSegmenter:
         )
 
         processed_units: List[Dict[str, Any]] = []
+        all_page_semantics: List[Dict[str, Any]] = []
         flat_lessons_pkg: List[Dict[str, Any]] = []
         flat_units_pkg: List[Dict[str, Any]] = []
         assets_registry: List[Dict[str, Any]] = []
@@ -224,11 +227,21 @@ class LessonSegmenter:
                 aggregated_text = []
                 grounding_pages = []
                 grounding_chunks = []
+                lesson_page_semantics: List[Dict[str, Any]] = []
 
                 for p_print, p_pdf in zip(printed_pages, pdf_pages):
                     pdf_idx = p_pdf - 1
                     if 0 <= pdf_idx < self.reader.page_count:
                         p_text = self.reader.extract_page_text(pdf_idx)
+                        page_semantics = extract_page_semantic_blocks(
+                            self.reader,
+                            pdf_idx,
+                            printed_page=p_print,
+                            toc_titles=[str(les.get("title", ""))],
+                        )
+                        page_semantics["questionBlocks"] = extract_question_blocks(page_semantics)
+                        lesson_page_semantics.append(page_semantics)
+                        all_page_semantics.append(page_semantics)
                         grounding_pages.append({
                             "printedPage": p_print,
                             "pdfPage": p_pdf,
