@@ -33,6 +33,7 @@ import {
   unitKey as buildUnitKey,
   textbookKey as buildTextbookKey,
   normalizeSlug,
+  questionKey as buildQuestionKey,
   type TextbookKey,
   type UnitKey,
 } from '../../../shared/kernel/identifiers.js';
@@ -84,6 +85,7 @@ export interface ImportProblem {
 
 export interface ImportOptions {
   readonly dryRun: boolean;
+  readonly mode?: 'APPEND_DEDUP' | 'UPDATE';
   readonly targetTextbookKey?: string;
   readonly selectedUnits?: readonly string[];
   readonly selectedLessons?: readonly string[];
@@ -512,6 +514,7 @@ export class ContentImportService {
     rawPkg: ContentPackage | Record<string, unknown>,
     options: ImportOptions,
   ): Promise<Result<ImportOutcome>> {
+    const mode = options.mode ?? 'APPEND_DEDUP';
     const problems: ImportProblem[] = [];
 
     // Normalize or convert hierarchical / partial packages
@@ -648,6 +651,15 @@ export class ContentImportService {
       }
       textbookKey = createdTextbook.value.key;
       generatedKeys.push({ sheet: 'textbook', reference: pkg.textbook.key, key: textbookKey });
+    } else if (mode === 'UPDATE') {
+      const update = await this.authoring.updateNode(ctx, 'textbook', textbookKey, {
+        title: pkg.textbook.title,
+        description: pkg.textbook.description ?? null,
+        issuer: pkg.textbook.issuer ?? null,
+        publishYear: pkg.textbook.publishYear ?? null,
+        totalPages: pkg.textbook.totalPages ?? null,
+      });
+      if (!update.ok) problems.push(this.toProblem('textbook', 1, textbookKey, update.error));
     }
 
     // ── 5. Apply, in declared dependency order ────────────────────────────
@@ -694,13 +706,15 @@ export class ContentImportService {
         generatedKeys.push({ sheet: 'units', reference: unit.slug, key: result.value.key });
         created.units += 1;
       } else if (result.error.code === 'content.slug_taken') {
-        // Already present. An import that cannot be re-run after fixing one
-        // row is not usable, so an existing row is "unchanged", not an error.
-        // The key is derived deterministically from parent + slug, so the
-        // existing node's key is the one this call would have produced.
-        unchanged.units += 1;
         const existing = deriveUnitKey(textbookKey, unit.slug);
         if (existing) unitKeyBySlug.set(unit.slug, existing);
+        if (mode === 'UPDATE' && existing) {
+          const update = await this.authoring.updateNode(ctx, 'unit', existing, {
+            name: unit.name, startPage: unit.startPage ?? null, endPage: unit.endPage ?? null, sourceRef: unit.sourceRef ?? null,
+          });
+          if (!update.ok) problems.push(this.toProblem('units', index, unit.slug, update.error));
+        }
+        unchanged.units += 1;
       } else {
         problems.push(this.toProblem('units', index, unit.slug, result.error));
       }
@@ -738,9 +752,16 @@ export class ContentImportService {
         generatedKeys.push({ sheet: 'lessons', reference: path, key: result.value.key });
         created.lessons += 1;
       } else if (result.error.code === 'content.slug_taken') {
-        unchanged.lessons += 1;
         const existing = deriveLessonKey(unitKey, lesson.slug);
         if (existing) lessonKeyByPath.set(path, existing);
+        if (mode === 'UPDATE' && existing) {
+          const update = await this.authoring.updateNode(ctx, 'lesson', existing, {
+            name: lesson.name, description: lesson.description ?? null, estimatedMins: lesson.estimatedMins ?? null,
+            startPage: lesson.startPage ?? null, endPage: lesson.endPage ?? null, sourceRef: lesson.sourceRef ?? null,
+          });
+          if (!update.ok) problems.push(this.toProblem('lessons', index, lesson.slug, update.error));
+        }
+        unchanged.lessons += 1;
       } else {
         problems.push(this.toProblem('lessons', index, lesson.slug, result.error));
       }
@@ -782,11 +803,18 @@ export class ContentImportService {
         generatedKeys.push({ sheet: 'concepts', reference: concept.slug, key: result.value.key });
         created.concepts += 1;
       } else if (result.error.code === 'content.slug_taken') {
-        unchanged.concepts += 1;
-        // Already present from an earlier run: its attachments still need the
-        // key, so re-derive it the same way the authoring service would.
         const existing = deriveConceptKey(lessonKey, concept.slug);
         if (existing) conceptKeyByPath.set(conceptPath, existing);
+        if (mode === 'UPDATE' && existing) {
+          const update = await this.authoring.updateNode(ctx, 'concept', existing, {
+            name: concept.name, description: concept.description ?? null, difficulty: concept.difficulty,
+            importance: concept.importance, masteryThreshold: concept.masteryThreshold, isCore: concept.isCore,
+            pageNumber: concept.pageNumber ?? null, sourceRef: concept.sourceRef ?? null,
+            nameEn: concept.nameEn ?? null, bloomsLevel: concept.bloomsLevel ?? null,
+          });
+          if (!update.ok) problems.push(this.toProblem('concepts', index, concept.slug, update.error));
+        }
+        unchanged.concepts += 1;
       } else {
         problems.push(this.toProblem('concepts', index, concept.slug, result.error));
       }
