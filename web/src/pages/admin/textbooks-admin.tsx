@@ -88,8 +88,8 @@ export function TextbooksAdminPage(): ReactNode {
     queryFn: () => administrationApi.subjects.list(),
   });
   const textbooksQuery = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'ALL', limit: 100 }),
-    queryFn: () => textbookAdministrationApi.textbooks({ limit: 100 }),
+    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'ALL', limit: 250 }),
+    queryFn: () => textbookAdministrationApi.textbooks({ limit: 250 }),
   });
 
   const transitionMutation = useMutation({
@@ -105,9 +105,9 @@ export function TextbooksAdminPage(): ReactNode {
   const subjects = subjectsQuery.data ?? [];
   const textbooks = textbooksQuery.data?.rows ?? [];
   const subjectsByKey = useMemo(() => new Map(subjects.map((subject) => [subject.key, subject])), [subjects]);
-  const activeGrades = useMemo(() => grades.filter((grade) => grade.isActive !== false), [grades]);
+  const displayGrades = useMemo(() => [...grades].sort((a, b) => a.ordinal - b.ordinal), [grades]);
   const selectedGrade = selectedGradeKey
-    ? activeGrades.find((grade) => grade.key === selectedGradeKey) ?? null
+    ? displayGrades.find((grade) => grade.key === selectedGradeKey) ?? null
     : null;
 
   const partValue = selectedPart === 1 ? 'PART_1' : 'PART_2';
@@ -126,7 +126,7 @@ export function TextbooksAdminPage(): ReactNode {
   }, [partValue, search, selectedGradeKey, statusFilter, subjectsByKey, textbooks]);
 
   const gradeStats = useMemo(() => {
-    return new Map(activeGrades.map((grade) => {
+    return new Map(displayGrades.map((grade) => {
       const books = textbooks.filter((book) => book.gradeKey === grade.key && book.part === partValue);
       return [grade.key, {
         total: books.length,
@@ -135,7 +135,7 @@ export function TextbooksAdminPage(): ReactNode {
         draft: books.filter((book) => book.status === 'DRAFT').length,
       }];
     }));
-  }, [activeGrades, partValue, textbooks]);
+  }, [displayGrades, partValue, textbooks]);
 
   const totals = useMemo(() => ({
     total: visibleBooks.length,
@@ -233,7 +233,7 @@ export function TextbooksAdminPage(): ReactNode {
               <div className="mb-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-black text-text">{t('settings.grades')}</p>
-                  <p className="text-2xs text-text-muted">{activeGrades.length} {t('textbookAdmin.activeGradesOnly')}</p>
+                  <p className="text-2xs text-text-muted">{displayGrades.length} {t('settings.grades')}</p>
                 </div>
                 <Users className="size-4 text-text-muted" />
               </div>
@@ -246,7 +246,7 @@ export function TextbooksAdminPage(): ReactNode {
                   <span>{t('common.all')}</span>
                   <span>{textbooks.filter((book) => book.part === partValue).length}</span>
                 </button>
-                {activeGrades.map((grade) => {
+                {displayGrades.map((grade) => {
                   const stats = gradeStats.get(grade.key) ?? { total: 0, published: 0, review: 0, draft: 0 };
                   const selected = grade.key === selectedGradeKey;
                   return (
