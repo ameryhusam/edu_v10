@@ -76,7 +76,7 @@ export function setSessionEndedListener(listener: SessionEndedListener | null): 
  */
 let refreshInFlight: Promise<boolean> | null = null;
 
-async function refreshAccessToken(): Promise<boolean> {
+export async function restoreAccessToken(): Promise<boolean> {
   refreshInFlight ??= (async () => {
     try {
       const response = await fetch(`${BASE}/auth/refresh`, {
@@ -169,7 +169,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
 
   // 401 once: refresh, then replay. Twice: the session is genuinely over.
   if (response.status === 401 && !options.skipAuthRefresh) {
-    const refreshed = await refreshAccessToken();
+    const refreshed = await restoreAccessToken();
     if (refreshed) {
       try {
         response = await send();
