@@ -53,7 +53,7 @@ class GeminiFreeProvider(AIProvider):
 
     def __init__(self, api_key: Optional[str] = None, model_name: Optional[str] = None):
         _load_env_file()
-        configured = model_name or os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+        configured = model_name or os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
         if configured not in SUPPORTED_MODELS:
             raise ValueError(
                 f"Unsupported Gemini model: {configured}. "
@@ -61,7 +61,7 @@ class GeminiFreeProvider(AIProvider):
             )
         self.model_name = configured
         self.client = GeminiClient(api_key=api_key, model_name=configured)
-        self.api_key = api_key or os.environ.get("GEMINI_API_KEYS", os.environ.get("GEMINI_API_KEY", ""))
+        self.api_key = api_key or (self.client.api_keys[0] if self.client.api_keys else "")
 
     @property
     def provider_name(self) -> str:
