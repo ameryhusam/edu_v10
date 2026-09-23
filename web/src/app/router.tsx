@@ -227,7 +227,7 @@ export function AppRouter(): ReactNode {
                   <Route path="/parent/support" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
                   <Route path="/parent/*" element={<RequireRole roles={['PARENT']}><PlaceholderRoute area="parent" /></RequireRole>} />
                   <Route path="/author" element={<RequireRole roles={['CONTENT_AUTHOR']}><Navigate to="/author/textbooks" replace /></RequireRole>} />
-                  <Route path="/author/textbooks" element={<RequireRole roles={['CONTENT_AUTHOR']}><PlaceholderRoute area="author" /></RequireRole>} />
+                  <Route path="/author/textbooks" element={<RequireRole roles={['CONTENT_AUTHOR']}><TextbooksAdmin /></RequireRole>} />
                   <Route path="/author/questions" element={<RequireRole roles={['CONTENT_AUTHOR']}><AuthorQuestionBank /></RequireRole>} />
                   <Route path="/author/*" element={<RequireRole roles={['CONTENT_AUTHOR']}><PlaceholderRoute area="author" /></RequireRole>} />
                   <Route path="/admin" element={<RequireRole roles={['SYSTEM_ADMIN', 'SCHOOL_ADMIN']}><AdminOverview /></RequireRole>} />
