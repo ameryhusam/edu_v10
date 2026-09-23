@@ -21,8 +21,6 @@ type Step = 1 | 2 | 3;
 export function TextbookWorkspaceModal({ open, onClose, initialCoordinates, onImportSuccess }: TextbookWorkspaceModalProps): ReactNode {
   const qc = useQueryClient();
   const [step, setStep] = useState<Step>(1);
-  const [grade, setGrade] = useState(initialCoordinates?.grade ?? '');
-  const [subject, setSubject] = useState(initialCoordinates?.subject ?? '');
   const [file, setFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [workspace, setWorkspace] = useState<string | null>(null);
@@ -41,8 +39,6 @@ export function TextbookWorkspaceModal({ open, onClose, initialCoordinates, onIm
       return textbookAdministrationApi.workspacePrepareUpload({
         file,
         part: initialCoordinates?.part === 'PART_1' || initialCoordinates?.part === 'PART_2' ? initialCoordinates.part : undefined,
-        grade: grade.trim(),
-        subject: subject.trim(),
         edition: initialCoordinates?.edition,
         title: initialCoordinates?.title,
         autoSegment: true,
@@ -113,7 +109,7 @@ export function TextbookWorkspaceModal({ open, onClose, initialCoordinates, onIm
       <div className="grid grid-cols-3 gap-2">{steps.map(s => <button key={s.n} type="button" onClick={() => s.n === 1 || workspace ? setStep(s.n) : undefined} disabled={s.n > 1 && !workspace} className={`rounded-xl border p-3 text-start transition ${step === s.n ? 'border-accent/40 bg-accent/10' : 'border-border bg-surface'}`}><div className="flex items-center gap-2 text-xs font-black text-text">{s.icon}<span>{s.label}</span></div><div className="mt-1 text-2xs text-text-muted">{s.n === 1 ? 'اختيار الصف والمادة ورفع PDF' : s.n === 2 ? 'معاينة البنية والصفحات' : 'Dry Run ثم الحفظ'}</div></button>)}</div>
       {error ? <div className="flex items-center gap-2 rounded-xl border border-danger/30 bg-danger-subtle p-3 text-xs font-semibold text-danger"><AlertCircle className="size-4"/>{error}</div> : null}
       {identity ? <section className="rounded-2xl border border-warning/30 bg-warning-subtle p-4"><h3 className="text-sm font-black text-text">تأكيد الهوية المكتشفة</h3><p className="mt-1 text-xs text-text-muted">هناك اختلاف بين ما حددته والهوية التي استخرجها المحرك. اختر المتابعة فقط إذا كانت الهوية المكتشفة صحيحة.</p><div className="mt-3 grid gap-2 sm:grid-cols-2">{(identity.conflicts ?? []).map((c: any) => <div key={c.field} className="rounded-xl border border-border bg-surface p-3 text-xs"><b>{c.field}</b><div className="mt-1 text-text-muted">{c.declared ?? '—'} ← {c.detected ?? '—'}</div></div>)}</div><div className="mt-3 flex gap-2"><Button variant="primary" size="sm" loading={prepare.isPending} onClick={() => prepare.mutate(true)}>تأكيد والمتابعة</Button><Button variant="ghost" size="sm" onClick={() => setIdentity(null)}>إلغاء</Button></div></section> : null}
-      {step === 1 ? <TextbookWorkspaceUploadStep grade={grade} onGradeChange={setGrade} subject={subject} onSubjectChange={setSubject} selectedFile={file} fileInputRef={fileRef} onFileChange={onFile} isPreparePending={prepare.isPending} onPrepare={() => prepare.mutate(false)} /> : null}
+      {step === 1 ? <TextbookWorkspaceUploadStep selectedFile={file} fileInputRef={fileRef} onFileChange={onFile} isPreparePending={prepare.isPending} onPrepare={() => prepare.mutate(false)} /> : null}
       {step === 2 ? <div className="space-y-4"><div className="space-y-3"><div className="flex flex-wrap items-center gap-2"><Badge tone="info">Workspace جاهزة</Badge>{workspace ? <span className="text-2xs text-text-muted">تم اختيار مساحة مراجعة</span> : null}</div>{availableWorkspaces.length > 1 ? <div className="rounded-2xl border border-border bg-surface p-3"><div className="text-xs font-black text-text">اختر الجزء المراد مراجعته</div><div className="mt-2 grid gap-2 sm:grid-cols-2">{availableWorkspaces.map(item => <Button key={item.workspaceDir} variant={workspace === item.workspaceDir ? "primary" : "secondary"} size="sm" onClick={() => setWorkspace(item.workspaceDir)}>{item.part === "PART_2" ? "الجزء الثاني" : "الجزء الأول"}</Button>)}</div></div> : null}</div><TextbookWorkspaceSliceView isInspecting={inspected.isPending} inspectedWorkspace={inspected.data} segmentPending={reconcile.isPending} onSegment={() => reconcile.mutate()} onBack={() => setStep(1)} onVerifyAndDryRun={() => verify.mutate()} dryRunPending={verify.isPending} /></div> : null}
       {step === 3 ? <TextbookWorkspaceSyncView dryRunResult={dryRun} importResult={result} syncPending={apply.isPending} onSync={() => apply.mutate()} onBack={() => setStep(2)} /> : null}
       {result ? <div className="rounded-2xl border border-success/30 bg-success-subtle p-4"><div className="flex items-center gap-2 text-sm font-black text-success"><CheckCircle2 className="size-5"/>اكتمل الاستيراد</div><p className="mt-1 text-xs text-text-muted">تم تطبيق Workspace عبر المسار القانوني للاستيراد.</p></div> : null}
