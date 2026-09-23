@@ -86,7 +86,7 @@ def test_absence_of_part_terms_in_first_five_is_a_both_indicator():
     assert result["status"] == "REVIEW"
 
 
-def test_combined_pdf_does_not_split_on_part_two_toc_mention_only():
+def test_part_two_toc_mention_marks_combined_book_but_does_not_split():
     texts = [
         "الجزء الأول",
         "فهرس: الجزء الثاني",
@@ -94,8 +94,8 @@ def test_combined_pdf_does_not_split_on_part_two_toc_mention_only():
 
     result = detect_combined_part_boundary(FakeReader(texts), analysis_pages=15)
 
-    assert result["status"] == "IDENTIFIED"
-    assert result["detectedPart"] == "PART_1"
+    assert result["status"] == "REVIEW"
+    assert result["detectedPart"] == "BOTH"
     assert result["boundaryPdfPage"] is None
 
 
