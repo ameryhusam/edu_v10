@@ -104,16 +104,39 @@ class PdfReader:
             # use extract_page_text() when running on the fallback backend.
             return []
 
-        raw_blocks = self.doc[page_num].get_text("blocks")
+        page = self.doc[page_num]
+        raw_blocks = page.get_text("blocks")
+        # Build a lightweight bbox -> font-size lookup from the structured
+        # text representation. Geometry remains the stable block contract;
+        # font size is supplementary visual evidence for heading detection.
+        font_sizes: Dict[tuple[float, float, float, float], float] = {}
+        try:
+            for block in page.get_text("dict").get("blocks", []):
+                if block.get("type") != 0:
+                    continue
+                bbox = tuple(float(v) for v in block.get("bbox", (0, 0, 0, 0)))
+                sizes = [
+                    float(span.get("size", 0) or 0)
+                    for line in block.get("lines", [])
+                    for span in line.get("spans", [])
+                    if span.get("size")
+                ]
+                if sizes:
+                    font_sizes[bbox] = max(sizes)
+        except Exception:
+            font_sizes = {}
+
         blocks: List[Dict[str, Any]] = []
         for b in raw_blocks:
             norm_text = normalize_arabic_text(b[4])
             if norm_text.strip():
+                bbox = tuple(float(v) for v in b[:4])
                 blocks.append({
-                    "bbox": (b[0], b[1], b[2], b[3]),
+                    "bbox": bbox,
                     "text": norm_text,
                     "block_no": b[5],
                     "type": b[6],
+                    "fontSize": font_sizes.get(bbox, 0.0),
                 })
         return blocks
 
