@@ -110,6 +110,8 @@ class PdfReader:
         # text representation. Geometry remains the stable block contract;
         # font size is supplementary visual evidence for heading detection.
         font_sizes: Dict[tuple[float, float, float, float], float] = {}
+        font_bold: Dict[tuple[float, float, float, float], bool] = {}
+        font_colors: Dict[tuple[float, float, float, float], int] = {}
         try:
             for block in page.get_text("dict").get("blocks", []):
                 if block.get("type") != 0:
@@ -123,8 +125,23 @@ class PdfReader:
                 ]
                 if sizes:
                     font_sizes[bbox] = max(sizes)
+                spans = [
+                    span
+                    for line in block.get("lines", [])
+                    for span in line.get("spans", [])
+                ]
+                if spans:
+                    font_bold[bbox] = any(
+                        "bold" in str(span.get("font", "")).lower()
+                        for span in spans
+                    )
+                    colors = [span.get("color") for span in spans if span.get("color") is not None]
+                    if colors:
+                        font_colors[bbox] = int(colors[0])
         except Exception:
             font_sizes = {}
+            font_bold = {}
+            font_colors = {}
 
         blocks: List[Dict[str, Any]] = []
         for b in raw_blocks:
@@ -137,6 +154,8 @@ class PdfReader:
                     "block_no": b[5],
                     "type": b[6],
                     "fontSize": font_sizes.get(bbox, 0.0),
+                    "fontBold": font_bold.get(bbox, False),
+                    "fontColor": font_colors.get(bbox),
                 })
         return blocks
 
