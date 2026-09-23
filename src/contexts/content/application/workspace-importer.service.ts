@@ -282,7 +282,10 @@ export class WorkspaceImporterService {
   }) {
     const proposal = await this.contentEngine.identify({ pdf: input.pdfBuffer, analysisPages: 15, dpi: 150 });
     const detected = proposal.identity;
-    const detectedEdition = detected.edition ?? undefined;
+    // In existing-book mode the administrator may already know the printed
+    // edition. Detection is evidence, not a prerequisite when a declared
+    // edition is available; when both exist they are reconciled below.
+    const detectedEdition = detected.edition ?? input.declared?.edition ?? undefined;
     const conflicts: Array<{ field: string; declared: string | null; detected: string | null }> = [];
     const compare = (field: 'subjectKey' | 'gradeKey' | 'part' | 'edition') => {
       const declared = input.declared?.[field] ?? null;
@@ -291,7 +294,7 @@ export class WorkspaceImporterService {
     };
     compare('subjectKey'); compare('gradeKey'); compare('part'); compare('edition');
 
-    if (proposal.status === 'NEEDS_REVIEW' || !detected.subjectKey || !detected.gradeKey || !detected.part || (detected.part !== 'BOTH' && !detected.edition)) {
+    if (proposal.status === 'NEEDS_REVIEW' || !detected.subjectKey || !detected.gradeKey || !detected.part || (detected.part !== 'BOTH' && !detectedEdition)) {
       return { status: 'NEEDS_REVIEW' as const, proposal, conflicts };
     }
     if (conflicts.length > 0 && !input.confirmDetectedIdentity) {
