@@ -25,9 +25,15 @@ class ContentAIService:
         *,
         page_texts: List[Dict[str, Any]],
         images_b64: Optional[List[str]] = None,
+        pdf_path: Optional[Path] = None,
     ) -> Dict[str, Any]:
         """
-        Validate textbook identity + TOC from the first ten PDF pages.
+        Validate textbook identity + TOC from the initial PDF analysis window.
+
+        When PyMuPDF rendering is unavailable, the original PDF is sent to
+        Gemini as an application/pdf part. pypdf remains responsible for local
+        text extraction/page counting; Gemini supplies the visual/semantic
+        evidence needed for identity.
 
         AI is evidence validation, not the canonical persistence layer.
         """
@@ -158,16 +164,17 @@ class ContentAIService:
 8. سنة النشر
 9. الجهة الناشرة أو المصدرة
 
-قواعد صارمة:
-- لا تخمن.
-- لا تستنتج الطبعة من السنة الدراسية.
-- لا تستنتج الطبعة من سنة النشر.
-- لا تستنتج الجزء من اسم الملف.
-- لا تستنتج الفصل الدراسي من السنة الدراسية.
+قواعد الهوية الإلزامية:
+- لا تخمن ولا تنشئ قيمة من عندك.
+- subjectKey يجب أن يكون مفتاح المادة النظامي بصيغة uppercase فقط عندما يكون اسم المادة الظاهر في المصدر قابلاً للمطابقة بشكل مؤكد؛ أمثلة معروفة: ARAB، MATH، SCI، ENG. إذا تعذر تحديد المفتاح النظامي من الدليل، أرجع null.
+- gradeKey يجب أن يكون بالشكل GNN (مثل G07) عندما يظهر الصف بوضوح. إذا ظهر رقم الصف فقط، يمكن تطبيعه إلى GNN؛ لا تستنتجه من مستوى أو وصف غير صريح.
 - "الجزء الأول" = PART_1.
 - "الجزء الثاني" = PART_2.
 - إذا ظهر الجزء الأول والثاني في الكتاب نفسه = BOTH.
-- إذا لم يوجد دليل واضح = null.
+- إذا طُبعت عبارة طبعة مع سنة، مثل "الطبعة 2026"، يمكن تطبيع edition إلى ED2026. أما السنة وحدها بدون دليل أنها طبعة فلا تكفي.
+- لا تستنتج edition من السنة الدراسية أو سنة النشر وحدها.
+- لا تستنتج الجزء أو الفصل الدراسي من اسم الملف أو من التخمين.
+- إذا لم يوجد دليل واضح لأي حقل = null.
 
 ثانيًا: الفهرس
 
@@ -203,10 +210,12 @@ class ContentAIService:
             "BOOK_FRONT_MATTER",
             prompt,
             schema,
+            pdf_path=pdf_path,
             images_b64=images_b64,
             context={
                 "pages": page_texts,
-                "maxAnalyzedPdfPages": 10,
+                "maxAnalyzedPdfPages": len(page_texts),
+                "pdfAttachmentProvided": bool(pdf_path),
             },
             timeout=240,
         )
