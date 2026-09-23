@@ -70,7 +70,7 @@ def test_toc_with_both_semesters_marks_source_as_both_but_requires_boundary():
     assert result["boundaryPdfPage"] is None
 
 
-def test_absence_of_part_terms_in_first_five_is_a_both_indicator():
+def test_absence_of_part_terms_in_first_five_does_not_infer_both():
     texts = [
         "الغلاف",
         "وزارة التربية والتعليم",
@@ -81,7 +81,7 @@ def test_absence_of_part_terms_in_first_five_is_a_both_indicator():
 
     result = detect_combined_part_boundary(FakeReader(texts), analysis_pages=15)
 
-    assert result["bothIndicator"] is True
+    assert result["bothIndicator"] is False
     assert result["detectedPart"] == "UNKNOWN"
     assert result["status"] == "REVIEW"
 
@@ -117,3 +117,15 @@ def test_both_cannot_become_workspace_identity():
         textbook_key("SCI", 7, "BOTH", "2026")
     with pytest.raises(ValueError):
         book_workspace("SCI", 7, "BOTH", "2026")
+
+
+def test_english_pupils_book_one_identifies_part_one():
+    texts = [
+        "English Course Pupil's Book 1",
+        "Contents",
+    ] + ["2.1 Look, listen and answer"] * 8
+
+    result = detect_combined_part_boundary(FakeReader(texts), analysis_pages=15)
+
+    assert result["status"] == "IDENTIFIED"
+    assert result["detectedPart"] == "PART_1"
