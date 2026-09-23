@@ -1,0 +1,1141 @@
+{
+  "grades": [
+    {
+      "id": "G07",
+      "level": 7,
+      "nameAr": "الصف السابع الأساسي",
+      "nameEn": "Grade 7"
+    }
+  ],
+  "subjects": [
+    {
+      "id": "MATH",
+      "code": "MATH",
+      "nameAr": "الرياضيات",
+      "nameEn": "Mathematics"
+    }
+  ],
+  "gradeSubjects": [
+    {
+      "id": "G07-MATH",
+      "gradeId": "G07",
+      "subjectId": "MATH"
+    }
+  ],
+  "books": [
+    {
+      "key": "EDU-MATH-G07-P1-ED2026",
+      "gradeSubjectId": "G07-MATH",
+      "titleAr": "الرياضيات - الصف السابع (الفصل الأول)",
+      "titleEn": "Mathematics - Grade 7 (Part 1)",
+      "part": 1,
+      "edition": "2026"
+    }
+  ],
+  "units": [
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 1,
+      "nameAr": "المجموعات والعلاقات",
+      "startPage": 9,
+      "endPage": 46,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة المجموعات والعلاقات لمستوى الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U02",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 2,
+      "nameAr": "مجموعة الأعداد الصحيحة",
+      "startPage": 47,
+      "endPage": 84,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة مجموعة الأعداد الصحيحة لمستوى الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U03",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 3,
+      "nameAr": "الحدود والمقادير الجبرية",
+      "startPage": 85,
+      "endPage": 121,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة الحدود والمقادير الجبرية لمستوى الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U04",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 4,
+      "nameAr": "المعادلات والمتراجحات",
+      "startPage": 122,
+      "endPage": 149,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة المعادلات والمتراجحات لمستوى الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U05",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 5,
+      "nameAr": "الهندسة والقياس الإحداثي",
+      "startPage": 150,
+      "endPage": 225,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة الهندسة والقياس الإحداثي لمستوى الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U06",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 6,
+      "nameAr": "القياس المجسم وحساب الحجوم",
+      "startPage": 226,
+      "endPage": 254,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة القياس المجسم وحساب الحجوم لمستوى الصف السابع الأساسي."
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U07",
+      "bookKey": "EDU-MATH-G07-P1-ED2026",
+      "orderIndex": 7,
+      "nameAr": "الإحصاء والتحليل البياني",
+      "startPage": 255,
+      "endPage": 270,
+      "description": "دراسة شاملة وتكيفية لمواضيع وحدة الإحصاء والتحليل البياني لمستوى الصف السابع الأساسي."
+    }
+  ],
+  "lessons": [
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 1,
+      "nameAr": "المجموعة والعنصر",
+      "startPage": 9,
+      "endPage": 12
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 2,
+      "nameAr": "طرق كتابة المجموعة وتمثيلها",
+      "startPage": 13,
+      "endPage": 16
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L03",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 3,
+      "nameAr": "المجموعة المنتهية والمجموعة غير المنتهية",
+      "startPage": 17,
+      "endPage": 19
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L04",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 4,
+      "nameAr": "تساوي المجموعات",
+      "startPage": 20,
+      "endPage": 22
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L05",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 5,
+      "nameAr": "المجموعة الجزئية",
+      "startPage": 23,
+      "endPage": 25
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L06",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 6,
+      "nameAr": "تقاطع مجموعتين",
+      "startPage": 26,
+      "endPage": 28
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L07",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 7,
+      "nameAr": "اتحاد مجموعتين",
+      "startPage": 29,
+      "endPage": 31
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L08",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 8,
+      "nameAr": "الزوج المرتب",
+      "startPage": 32,
+      "endPage": 33
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U01-L09",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U01",
+      "orderIndex": 9,
+      "nameAr": "حاصل ضرب مجموعتين والعلاقات",
+      "startPage": 34,
+      "endPage": 42
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U02-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U02",
+      "orderIndex": 1,
+      "nameAr": "مجموعة الأعداد الطبيعية والصحيحة",
+      "startPage": 47,
+      "endPage": 55
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U02-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U02",
+      "orderIndex": 2,
+      "nameAr": "مقارنة وترتيب الأعداد الصحيحة",
+      "startPage": 56,
+      "endPage": 58
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U02-L03",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U02",
+      "orderIndex": 3,
+      "nameAr": "العمليات على الأعداد الصحيحة",
+      "startPage": 59,
+      "endPage": 77
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U02-L04",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U02",
+      "orderIndex": 4,
+      "nameAr": "الأسس والقوى",
+      "startPage": 78,
+      "endPage": 81
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U03-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U03",
+      "orderIndex": 1,
+      "nameAr": "الحدود الجبرية وتطبيقاتها",
+      "startPage": 85,
+      "endPage": 90
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U03-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U03",
+      "orderIndex": 2,
+      "nameAr": "العمليات على الحدود الجبرية المتشابهة",
+      "startPage": 91,
+      "endPage": 106
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U03-L03",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U03",
+      "orderIndex": 3,
+      "nameAr": "المقادير الجبرية والعمليات عليها",
+      "startPage": 107,
+      "endPage": 118
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U04-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U04",
+      "orderIndex": 1,
+      "nameAr": "الجملة المفتوحة والمعادلة",
+      "startPage": 122,
+      "endPage": 129
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U04-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U04",
+      "orderIndex": 2,
+      "nameAr": "معادلات الدرجة الأولى في متغير واحد",
+      "startPage": 130,
+      "endPage": 140
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U04-L03",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U04",
+      "orderIndex": 3,
+      "nameAr": "المتراجحات",
+      "startPage": 141,
+      "endPage": 146
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U05-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U05",
+      "orderIndex": 1,
+      "nameAr": "الزوايا والعلاقات بينها",
+      "startPage": 150,
+      "endPage": 166
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U05-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U05",
+      "orderIndex": 2,
+      "nameAr": "التوازي والزوايا الناتجة عن القاطع",
+      "startPage": 167,
+      "endPage": 181
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U05-L03",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U05",
+      "orderIndex": 3,
+      "nameAr": "زوايا وتطابق المثلثات",
+      "startPage": 182,
+      "endPage": 204
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U05-L04",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U05",
+      "orderIndex": 4,
+      "nameAr": "نظام الإحداثيات والانعكاس",
+      "startPage": 205,
+      "endPage": 219
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U06-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U06",
+      "orderIndex": 1,
+      "nameAr": "المضلعات وخصائصها",
+      "startPage": 226,
+      "endPage": 235
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U06-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U06",
+      "orderIndex": 2,
+      "nameAr": "حساب الحجوم والمجسمات",
+      "startPage": 236,
+      "endPage": 252
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U07-L01",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U07",
+      "orderIndex": 1,
+      "nameAr": "تنظيم وتمثيل البيانات الإحصائية",
+      "startPage": 255,
+      "endPage": 263
+    },
+    {
+      "key": "EDU-MATH-G07-P1-ED2026-U07-L02",
+      "unitKey": "EDU-MATH-G07-P1-ED2026-U07",
+      "orderIndex": 2,
+      "nameAr": "المقاييس الإحصائية",
+      "startPage": 264,
+      "endPage": 267
+    }
+  ],
+  "concepts": [
+    {
+      "key": "MATH-G07-C-SET",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L01",
+      "orderIndex": 1,
+      "nameAr": "المجموعة",
+      "description": "تجمع من الأشياء المحددة تحديداً تاماً، وتسمى الأشياء التي تتكون منها المجموعة عناصر.",
+      "difficultyHint": 0.25
+    },
+    {
+      "key": "MATH-G07-C-ELEMENT",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L01",
+      "orderIndex": 2,
+      "nameAr": "العنصر",
+      "description": "الأشياء التي تتكون منها المجموعة يطلق عليها اسم عناصر.",
+      "difficultyHint": 0.2
+    },
+    {
+      "key": "MATH-G07-C-MEMBERSHIP",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L01",
+      "orderIndex": 3,
+      "nameAr": "الانتماء",
+      "description": "علاقة تربط عنصراً بمجموعة تدل على وجوده فيها، ويُرمز لها بالرمز (∈) ويقرأ 'ينتمي إلى'. وإذا كان العنصر غير موجود يُرمز له بالرمز (∉) ويقرأ 'لا ينتمي إلى'.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-ROSTER-METHOD",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L02",
+      "orderIndex": 1,
+      "nameAr": "طريقة السرد",
+      "description": "كتابة جميع عناصر المجموعة داخل حاصرتين بالشكل { } مع وضع فاصلة (،) بين كل عنصر وآخر، مع عدم تكرار أي عنصر وعدم اشتراط الترتيب.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-SET-BUILDER-NOTATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L02",
+      "orderIndex": 2,
+      "nameAr": "طريقة الصفة المميزة",
+      "description": "كتابة المجموعة بذكر الصفة التي تحدد عناصرها تحديداً واضحاً وتميزها عن غيرها.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-VENN-DIAGRAM",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L02",
+      "orderIndex": 3,
+      "nameAr": "شكل فن",
+      "description": "تمثيل المجموعة برسم منحنى مغلق (دائرة، مستطيل، إلخ) تقع عناصر المجموعة بداخله.",
+      "difficultyHint": 0.25
+    },
+    {
+      "key": "MATH-G07-C-FINITE-SET",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L03",
+      "orderIndex": 1,
+      "nameAr": "المجموعة المنتهية",
+      "description": "المجموعة التي يمكن تحديد وحصر عدد عناصرها.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-INFINITE-SET",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L03",
+      "orderIndex": 2,
+      "nameAr": "المجموعة غير المنتهية",
+      "description": "المجموعة التي لا يمكن تحديد وحصر عدد عناصرها، ونضع ثلاث نقاط (...) للدلالة على استمراريتها.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-EMPTY-SET",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L03",
+      "orderIndex": 3,
+      "nameAr": "المجموعة الخالية",
+      "description": "المجموعة التي لا تحتوي على أي عنصر على الإطلاق، ويُرمز لها بالرمز ∅ (فاي) أو الحاصرتين الفارغتين { }.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-EQUAL-SETS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L04",
+      "orderIndex": 1,
+      "nameAr": "تساوي المجموعات",
+      "description": "تتساوى المجموعتان س، ص (س = ص) إذا كان كل عنصر في س ينتمي إلى ص وكل عنصر في ص ينتمي إلى س؛ أي أن لهما نفس العناصر تماماً.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-SUBSET",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L05",
+      "orderIndex": 1,
+      "nameAr": "المجموعة الجزئية",
+      "description": "يقال للمجموعة س أنها مجموعة جزئية من ص (س ⊂ ص) إذا كان كل عنصر في س ينتمي أيضاً إلى ص.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-INTERSECTION-OF-SETS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L06",
+      "orderIndex": 1,
+      "nameAr": "تقاطع المجموعات",
+      "description": "مجموعة العناصر المشتركة التي تنتمي للمجموعتين معاً في آن واحد، ويُرمز له بالرمز (∩).",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-UNION-OF-SETS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L07",
+      "orderIndex": 1,
+      "nameAr": "اتحاد المجموعات",
+      "description": "مجموعة كل العناصر التي تنتمي للمجموعة الأولى أو الثانية أو كليهما معاً دون تكرار، ويُرمز له بالرمز (∪).",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-ORDERED-PAIR",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L08",
+      "orderIndex": 1,
+      "nameAr": "الزوج المرتب",
+      "description": "ثنائية من العناصر تكتب داخل قوسين دائريين بالشكل (أ، ب) حيث يسمى 'أ' المسقط الأول، ويسمى 'ب' المسقط الثاني، والترتيب فيه جوهري.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-CARTESIAN-PRODUCT",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L09",
+      "orderIndex": 1,
+      "nameAr": "حاصل الضرب الديكارتي",
+      "description": "مجموعة الأزواج المرتبة التي مسقطها الأول ينتمي للمجموعة الأولى ومسقطها الثاني ينتمي للمجموعة الثانية، ويُرمز له بـ س × ص.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-RELATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U01-L09",
+      "orderIndex": 2,
+      "nameAr": "العلاقة",
+      "description": "العلاقة ع من المجموعة س إلى ص هي أي مجموعة جزئية من حاصل الضرب الديكارتي س × ص (ع ⊂ س × ص).",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "MATH-G07-C-NATURAL-NUMBERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L01",
+      "orderIndex": 1,
+      "nameAr": "الأعداد الطبيعية",
+      "description": "مجموعة أعداد العد بالإضافة للصفر ط = { 0، 1، 2، 3، ... } والصفر هو أصغر أعدادها.",
+      "difficultyHint": 0.2
+    },
+    {
+      "key": "MATH-G07-C-INTEGERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L01",
+      "orderIndex": 2,
+      "nameAr": "الأعداد الصحيحة",
+      "description": "المجموعة الشاملة للأعداد الموجبة، السالبة، والصفر ص = { ...، -2، -1، 0، 1، 2، ... }.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-COMPARISON-OF-INTEGERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L02",
+      "orderIndex": 1,
+      "nameAr": "مقارنة الأعداد الصحيحة",
+      "description": "تحديد القيمة الكبرى للأعداد الصحيحة بناءً على موقعها على خط الأعداد؛ حيث يزداد العدد كلما اتجهنا لليمين ويقل كلما اتجهنا لليسار.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-ABSOLUTE-VALUE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L03",
+      "orderIndex": 1,
+      "nameAr": "القيمة المطلقة",
+      "description": "المسافة بين العدد والصفر على خط الأعداد وهي دائماً موجبة، ويُرمز لها بالرمز | أ |.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-ADDITION-OF-INTEGERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L03",
+      "orderIndex": 2,
+      "nameAr": "جمع الأعداد الصحيحة",
+      "description": "عملية جمع الأعداد الصحيحة وتخضع لقواعد الإشارات: المتشابهة نجمع ونضع نفس الإشارة، والمختلفة نطرح ونضع إشارة الأكبر مطلقاً.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-SUBTRACTION-OF-INTEGERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L03",
+      "orderIndex": 3,
+      "nameAr": "طرح الأعداد الصحيحة",
+      "description": "عملية طرح عدد صحيح من آخر تعادل إضافة النظير الجمعي للمطروح إلى المطروح منه.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-MULTIPLICATION-DIVISION-OF-INTEGERS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L03",
+      "orderIndex": 4,
+      "nameAr": "ضرب وقسمة الأعداد الصحيحة",
+      "description": "عمليات الضرب والقسمة وتخضع لقاعدة الإشارات الثابتة: موجب × موجب = موجب، سالب × سالب = موجب، مختلفين = سالب.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-EXPONENTS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L04",
+      "orderIndex": 1,
+      "nameAr": "الأسس",
+      "description": "اختصار لعملية الضرب المتكرر للعدد في نفسه عدة مرات، حيث يكتب أ^ن حيث أ هو الأساس ون هو الأس (عدد المرات).",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-LAWS-OF-EXPONENTS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U02-L04",
+      "orderIndex": 2,
+      "nameAr": "قوانين الأسس",
+      "description": "القواعد الحسابية للقوى متحدة الأساس: عند الضرب نجمع الأسس، وعند القسمة نطرح الأسس.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "MATH-G07-C-ALGEBRAIC-TERM",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L01",
+      "orderIndex": 1,
+      "nameAr": "الحد الجبري",
+      "description": "تعبير رياضي يتكون من حاصل ضرب معامل عددي في متغير (حرف) أو أكثر.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-LIKE-TERMS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L01",
+      "orderIndex": 2,
+      "nameAr": "الحدود المتشابهة",
+      "description": "الحدود الجبرية التي لها نفس المتغيرات وبنفس الأسس والدرجات تماماً، بغض النظر عن اختلاف معاملاتها العددية.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-ADDITION-OF-LIKE-TERMS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L02",
+      "orderIndex": 1,
+      "nameAr": "جمع الحدود المتشابهة",
+      "description": "جمع المعاملات العددية للحدود المتشابهة مع بقاء القسم الرمزي كما هو دون تغيير.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-SUBTRACTION-OF-LIKE-TERMS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L02",
+      "orderIndex": 2,
+      "nameAr": "طرح الحدود المتشابهة",
+      "description": "طرح المعاملات العددية للحدود المتشابهة بإضافة النظير الجمعي للمطروح مع بقاء القسم الرمزي كما هو.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-MULTIPLICATION-OF-TERMS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L02",
+      "orderIndex": 3,
+      "nameAr": "ضرب الحدود الجبرية",
+      "description": "ضرب المعاملات العددية في بعضها، ثم ضرب المتغيرات وتطبيق قوانين الأسس (جمع أسس الحروف المتشابهة).",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-DIVISION-OF-TERMS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L02",
+      "orderIndex": 4,
+      "nameAr": "قسمة الحدود الجبرية",
+      "description": "قسمة المعاملات العددية لبعضها، وقسمة المتغيرات وتطبيق قوانين الأسس (طرح أسس الحروف المتشابهة).",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "MATH-G07-C-ALGEBRAIC-EXPRESSION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L03",
+      "orderIndex": 1,
+      "nameAr": "المقدار الجبري",
+      "description": "ما تكون من حد جبري واحد أو أكثر تفصل بينها إشارات الجمع (+) أو الطرح (-).",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-OPERATIONS-ON-EXPRESSIONS",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U03-L03",
+      "orderIndex": 2,
+      "nameAr": "جمع وطرح المقادير الجبرية",
+      "description": "ترتيب المقادير الجبرية تنازلياً أو تصاعدياً ووضع الحدود المتشابهة تحت بعضها (رأسياً) أو خلطها أفقياً وجمع معاملاتها.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "MATH-G07-C-OPEN-SENTENCE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U04-L01",
+      "orderIndex": 1,
+      "nameAr": "الجملة المفتوحة",
+      "description": "جملة رياضية تحتوي على متغير (مجهول) أو أكثر، ولا يمكن الحكم على صوابها أو خطئها إلا بعد التعويض عن هذا المتغير.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-EQUATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U04-L01",
+      "orderIndex": 2,
+      "nameAr": "المعادلة",
+      "description": "جملة مفتوحة تحتوي على إشارة المساواة (=) وتتكون من طرفين أيمن وأيسر مثل كفتي الميزان.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-LINEAR-EQUATION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U04-L02",
+      "orderIndex": 1,
+      "nameAr": "معادلة الدرجة الأولى",
+      "description": "معادلة كلاسيكية تحتوي على متغير واحد مرفوع للأس 1 وصورتها العامة أس + ب = جـ.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-INEQUALITY",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U04-L03",
+      "orderIndex": 1,
+      "nameAr": "المتراجحة",
+      "description": "جملة رياضية مفتوحة تحتوي على إحدى علامات التباين والترجيح (>، <، ≥، ≤، ≠).",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-SOLVING-INEQUALITIES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U04-L03",
+      "orderIndex": 2,
+      "nameAr": "حل المتراجحات",
+      "description": "إيجاد مجموعة قيم المجهول التي تحقق التباين باستخدام قواعد التحويلات المكافئة، مع قلب إشارة التباين عند الضرب أو القسمة على عدد سالب.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "MATH-G07-C-TYPES-OF-ANGLES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L01",
+      "orderIndex": 1,
+      "nameAr": "أنواع الزوايا",
+      "description": "تصنيف الزوايا حسب قياسها بالدرجات: حادة (<90)، قائمة (=90)، منفرجة (90-180)، مستقيمة (=180)، ومنعكسة (180-360).",
+      "difficultyHint": 0.25
+    },
+    {
+      "key": "MATH-G07-C-COMPLEMENTARY-SUPPLEMENTARY-ANGLES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L01",
+      "orderIndex": 2,
+      "nameAr": "الزاويتان المتتامتان والمتكاملتان",
+      "description": "المتتامتان هما زاويتان مجموع قياسيهما 90 درجة، والمتكاملتان هما زاويتان مجموع قياسيهما 180 درجة.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-VERTICALLY-OPPOSITE-ANGLES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L01",
+      "orderIndex": 3,
+      "nameAr": "التقابل بالرأس",
+      "description": "الزاويتان الناتجتان عن تقاطع مستقيمين وتكونان متقابلتين بالرأس ومتساويتين تماماً في القياس.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-PARALLEL-LINES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L02",
+      "orderIndex": 1,
+      "nameAr": "المستقيمات المتوازية",
+      "description": "مستقيمان يقعان في مستوى واحد ولا يلتقيان أبداً مهما امتدا، والمسافة العمودية بينهما ثابتة.",
+      "difficultyHint": 0.25
+    },
+    {
+      "key": "MATH-G07-C-ALTERNATE-CORRESPONDING-INTERIOR-ANGLES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L02",
+      "orderIndex": 2,
+      "nameAr": "التبادل والتناظر والتحالف",
+      "description": "العلاقات بين الزوايا الناتجة عن قطع مستقيم لمستقيمين متوازيين؛ التبادل يشكل حرف Z (متساوية)، التناظر يشكل حرف F (متساوية)، والداخلية متكاملة مجموعها 180.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-ANGLES-OF-A-TRIANGLE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L03",
+      "orderIndex": 1,
+      "nameAr": "زوايا المثلث",
+      "description": "مجموع قياسات الزوايا الداخلية لأي مثلث يساوي دائماً 180 درجة، والزاوية الخارجة تساوي مجموع الزاويتين الداخلتين عدا المجاورة لها.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-CONGRUENCE-OF-TRIANGLES",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L03",
+      "orderIndex": 2,
+      "nameAr": "تطابق المثلثات",
+      "description": "تطابق مثلثين إذا انطبقت عناصرهما المتناظرة تمام الانطباق، وتوجد 4 حالات للتطابق: ض ض ض، ض ز ض، ز ض ز، وتر وضلع في القائم.",
+      "difficultyHint": 0.5
+    },
+    {
+      "key": "MATH-G07-C-COORDINATE-PLANE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L04",
+      "orderIndex": 1,
+      "nameAr": "المستوى الإحداثي المتعامد",
+      "description": "نظام إحداثي يتكون من تقاطع محورين متعامدين: محور السينات الأفقي (س) ومحور الصادات الرأسي (ص) يتقاطعان في نقطة الأصل (0،0).",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-REFLECTION",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U05-L04",
+      "orderIndex": 2,
+      "nameAr": "الانعكاس الإحداثي",
+      "description": "تحويل هندسي يربط كل نقطة بصورتها كالمرآة: الانعكاس في محور السينات يغير إشارة ص (س، -ص)، وفي الصادات يغير إشارة س (-س، ص)، وفي الأصل يغير الإشارتين معاً.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-POLYGON-DIAGONAL",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U06-L01",
+      "orderIndex": 1,
+      "nameAr": "المضلع والقطر",
+      "description": "المضلع خط منكسر مغلق يتكون من قطع مستقيمة متتابعة تسمى أضلاعاً، وقطر المضلع هو القطعة المستقيمة الواصلة بين رأسين غير متتاليين.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-ANGLES-OF-N-GON",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U06-L01",
+      "orderIndex": 2,
+      "nameAr": "زوايا المضلع النوني",
+      "description": "قانون حساب مجموع زوايا المضلع الداخلية ذي ن ضلعاً: مجموع الزوايا = (ن - 2) × 180.",
+      "difficultyHint": 0.4
+    },
+    {
+      "key": "MATH-G07-C-CUBE-CUBOID",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U06-L02",
+      "orderIndex": 1,
+      "nameAr": "المكعب ومتوازي المستطيلات",
+      "description": "مجسمات ثلاثية الأبعاد؛ حجم متوازي المستطيلات = الطول × العرض × الارتفاع، وحجم المكعب = ل^3 حيث ل هو طول الضلع.",
+      "difficultyHint": 0.35
+    },
+    {
+      "key": "MATH-G07-C-PRISM-CYLINDER",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U06-L02",
+      "orderIndex": 2,
+      "nameAr": "المنشور والاسطوانة",
+      "description": "مجسمات لها قاعدتان متوازيتان ومتطابقتان؛ الحجم لجميعها = مساحة القاعدة × الارتفاع. للاسطوانة: الحجم = π نق٢ ع.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-PYRAMID-CONE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U06-L02",
+      "orderIndex": 3,
+      "nameAr": "الهرم والمخروط",
+      "description": "مجسمات مدببة تنتهي برأس علوي مدبب؛ الحجم = (1/3) × مساحة القاعدة × الارتفاع.",
+      "difficultyHint": 0.45
+    },
+    {
+      "key": "MATH-G07-C-FREQUENCY-TABLE",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U07-L01",
+      "orderIndex": 1,
+      "nameAr": "جدول التفريغ والفرز",
+      "description": "تنظيم وتلخيص البيانات الأولية المشتتة في جدول تكراري منظم باستخدام خطوط فرز رأسية (حيث تشكل كل 5 خطوط حزمة مغلقة) يسهل قراءتها.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-BAR-CHART",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U07-L01",
+      "orderIndex": 2,
+      "nameAr": "التمثيل البياني بالأعمدة",
+      "description": "تمثيل البيانات الإحصائية بصرياً برسم مستطيلات عمودية متباعدة قواعدها متساوية على المحور الأفقي، وارتفاعاتها تمثل التكرار على المحور الرأسي.",
+      "difficultyHint": 0.3
+    },
+    {
+      "key": "MATH-G07-C-ARITHMETIC-MEAN",
+      "gradeId": "G07",
+      "lessonKey": "EDU-MATH-G07-P1-ED2026-U07-L02",
+      "orderIndex": 1,
+      "nameAr": "المتوسط الحسابي",
+      "description": "القيمة الإحصائية التي تصف التوزيع بأكمله؛ المتوسط الحسابي = مجموع القيم ÷ عددها.",
+      "difficultyHint": 0.35
+    }
+  ],
+  "conceptPrerequisites": [
+    {
+      "conceptKey": "MATH-G07-C-ELEMENT",
+      "prerequisiteKey": "MATH-G07-C-SET",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-MEMBERSHIP",
+      "prerequisiteKey": "MATH-G07-C-ELEMENT",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-SET-BUILDER-NOTATION",
+      "prerequisiteKey": "MATH-G07-C-ROSTER-METHOD",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-VENN-DIAGRAM",
+      "prerequisiteKey": "MATH-G07-C-SET-BUILDER-NOTATION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ROSTER-METHOD",
+      "prerequisiteKey": "MATH-G07-C-SET",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-INFINITE-SET",
+      "prerequisiteKey": "MATH-G07-C-FINITE-SET",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-EMPTY-SET",
+      "prerequisiteKey": "MATH-G07-C-INFINITE-SET",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-FINITE-SET",
+      "prerequisiteKey": "MATH-G07-C-ROSTER-METHOD",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-EQUAL-SETS",
+      "prerequisiteKey": "MATH-G07-C-FINITE-SET",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-SUBSET",
+      "prerequisiteKey": "MATH-G07-C-EQUAL-SETS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-INTERSECTION-OF-SETS",
+      "prerequisiteKey": "MATH-G07-C-SUBSET",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-UNION-OF-SETS",
+      "prerequisiteKey": "MATH-G07-C-INTERSECTION-OF-SETS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-ORDERED-PAIR",
+      "prerequisiteKey": "MATH-G07-C-UNION-OF-SETS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-RELATION",
+      "prerequisiteKey": "MATH-G07-C-CARTESIAN-PRODUCT",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-CARTESIAN-PRODUCT",
+      "prerequisiteKey": "MATH-G07-C-ORDERED-PAIR",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-INTEGERS",
+      "prerequisiteKey": "MATH-G07-C-NATURAL-NUMBERS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-COMPARISON-OF-INTEGERS",
+      "prerequisiteKey": "MATH-G07-C-NATURAL-NUMBERS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-ADDITION-OF-INTEGERS",
+      "prerequisiteKey": "MATH-G07-C-ABSOLUTE-VALUE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-SUBTRACTION-OF-INTEGERS",
+      "prerequisiteKey": "MATH-G07-C-ADDITION-OF-INTEGERS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-MULTIPLICATION-DIVISION-OF-INTEGERS",
+      "prerequisiteKey": "MATH-G07-C-SUBTRACTION-OF-INTEGERS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ABSOLUTE-VALUE",
+      "prerequisiteKey": "MATH-G07-C-COMPARISON-OF-INTEGERS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-LAWS-OF-EXPONENTS",
+      "prerequisiteKey": "MATH-G07-C-EXPONENTS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-EXPONENTS",
+      "prerequisiteKey": "MATH-G07-C-ABSOLUTE-VALUE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-NATURAL-NUMBERS",
+      "prerequisiteKey": "MATH-G07-C-RELATION",
+      "strength": 0.9,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-LIKE-TERMS",
+      "prerequisiteKey": "MATH-G07-C-ALGEBRAIC-TERM",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-SUBTRACTION-OF-LIKE-TERMS",
+      "prerequisiteKey": "MATH-G07-C-ADDITION-OF-LIKE-TERMS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-MULTIPLICATION-OF-TERMS",
+      "prerequisiteKey": "MATH-G07-C-SUBTRACTION-OF-LIKE-TERMS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-DIVISION-OF-TERMS",
+      "prerequisiteKey": "MATH-G07-C-MULTIPLICATION-OF-TERMS",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ADDITION-OF-LIKE-TERMS",
+      "prerequisiteKey": "MATH-G07-C-ALGEBRAIC-TERM",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-OPERATIONS-ON-EXPRESSIONS",
+      "prerequisiteKey": "MATH-G07-C-ALGEBRAIC-EXPRESSION",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ALGEBRAIC-EXPRESSION",
+      "prerequisiteKey": "MATH-G07-C-ADDITION-OF-LIKE-TERMS",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-ALGEBRAIC-TERM",
+      "prerequisiteKey": "MATH-G07-C-LAWS-OF-EXPONENTS",
+      "strength": 0.9,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-EQUATION",
+      "prerequisiteKey": "MATH-G07-C-OPEN-SENTENCE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-LINEAR-EQUATION",
+      "prerequisiteKey": "MATH-G07-C-OPEN-SENTENCE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-SOLVING-INEQUALITIES",
+      "prerequisiteKey": "MATH-G07-C-INEQUALITY",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-INEQUALITY",
+      "prerequisiteKey": "MATH-G07-C-LINEAR-EQUATION",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-OPEN-SENTENCE",
+      "prerequisiteKey": "MATH-G07-C-OPERATIONS-ON-EXPRESSIONS",
+      "strength": 0.9,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-COMPLEMENTARY-SUPPLEMENTARY-ANGLES",
+      "prerequisiteKey": "MATH-G07-C-TYPES-OF-ANGLES",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-VERTICALLY-OPPOSITE-ANGLES",
+      "prerequisiteKey": "MATH-G07-C-COMPLEMENTARY-SUPPLEMENTARY-ANGLES",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ALTERNATE-CORRESPONDING-INTERIOR-ANGLES",
+      "prerequisiteKey": "MATH-G07-C-PARALLEL-LINES",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-PARALLEL-LINES",
+      "prerequisiteKey": "MATH-G07-C-TYPES-OF-ANGLES",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-CONGRUENCE-OF-TRIANGLES",
+      "prerequisiteKey": "MATH-G07-C-ANGLES-OF-A-TRIANGLE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ANGLES-OF-A-TRIANGLE",
+      "prerequisiteKey": "MATH-G07-C-PARALLEL-LINES",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-REFLECTION",
+      "prerequisiteKey": "MATH-G07-C-COORDINATE-PLANE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-COORDINATE-PLANE",
+      "prerequisiteKey": "MATH-G07-C-ANGLES-OF-A-TRIANGLE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-TYPES-OF-ANGLES",
+      "prerequisiteKey": "MATH-G07-C-SOLVING-INEQUALITIES",
+      "strength": 0.9,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-ANGLES-OF-N-GON",
+      "prerequisiteKey": "MATH-G07-C-POLYGON-DIAGONAL",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-PRISM-CYLINDER",
+      "prerequisiteKey": "MATH-G07-C-CUBE-CUBOID",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-PYRAMID-CONE",
+      "prerequisiteKey": "MATH-G07-C-PRISM-CYLINDER",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-CUBE-CUBOID",
+      "prerequisiteKey": "MATH-G07-C-POLYGON-DIAGONAL",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-POLYGON-DIAGONAL",
+      "prerequisiteKey": "MATH-G07-C-REFLECTION",
+      "strength": 0.9,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-BAR-CHART",
+      "prerequisiteKey": "MATH-G07-C-FREQUENCY-TABLE",
+      "strength": 1.0,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "MATH-G07-C-ARITHMETIC-MEAN",
+      "prerequisiteKey": "MATH-G07-C-FREQUENCY-TABLE",
+      "strength": 0.8,
+      "requiredMastery": 0.75
+    },
+    {
+      "conceptKey": "MATH-G07-C-FREQUENCY-TABLE",
+      "prerequisiteKey": "MATH-G07-C-PYRAMID-CONE",
+      "strength": 0.9,
+      "requiredMastery": 0.75
+    }
+  ]
+}
