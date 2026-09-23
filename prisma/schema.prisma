@@ -197,7 +197,7 @@ enum ReviewReportStatus {
 
 model User {
   id           String     @id @default(uuid()) @db.Uuid
-  key          String     @unique // usr_<slug> — stable across environments
+  key          String     @unique
   email        String?    @unique
   username     String     @unique
   passwordHash String
@@ -265,7 +265,7 @@ model UserRole {
 
 model LearnerProfile {
   id     String @id @default(uuid()) @db.Uuid
-  key    String @unique // lrn_<slug> — the learnerKey used across all contexts
+  key    String @unique
   userId String @unique @db.Uuid
 
   xpTotal        Int       @default(0)
@@ -341,7 +341,7 @@ model GuardianLink {
   id         String  @id @default(uuid()) @db.Uuid
   guardianId String  @db.Uuid
   learnerId  String  @db.Uuid
-  relation   String? // father, mother, guardian
+  relation   String?
   isVerified Boolean @default(false)
 
   guardian GuardianProfile @relation(fields: [guardianId], references: [id], onDelete: Cascade)
@@ -373,7 +373,7 @@ model School {
 
 model AcademicYear {
   id        String   @id @default(uuid()) @db.Uuid
-  key       String   @unique // "2026-2027"
+  key       String   @unique
   startsOn  DateTime @db.Date
   endsOn    DateTime @db.Date
   isCurrent Boolean  @default(false)
@@ -389,9 +389,9 @@ model AcademicYear {
 
 model Term {
   id             String @id @default(uuid()) @db.Uuid
-  key            String @unique // "2026-2027-T01"
+  key            String @unique
   academicYearId String @db.Uuid
-  ordinal        Int // 1-based
+  ordinal        Int
   name           String
 
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Restrict)
@@ -405,10 +405,10 @@ model Term {
 
 model Grade {
   id       String  @id @default(uuid()) @db.Uuid
-  key      String  @unique // "G07"
+  key      String  @unique
   ordinal  Int     @unique
   name     String
-  stage    String? // primary / preparatory / secondary
+  stage    String?
 
   isActive Boolean @default(true)
 
@@ -422,7 +422,7 @@ model Grade {
 
 model Subject {
   id       String  @id @default(uuid()) @db.Uuid
-  key      String  @unique // "MATH" — uppercase canonical code
+  key      String  @unique
   name     String
   nameEn   String?
 
@@ -545,7 +545,7 @@ model Unit {
 
   slug       String
   textbookId String          @db.Uuid
-  parentId   String?         @db.Uuid // self-nesting for branches/sections
+  parentId   String?         @db.Uuid
   name       String
   type       ContentNodeType @default(UNIT)
 
@@ -655,8 +655,8 @@ model Concept {
 
 model ConceptPrerequisite {
   id             String @id @default(uuid()) @db.Uuid
-  conceptId      String @db.Uuid // the gated concept
-  prerequisiteId String @db.Uuid // must come first
+  conceptId      String @db.Uuid
+  prerequisiteId String @db.Uuid
 
   strength        Float @default(1.0)
   requiredMastery Float @default(0.7)
@@ -674,7 +674,7 @@ model ConceptPrerequisite {
 
 model Misconception {
   id          String  @id @default(uuid()) @db.Uuid
-  key         String  @unique // <conceptKey>-MIS<fingerprint>
+  key         String  @unique
 
   slug        String
   conceptId   String  @db.Uuid
@@ -774,7 +774,7 @@ model ContentChunk {
 
 model LearningResource {
   id         String       @id @default(uuid()) @db.Uuid
-  key        String       @unique // <conceptKey>-RES<fingerprint>
+  key        String       @unique
 
   slug       String?
   kind       ResourceKind
