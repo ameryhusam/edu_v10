@@ -66,6 +66,7 @@ export function TextbookWorkspaceModal({
 
   // Execution & Feedback States
   const [actionError, setActionError] = useState<string | null>(null);
+  const [identityConflict, setIdentityConflict] = useState<any | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [dryRunResult, setDryRunResult] = useState<any | null>(null);
   const [importResult, setImportResult] = useState<any | null>(null);
@@ -121,7 +122,7 @@ export function TextbookWorkspaceModal({
 
   // Mutation: Prepare & Segment Workspace
   const prepareMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (confirmDetectedIdentity = false) => {
       setActionError(null);
       setActionSuccess(null);
       if (!selectedFile) throw new Error('يرجى اختيار ملف PDF للكتاب');
@@ -130,12 +131,14 @@ export function TextbookWorkspaceModal({
         grade: grade.trim(),
         subject: subject.trim(),
         autoSegment: true,
+        confirmDetectedIdentity,
       });
       return res;
     },
     onSuccess: (data: any) => {
       if (data?.status === 'CONFIRM_REQUIRED') {
-        setActionError(`تم اكتشاف هوية مختلفة عن الاختيار: ${data?.conflicts?.map((item: any) => `${item.field}: ${item.declared ?? '—'} → ${item.detected ?? '—'}`).join('، ') || 'يوجد تعارض في الهوية'}. أعد التحليل للتأكيد.`);
+        setIdentityConflict(data);
+        setActionError(null);
         setCurrentStep(1);
         return;
       }
@@ -144,6 +147,7 @@ export function TextbookWorkspaceModal({
         setActionError('اكتمل التحليل لكن لم تُنتج مساحة Workspace صالحة للمراجعة.');
         return;
       }
+      setIdentityConflict(null);
       setSelectedWorkspaceDir(firstWorkspace);
       setActionSuccess('تم تحليل هوية الكتاب وتجهيز Workspace بنجاح.');
       refetchWorkspaces();
@@ -356,6 +360,29 @@ export function TextbookWorkspaceModal({
             <span>{actionError}</span>
           </div>
         )}
+        {identityConflict ? (
+          <div className="rounded-xl border border-warning/30 bg-warning-subtle p-4">
+            <p className="text-sm font-bold text-text">تم اكتشاف هوية تختلف عن الاختيار.</p>
+            <p className="mt-1 text-xs leading-5 text-text-muted">
+              {identityConflict.conflicts?.map((item: any) => `${item.field}: ${item.declared ?? '—'} → ${item.detected ?? '—'}`).join('، ')}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                loading={prepareMutation.isPending}
+                onClick={() => prepareMutation.mutate(true)}
+              >
+                تأكيد الهوية المكتشفة والمتابعة
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setIdentityConflict(null)}>
+                إلغاء
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         {actionSuccess && (
           <div className="p-3 bg-success-subtle border border-success/20 text-success text-sm rounded-lg flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
