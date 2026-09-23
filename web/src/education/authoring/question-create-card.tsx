@@ -73,8 +73,8 @@ function QuestionCreateModal({ onClose }: { readonly onClose: () => void }): Rea
   const hasConceptLinks = parseConceptLinks(form.conceptLinks).length > 0;
 
   const textbooks = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'PUBLISHED', limit: 200 }),
-    queryFn: () => textbookAdministrationApi.textbooks({ status: 'PUBLISHED', limit: 200 }),
+    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'PUBLISHED', limit: 100 }),
+    queryFn: () => textbookAdministrationApi.textbooks({ status: 'PUBLISHED', limit: 100 }),
   });
   const outline = useQuery({
     queryKey: queryKeys.content.outline(link.textbookKey),
