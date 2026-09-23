@@ -55,8 +55,8 @@ export function TextbookWorkspaceModal({
 
   // Form coordinates
   const [part, setPart] = useState<'PART_1' | 'PART_2' | 'BOTH'>(initialCoordinates?.part || 'PART_1');
-  const [grade, setGrade] = useState(initialCoordinates?.grade || 'G07');
-  const [subject, setSubject] = useState(initialCoordinates?.subject || 'MATH');
+  const [grade, setGrade] = useState(initialCoordinates?.grade || '');
+  const [subject, setSubject] = useState(initialCoordinates?.subject || '');
   const [edition, setEdition] = useState(initialCoordinates?.edition || '');
   const [title, setTitle] = useState(initialCoordinates?.title || '');
 
@@ -132,10 +132,10 @@ export function TextbookWorkspaceModal({
       const res = await textbookAdministrationApi.workspacePrepareUpload({
         file: selectedFile,
         part: validPart,
-        grade: grade.trim(),
-        subject: subject.trim(),
-        edition: edition.trim() ? edition.trim() : undefined,
-        title: title.trim() ? title.trim() : `كتاب ${subject.trim()}`,
+        ...(grade.trim() ? { grade: grade.trim() } : {}),
+        ...(subject.trim() ? { subject: subject.trim() } : {}),
+        ...(edition.trim() ? { edition: edition.trim() } : {}),
+        ...(title.trim() ? { title: title.trim() } : {}),
         autoSegment: true,
       });
       return res;
@@ -229,9 +229,9 @@ export function TextbookWorkspaceModal({
             onClick={() => setImportMode('PREPARE_BOOK')}
             className={`rounded-lg border p-3 text-start ${importMode === 'PREPARE_BOOK' ? 'border-primary bg-primary/10' : 'border-border'}`}
           >
-            <div className="font-semibold">كتاب PDF يحتاج تجهيز</div>
+            <div className="font-semibold">رفع PDF وتجهيز الكتاب</div>
             <div className="mt-1 text-xs text-muted-foreground">
-              يمر عبر محرك Python والذكاء لاكتشاف البنية، الصفحات، الدروس والجزء الفيزيائي.
+              ارفع ملف PDF؛ يمكن ترك الصف والمادة والطبعة فارغة ليتم اكتشاف هوية الكتاب أولاً ثم مراجعتها قبل المتابعة.
             </div>
           </button>
           <button
