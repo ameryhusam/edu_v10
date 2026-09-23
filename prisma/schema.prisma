@@ -33,7 +33,6 @@ enum PublicationStatus {
 
 enum ContentNodeType {
   UNIT
-  BRANCH
   SECTION
 }
 
@@ -547,6 +546,7 @@ model Unit {
   textbookId String          @db.Uuid
   parentId   String?         @db.Uuid
   name       String
+  /// Structural node type only. Branch/domain classification belongs to Lesson.branch.
   type       ContentNodeType @default(UNIT)
 
   orderIndex Int
@@ -580,6 +580,8 @@ model Lesson {
   unitId        String  @db.Uuid
   name          String
   description   String?
+  /// Subject-specific educational branch/domain; allowed values come from subject profiles.
+  branch        String?
 
   orderIndex    Int
   estimatedMins Int?
