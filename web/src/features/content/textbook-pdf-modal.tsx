@@ -47,8 +47,6 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
     });
     if (result?.status === 'CONFIRM_REQUIRED') return result;
     if (result?.status !== 'PREPARED') throw new Error('تعذر تجهيز ملف الكتاب.');
-    await textbookAdministrationApi.workspaceImport({ workspaceDir: result.workspaceDir, dryRun: true, syncAssets: true });
-    await textbookAdministrationApi.workspaceImport({ workspaceDir: result.workspaceDir, dryRun: false, syncAssets: true });
     return result;
   };
 
@@ -66,15 +64,19 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
           title: title.trim() || textbook.title, url: url.trim(), body: notes.trim() || null, orderIndex: 1,
         });
       }
-      const pageCount = Number(pages);
-      if (Number.isInteger(pageCount) && pageCount > 0) {
-        await textbookAdministrationApi.updateNode({ kind: 'textbook', key: textbook.key, patch: { totalPages: pageCount } });
+      // PDF preparation is intentionally staged. Canonical metadata/content is not mutated here;
+      // the Workspace review → dry-run → explicit final import flow owns the apply step.
+      if (mode === 'URL') {
+        const pageCount = Number(pages);
+        if (Number.isInteger(pageCount) && pageCount > 0) {
+          await textbookAdministrationApi.updateNode({ kind: 'textbook', key: textbook.key, patch: { totalPages: pageCount } });
+        }
       }
       return null;
     },
     onSuccess: async (result) => {
       if (result?.status === 'CONFIRM_REQUIRED') { setConflict(result); return; }
-      setSuccess('تم حفظ مصدر الكتاب وتجهيز المحتوى بنجاح.');
+      setSuccess(mode === 'FILE' ? 'تم تجهيز PDF للمراجعة. لم يتم استيراد المحتوى بعد.' : 'تم حفظ مصدر الكتاب بنجاح.');
       setFile(null); setUrl(''); setTitle(''); setPages(''); setNotes('');
       await resources.refetch(); await queryClient.invalidateQueries({ queryKey: queryKeysCompat() }); onSaved?.();
     },
