@@ -134,6 +134,21 @@ class LessonSegmenter:
 
         processed_units: List[Dict[str, Any]] = []
         all_page_semantics: List[Dict[str, Any]] = []
+        (workspace_dir / "printed_pdf_mapping.json").write_text(
+            json.dumps(
+                {
+                    "schemaVersion": "1.0",
+                    "detectedOffset": self.mapper.detected_offset,
+                    "offsetConsistency": getattr(self.mapper, "offset_consistency", None),
+                    "reviewRequired": getattr(self.mapper, "mapping_review_required", False),
+                    "observations": getattr(self.mapper, "offset_observations", []),
+                    "formula": "pdfPage = printedPage + detectedOffset",
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         flat_lessons_pkg: List[Dict[str, Any]] = []
         flat_units_pkg: List[Dict[str, Any]] = []
         assets_registry: List[Dict[str, Any]] = []
