@@ -177,6 +177,54 @@ Decision precedence:
 
 The final classification records its evidence source.
 
+
+
+## 8A. Physical textbook-part detection
+
+Before canonical Textbook identity or Workspace creation, the Python engine must determine whether the source PDF represents P1, P2, or a combined source.
+
+Detection evidence is evaluated in this order:
+
+1. **First five PDF pages — explicit identity**
+   - الفصل الدراسي الأول / الجزء الأول → PART_1.
+   - الفصل الدراسي الثاني / الجزء الثاني → PART_2.
+   - Arabic numeral and common English equivalents may be normalized to the same signals.
+   - If both first/second signals occur in the same early source window, classify the source as BOTH.
+
+2. **Early TOC/front matter — combined-book evidence**
+   - If the TOC or early pages explicitly contain both الفصل الدراسي الأول and الفصل الدراسي الثاني, this is strong evidence that one PDF covers both semesters.
+   - The same applies when the TOC explicitly separates content into الجزء الأول and الجزء الثاني.
+   - This establishes detectedPart = BOTH, but it does not by itself establish the physical PDF split page.
+
+3. **Absence signal in the first five pages**
+   - If none of the first five pages contains first/second part or semester terminology, record bothIndicator = true.
+   - This is an indicator that the PDF may contain both parts; it is not by itself proof and must not cause an automatic split.
+   - The engine continues searching the TOC and later pages for structural evidence.
+
+4. **Physical split detection**
+   - A later standalone PART_2 / الجزء الثاني / second-semester heading is required to establish the actual split.
+   - A PART_2 mention that appears only as a TOC reference is not sufficient to choose the split page.
+   - Once a validated boundary exists, the source is temporarily split into P1 and P2, then each part receives its own canonical Workspace identity.
+
+5. **Review safety**
+   - BOTH + no validated boundary remains REVIEW.
+   - UNKNOWN remains REVIEW.
+   - The engine must never silently choose P1/P2 from weak or conflicting evidence.
+
+Example:
+
+Cover: الفصل الدراسي الأول → detectedPart = PART_1
+
+Cover: الفصل الدراسي الثاني → detectedPart = PART_2
+
+First five pages: no part/semester marker
+TOC: الفصل الدراسي الأول + الفصل الدراسي الثاني
+→ detectedPart = BOTH
+→ search for physical second-part boundary
+→ split only after structural boundary validation
+
+The part detector records the evidence pages and reason in the preparation result so the decision remains auditable.
+
 ## 9. AI classification
 
 AI is a classifier/proposal generator, never the canonical writer.
