@@ -1,0 +1,175 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+enum UserRole { SYSTEM_ADMIN PARENT CHILD }
+enum QuestionOrigin { TEXTBOOK MINISTERIAL AI }
+enum QuestionType { MCQ_SINGLE TRUE_FALSE SHORT_TEXT FILL_BLANK ORDERING MATCHING }
+
+model User {
+ id String @id @default(cuid())
+ username String @unique
+ displayName String
+ role UserRole
+ pinHash String
+ createdAt DateTime @default(now())
+ parentLinks ParentChildLink[] @relation("ParentLinks")
+ childLinks ParentChildLink[] @relation("ChildLinks")
+ attempts Attempt[]
+ states ConceptState[]
+}
+model ParentChildLink {
+ parentId String
+ childId String
+ relation String @default("parent")
+ parent User @relation("ParentLinks",fields:[parentId],references:[id],onDelete:Cascade)
+ child User @relation("ChildLinks",fields:[childId],references:[id],onDelete:Cascade)
+ @@id([parentId,childId])
+}
+model Grade {
+ id String @id
+ nameAr String
+ subjects GradeSubject[]
+ books Book[]
+ concepts Concept[]
+}
+model Subject {
+ id String @id
+ nameAr String
+ iconName String?
+ grades GradeSubject[]
+ books Book[]
+}
+model GradeSubject {
+ gradeId String
+ subjectId String
+ isActive Boolean @default(true)
+ grade Grade @relation(fields:[gradeId],references:[id],onDelete:Cascade)
+ subject Subject @relation(fields:[subjectId],references:[id],onDelete:Cascade)
+ @@id([gradeId,subjectId])
+}
+model Book {
+ id String @id @default(cuid())
+ key String @unique
+ gradeId String
+ subjectId String
+ title String
+ part String?
+ semester String?
+ edition String?
+ publisher String?
+ publicationYear Int?
+ grade Grade @relation(fields:[gradeId],references:[id])
+ subject Subject @relation(fields:[subjectId],references:[id])
+ units Unit[]
+ @@index([gradeId,subjectId])
+}
+model Unit {
+ id String @id @default(cuid())
+ key String @unique
+ bookId String
+ orderIndex Int
+ title String
+ printedStartPage Int?
+ printedEndPage Int?
+ book Book @relation(fields:[bookId],references:[id],onDelete:Cascade)
+ lessons Lesson[]
+ @@unique([bookId,orderIndex])
+}
+model Lesson {
+ id String @id @default(cuid())
+ key String @unique
+ unitId String
+ orderIndex Int
+ title String
+ branch String?
+ printedStartPage Int?
+ printedEndPage Int?
+ unit Unit @relation(fields:[unitId],references:[id],onDelete:Cascade)
+ concepts Concept[]
+ questions Question[]
+ @@unique([unitId,orderIndex])
+}
+model Concept {
+ id String @id @default(cuid())
+ key String @unique
+ gradeId String
+ lessonId String
+ orderIndex Int
+ nameAr String
+ description String?
+ difficultyHint Float?
+ grade Grade @relation(fields:[gradeId],references:[id])
+ lesson Lesson @relation(fields:[lessonId],references:[id],onDelete:Cascade)
+ prerequisites ConceptPrerequisite[] @relation("ConceptPrerequisites")
+ requiredBy ConceptPrerequisite[] @relation("RequiredBy")
+ questions QuestionConcept[]
+ states ConceptState[]
+ @@index([gradeId])
+ @@index([lessonId])
+}
+model ConceptPrerequisite {
+ conceptId String
+ prerequisiteId String
+ strength Float @default(1)
+ requiredMastery Float @default(0.7)
+ concept Concept @relation("ConceptPrerequisites",fields:[conceptId],references:[id],onDelete:Cascade)
+ prerequisite Concept @relation("RequiredBy",fields:[prerequisiteId],references:[id],onDelete:Cascade)
+ @@id([conceptId,prerequisiteId])
+}
+model Question {
+ id String @id @default(cuid())
+ key String @unique
+ lessonId String
+ text String
+ type QuestionType
+ options Json?
+ correctAnswer Json
+ explanation String?
+ difficulty Float @default(0.5)
+ sourcePage Int?
+ origin QuestionOrigin
+ lesson Lesson @relation(fields:[lessonId],references:[id],onDelete:Cascade)
+ concepts QuestionConcept[]
+ attempts Attempt[]
+ @@index([lessonId,difficulty])
+ @@index([origin])
+}
+model QuestionConcept {
+ questionId String
+ conceptId String
+ weight Float @default(1)
+ question Question @relation(fields:[questionId],references:[id],onDelete:Cascade)
+ concept Concept @relation(fields:[conceptId],references:[id],onDelete:Cascade)
+ @@id([questionId,conceptId])
+}
+model Attempt {
+ id String @id @default(cuid())
+ learnerId String
+ questionId String
+ lessonId String
+ selectedAnswer Json
+ isCorrect Boolean
+ timeMs Int?
+ orderInSession Int?
+ sessionId String?
+ guessScore Float?
+ understandingLabel String?
+ answeredAt DateTime @default(now())
+ learner User @relation(fields:[learnerId],references:[id],onDelete:Cascade)
+ question Question @relation(fields:[questionId],references:[id])
+ @@index([learnerId,lessonId,answeredAt])
+}
+model ConceptState {
+ learnerId String
+ conceptId String
+ theta Float @default(0)
+ attempts Int @default(0)
+ correct Int @default(0)
+ understoodCount Int @default(0)
+ guessedCount Int @default(0)
+ lastUpdated DateTime @updatedAt
+ learner User @relation(fields:[learnerId],references:[id],onDelete:Cascade)
+ concept Concept @relation(fields:[conceptId],references:[id],onDelete:Cascade)
+ @@id([learnerId,conceptId])
+ @@index([conceptId])
+}
