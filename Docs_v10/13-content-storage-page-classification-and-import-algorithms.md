@@ -89,7 +89,7 @@ A lesson may contain page_classification.json at its root:
       pages/
         page_001.png
 
-A unit-level manifest may provide defaults. Lesson-level values override unit defaults.
+Branch/domain classification is lesson-owned. Page-level `branch` remains classification metadata for individual pages; it is not a Unit structural type. A lesson-level branch may be supplied by the lesson manifest/package and is resolved from subject/profile configuration.
 
 Example:
 
