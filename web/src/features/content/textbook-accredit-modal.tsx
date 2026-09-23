@@ -1,13 +1,10 @@
-/**
- * Modal dialog for accrediting textbooks to a school.
- *
- * Supports single textbook accreditation and whole-grade accreditation.
- */
-
+/** Modal for assigning published textbooks to a school context. */
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Building2 } from 'lucide-react';
 import { Button } from '../../design-system/ui/button';
 import { ErrorState } from '../../design-system/patterns/data-states';
+import { ActionModal, ActionStepCard } from '../../design-system/patterns/action-modal';
 import { catalogueApi as administrationApi } from '../catalogue/catalogue.api';
 import { schoolsApi, type SchoolRecord } from '../schools/schools.api';
 import { textbookAdministrationApi } from './content.api';
@@ -15,249 +12,21 @@ import { queryKeys } from '../../shared/api/query-keys';
 import { useSession } from '../../shared/auth/session';
 import { useI18n } from '../../shared/i18n/i18n';
 
-const selectClass =
-  'h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent';
-
-export function TextbookAccreditModal({
-  open,
-  onClose,
-  initialTextbookKey,
-}: {
-  readonly open: boolean;
-  readonly onClose: () => void;
-  readonly initialTextbookKey?: string | null;
-}): ReactNode {
-  const { t } = useI18n();
-  const { schoolIds } = useSession();
-  const queryClient = useQueryClient();
-
-  const [mode, setMode] = useState<'single' | 'grade'>('single');
-  const [selectedSchoolKey, setSelectedSchoolKey] = useState(schoolIds[0] ?? '');
-  const [selectedAcademicYearKey, setSelectedAcademicYearKey] = useState('');
-  const [selectedTextbookKey, setSelectedTextbookKey] = useState(initialTextbookKey ?? '');
-  const [selectedGradeKey, setSelectedGradeKey] = useState('');
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-
-  const schools = useQuery({
-    queryKey: queryKeys.administration.schools(),
-    queryFn: () => schoolsApi.list(),
-  });
-
-  const academicYears = useQuery({
-    queryKey: queryKeys.administration.catalogue('academicYears'),
-    queryFn: async () => {
-      const data = await administrationApi.academicYears.list();
-      const current = data.find((y) => y.isCurrent);
-      if (current && !selectedAcademicYearKey) {
-        setSelectedAcademicYearKey(current.key);
-      }
-      return data;
-    },
-  });
-
-  const textbooks = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({ limit: 100 }),
-    queryFn: () => textbookAdministrationApi.listTextbooks({ limit: 100 }),
-  });
-
-  const grades = useQuery({
-    queryKey: queryKeys.administration.catalogue('grades'),
-    queryFn: () => administrationApi.grades.list(),
-  });
-
-  const adoptMutation = useMutation({
-    mutationFn: async () => {
-      if (mode === 'single') {
-        await textbookAdministrationApi.adopt({
-          schoolKey: selectedSchoolKey,
-          academicYearKey: selectedAcademicYearKey,
-          textbookKey: selectedTextbookKey,
-        });
-        return { message: t('textbookAdmin.accreditSuccess') };
-      } else {
-        const result = await textbookAdministrationApi.adoptGrade({
-          schoolKey: selectedSchoolKey,
-          academicYearKey: selectedAcademicYearKey,
-          gradeKey: selectedGradeKey,
-        });
-        return {
-          message: t('textbookAdmin.accreditGradeSummary', {
-            adopted: result.adopted,
-            already: result.alreadyAdopted,
-          }),
-        };
-      }
-    },
-    onSuccess: async (data) => {
-      setStatusMessage(data.message);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.textbookAdministration.all });
-      await queryClient.invalidateQueries({ queryKey: queryKeys.administration.all });
-    },
-  });
-
-  if (!open) return null;
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>): void {
-    e.preventDefault();
-    adoptMutation.mutate();
-  }
-
-  const isValid =
-    selectedSchoolKey &&
-    selectedAcademicYearKey &&
-    (mode === 'single' ? selectedTextbookKey : selectedGradeKey);
-
-  return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-scrim p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={t('textbookAdmin.accreditBooks')}
-    >
-      <form
-        className="max-h-[min(44rem,92vh)] w-full max-w-xl space-y-4 overflow-y-auto rounded-2xl border border-border bg-surface-raised p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={handleSubmit}
-      >
-        <div className="flex items-center justify-between border-b border-border pb-3">
-          <div>
-            <h2 className="text-lg font-bold text-text">{t('textbookAdmin.accreditBooks')}</h2>
-            <p className="text-xs text-text-muted">{t('textbookAdmin.selectSchoolHint')}</p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex size-8 items-center justify-center rounded-lg text-text-muted hover:bg-surface-hover hover:text-text"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Mode selector pills */}
-        <div className="flex rounded-xl bg-surface-sunken p-1 border border-border">
-          <button
-            type="button"
-            className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-              mode === 'single'
-                ? 'bg-surface-raised text-text shadow-sm'
-                : 'text-text-muted hover:text-text'
-            }`}
-            onClick={() => setMode('single')}
-          >
-            {t('textbookAdmin.modeSingleBook')}
-          </button>
-          <button
-            type="button"
-            className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-              mode === 'grade'
-                ? 'bg-surface-raised text-text shadow-sm'
-                : 'text-text-muted hover:text-text'
-            }`}
-            onClick={() => setMode('grade')}
-          >
-            {t('textbookAdmin.modeAllGrade')}
-          </button>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.selectSchool')} *</span>
-            <select
-              value={selectedSchoolKey}
-              onChange={(e) => setSelectedSchoolKey(e.target.value)}
-              className={selectClass}
-              required
-            >
-              <option value="">—</option>
-              {(schools.data ?? []).map((school: SchoolRecord) => (
-                <option key={school.key} value={school.key}>
-                  {school.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.selectAcademicYear')} *</span>
-            <select
-              value={selectedAcademicYearKey}
-              onChange={(e) => setSelectedAcademicYearKey(e.target.value)}
-              className={selectClass}
-              required
-            >
-              <option value="">—</option>
-              {(academicYears.data ?? []).map((year) => (
-                <option key={year.key} value={year.key}>
-                  {year.startsOn} – {year.endsOn} {year.isCurrent ? '(الحالي)' : ''}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {mode === 'single' ? (
-          <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('textbookAdmin.selectTextbook')} *</span>
-            <select
-              value={selectedTextbookKey}
-              onChange={(e) => setSelectedTextbookKey(e.target.value)}
-              className={selectClass}
-              required
-            >
-              <option value="">—</option>
-              {(textbooks.data?.rows ?? []).map((tb) => (
-                <option key={tb.key} value={tb.key}>
-                  {tb.title} ({tb.gradeName || tb.gradeKey} - {tb.subjectName || tb.subjectKey}) [{tb.status}]
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : (
-          <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-text-muted">{t('collection.grades')} *</span>
-            <select
-              value={selectedGradeKey}
-              onChange={(e) => setSelectedGradeKey(e.target.value)}
-              className={selectClass}
-              required
-            >
-              <option value="">—</option>
-              {(grades.data ?? []).map((grade) => (
-                <option key={grade.key} value={grade.key}>
-                  {grade.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-
-        <div className="rounded-xl border border-warning/30 bg-warning-subtle/50 p-3 text-2xs text-text-muted">
-          💡 {t('textbookAdmin.publishedOnlyNote')}
-        </div>
-
-        {statusMessage ? (
-          <div className="rounded-xl bg-success-subtle p-3 text-xs font-medium text-success border border-success/30">
-            {statusMessage}
-          </div>
-        ) : null}
-
-        {adoptMutation.isError ? <ErrorState error={adoptMutation.error} /> : null}
-
-        <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="ghost" size="sm" type="button" disabled={adoptMutation.isPending} onClick={onClose}>
-            {t('common.close')}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            type="submit"
-            disabled={adoptMutation.isPending || !isValid}
-          >
-            {adoptMutation.isPending ? t('common.working') : t('textbookAdmin.adopt')}
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
+const selectClass='h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent';
+export function TextbookAccreditModal({open,onClose,initialTextbookKey}:{readonly open:boolean;readonly onClose:()=>void;readonly initialTextbookKey?:string|null}):ReactNode{
+ const {t}=useI18n(); const {schoolIds}=useSession(); const qc=useQueryClient();
+ const [mode,setMode]=useState<'single'|'grade'>('single'); const [school,setSchool]=useState(schoolIds[0]??''); const [year,setYear]=useState(''); const [book,setBook]=useState(initialTextbookKey??''); const [grade,setGrade]=useState(''); const [message,setMessage]=useState<string|null>(null);
+ const schools=useQuery({queryKey:queryKeys.administration.schools(),queryFn:()=>schoolsApi.list()});
+ const years=useQuery({queryKey:queryKeys.administration.catalogue('academicYears'),queryFn:async()=>{const data=await administrationApi.academicYears.list();const current=data.find(y=>y.isCurrent);if(current&&!year)setYear(current.key);return data;}});
+ const books=useQuery({queryKey:queryKeys.textbookAdministration.textbooks({limit:100}),queryFn:()=>textbookAdministrationApi.listTextbooks({limit:100})});
+ const grades=useQuery({queryKey:queryKeys.administration.catalogue('grades'),queryFn:()=>administrationApi.grades.list()});
+ const adopt=useMutation({mutationFn:async()=>{if(mode==='single'){await textbookAdministrationApi.adopt({schoolKey:school,academicYearKey:year,textbookKey:book});return t('textbookAdmin.accreditSuccess');}const r=await textbookAdministrationApi.adoptGrade({schoolKey:school,academicYearKey:year,gradeKey:grade});return t('textbookAdmin.accreditGradeSummary',{adopted:r.adopted,already:r.alreadyAdopted});},onSuccess:async(m)=>{setMessage(m);await qc.invalidateQueries({queryKey:queryKeys.textbookAdministration.all});await qc.invalidateQueries({queryKey:queryKeys.administration.all});}});
+ if(!open)return null; const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();adopt.mutate();}; const valid=Boolean(school&&year&&(mode==='single'?book:grade));
+ return <ActionModal kind="textbook" icon={<Building2/>} title={t('textbookAdmin.accreditBooks')} subtitle={t('textbookAdmin.selectSchoolHint')} onClose={onClose}
+ footer={<><Button variant="ghost" type="button" disabled={adopt.isPending} onClick={onClose}>{t('common.close')}</Button><Button variant="primary" type="submit" form="textbook-adopt-form" disabled={adopt.isPending||!valid}>{adopt.isPending?t('common.working'):t('textbookAdmin.adopt')}</Button></>}>
+ <form id="textbook-adopt-form" onSubmit={submit} className="space-y-4">
+  <ActionStepCard step={1} title={t('textbookAdmin.accreditBooks')}><div className="flex rounded-xl border border-border bg-surface-sunken p-1"><button type="button" onClick={()=>setMode('single')} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold ${mode==='single'?'bg-surface-raised text-text shadow-sm':'text-text-muted'}`}>{t('textbookAdmin.modeSingleBook')}</button><button type="button" onClick={()=>setMode('grade')} className={`flex-1 rounded-lg px-3 py-2 text-xs font-semibold ${mode==='grade'?'bg-surface-raised text-text shadow-sm':'text-text-muted'}`}>{t('textbookAdmin.modeAllGrade')}</button></div><div className="grid gap-3 sm:grid-cols-2"><label className="space-y-1.5"><span className="text-xs font-medium text-text-muted">{t('textbookAdmin.selectSchool')} *</span><select value={school} onChange={e=>setSchool(e.target.value)} className={selectClass} required><option value="">—</option>{(schools.data??[]).map((s:SchoolRecord)=><option key={s.key} value={s.key}>{s.name}</option>)}</select></label><label className="space-y-1.5"><span className="text-xs font-medium text-text-muted">{t('textbookAdmin.selectAcademicYear')} *</span><select value={year} onChange={e=>setYear(e.target.value)} className={selectClass} required><option value="">—</option>{(years.data??[]).map(y=><option key={y.key} value={y.key}>{y.startsOn} – {y.endsOn}{y.isCurrent?' (الحالي)':''}</option>)}</select></label></div></ActionStepCard>
+  <ActionStepCard step={2} title={mode==='single'?t('textbookAdmin.selectTextbook'):t('collection.grades')}>{mode==='single'?<label className="block space-y-1.5"><span className="text-xs font-medium text-text-muted">{t('textbookAdmin.selectTextbook')} *</span><select value={book} onChange={e=>setBook(e.target.value)} className={selectClass} required><option value="">—</option>{(books.data?.rows??[]).map(b=><option key={b.key} value={b.key}>{b.title} · {b.gradeName||b.gradeKey} · {b.subjectName||b.subjectKey}</option>)}</select></label>:<label className="block space-y-1.5"><span className="text-xs font-medium text-text-muted">{t('collection.grades')} *</span><select value={grade} onChange={e=>setGrade(e.target.value)} className={selectClass} required><option value="">—</option>{(grades.data??[]).map(g=><option key={g.key} value={g.key}>{g.name}</option>)}</select></label>}<div className="rounded-xl border border-warning/30 bg-warning-subtle/50 p-3 text-2xs text-text-muted">{t('textbookAdmin.publishedOnlyNote')}</div></ActionStepCard>
+  {message?<div className="rounded-xl border border-success/30 bg-success-subtle p-3 text-xs font-semibold text-success">{message}</div>:null}{adopt.isError?<ErrorState error={adopt.error}/>:null}
+ </form></ActionModal>;
 }
