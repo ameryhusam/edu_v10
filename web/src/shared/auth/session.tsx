@@ -17,7 +17,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { api, setAccessToken, setSessionEndedListener } from '../api/client';
+import { api, restoreAccessToken, setAccessToken, setSessionEndedListener } from '../api/client';
 import type { RoleName, ScopedRole } from '../types/roles';
 
 /**
@@ -110,6 +110,14 @@ export function SessionProvider({ children }: { children: ReactNode }): ReactNod
 
     void (async () => {
       try {
+        // Restore the cookie-backed access token before probing /auth/me.
+        // A fresh visitor with no cookie therefore never produces the
+        // misleading GET /auth/me 401 seen in the browser console.
+        const restored = await restoreAccessToken();
+        if (!restored) {
+          if (!cancelled) setStatus('anonymous');
+          return;
+        }
         const me = await api.get<MeResponse>('auth/me');
         if (cancelled) return;
         setUser({
