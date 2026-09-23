@@ -1,17 +1,9 @@
 import { type ReactNode, type ChangeEvent, type RefObject } from 'react';
 import { BookOpen, FileUp, Sparkles } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '../../design-system/ui/button';
 import { Badge } from '../../design-system/ui/badge';
-import { administrationApi } from '../administration/administration.api';
-import { queryKeys } from '../../shared/api/query-keys';
-import { useI18n } from '../../shared/i18n/i18n';
 
 export interface TextbookWorkspaceUploadStepProps {
-  readonly grade: string;
-  readonly onGradeChange: (value: string) => void;
-  readonly subject: string;
-  readonly onSubjectChange: (value: string) => void;
   readonly selectedFile: File | null;
   readonly fileInputRef: RefObject<HTMLInputElement | null>;
   readonly onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -20,29 +12,12 @@ export interface TextbookWorkspaceUploadStepProps {
 }
 
 export function TextbookWorkspaceUploadStep({
-  grade,
-  onGradeChange,
-  subject,
-  onSubjectChange,
   selectedFile,
   fileInputRef,
   onFileChange,
   isPreparePending,
   onPrepare,
 }: TextbookWorkspaceUploadStepProps): ReactNode {
-  const { t } = useI18n();
-  const grades = useQuery({
-    queryKey: queryKeys.administration.catalogue('grades'),
-    queryFn: () => administrationApi.grades.list(),
-  });
-  const subjects = useQuery({
-    queryKey: queryKeys.administration.catalogue('subjects'),
-    queryFn: () => administrationApi.subjects.list(),
-  });
-
-  const activeGrades = (grades.data ?? []).filter((item) => item.isActive);
-  const activeSubjects = (subjects.data ?? []).filter((item) => item.isActive);
-
   return (
     <div className="space-y-5">
       <section className="rounded-2xl border border-border bg-surface-subtle/35 p-4 sm:p-5">
@@ -58,33 +33,8 @@ export function TextbookWorkspaceUploadStep({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <label className="space-y-1.5">
-            <span className="text-xs font-bold text-text">{t('catalogue.tab.grades')}</span>
-            <select
-              value={grade}
-              onChange={(event) => onGradeChange(event.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text outline-none focus:border-accent"
-            >
-              <option value="">اختر الصف</option>
-              {activeGrades.map((item) => (
-                <option key={item.key} value={item.key}>{item.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="space-y-1.5">
-            <span className="text-xs font-bold text-text">{t('catalogue.tab.subjects')}</span>
-            <select
-              value={subject}
-              onChange={(event) => onSubjectChange(event.target.value)}
-              className="h-10 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text outline-none focus:border-accent"
-            >
-              <option value="">اختر المادة</option>
-              {activeSubjects.map((item) => (
-                <option key={item.key} value={item.key}>{item.name}</option>
-              ))}
-            </select>
-          </label>
+        <div className="mt-5 rounded-xl border border-border bg-surface p-3 text-xs leading-5 text-text-muted">
+          لا تحتاج إلى إدخال اسم الكتاب أو الصف أو المادة أو الجزء أو الطبعة أو عدد الصفحات. ارفع ملف PDF فقط؛ سيحاول محرك المحتوى اكتشاف هوية الكتاب وبنيته، ثم يعرض أي تعارض يحتاج إلى مراجعة قبل الاستيراد.
         </div>
       </section>
 
@@ -113,7 +63,7 @@ export function TextbookWorkspaceUploadStep({
         <Button
           type="button"
           variant="primary"
-          disabled={!selectedFile || !grade || !subject || isPreparePending}
+          disabled={!selectedFile || isPreparePending}
           loading={isPreparePending}
           onClick={onPrepare}
           className="gap-2"
