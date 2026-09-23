@@ -110,8 +110,8 @@ export function GradeSubjectDistributionModal({
       onClose={onClose}
       title={grade ? grade.name : t('catalogue.tab.grades')}
       subtitle={t('matrix.stats', { offered: enabledCount, total: matrix.data?.subjects.filter((s) => s.isActive).length ?? 0 })}
+      kind="textbook"
       icon={<Check className="size-5" />}
-      size="lg"
       footer={
         <div className="flex w-full items-center justify-between gap-3">
           <div className="text-xs text-text-muted">
