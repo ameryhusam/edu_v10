@@ -106,7 +106,6 @@ export function GradeSubjectDistributionModal({
 
   return (
     <ActionModal
-      open={open}
       onClose={onClose}
       title={grade ? grade.name : t('catalogue.tab.grades')}
       subtitle={t('matrix.stats', { offered: enabledCount, total: matrix.data?.subjects.filter((s) => s.isActive).length ?? 0 })}
