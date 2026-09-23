@@ -166,7 +166,7 @@ export function TextbookWorkspaceUploadStep({
           <p className="text-xs text-text-muted mt-1">
             {selectedFile
               ? `الحجم: ${(selectedFile.size / (1024 * 1024)).toFixed(2)} ميجابايت`
-              : 'سيُرسل الكتاب إلى الخادم مؤقتاً ثم يعالجه محرك المحتوى؛ الحفظ الدائم يكون لملفات الدروس فقط'}
+              : 'سيُحلّل الملف أولاً لاكتشاف هوية الكتاب وبنيته، ثم تُراجع النتيجة قبل اعتماد أي بيانات'}
           </p>
         </div>
         <Button
@@ -185,7 +185,7 @@ export function TextbookWorkspaceUploadStep({
           type="button"
           variant="primary"
           onClick={onPrepare}
-          disabled={isPreparePending || !subject || !grade || !part}
+          disabled={isPreparePending || !selectedFile || !part}
           className="gap-2"
         >
           {isPreparePending ? (
@@ -193,7 +193,7 @@ export function TextbookWorkspaceUploadStep({
           ) : (
             <Play className="w-4 h-4" />
           )}
-          <span>تجهيز وتقطيع مساحة العمل (Prepare & Slice)</span>
+          <span>تحليل الهوية وتجهيز مساحة العمل</span>
         </Button>
       </div>
     </div>
