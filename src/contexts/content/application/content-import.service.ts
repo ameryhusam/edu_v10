@@ -1038,8 +1038,34 @@ export class ContentImportService {
         });
         created.questions += 1;
       } else if (result.error.code === 'question.exists') {
-        // Identity is the stem against the lesson, so the same question twice
-        // is the same question. Re-running an import must not fork the bank.
+        if (mode === 'UPDATE') {
+          const derived = buildQuestionKey(questionLessonKey as LessonKey, question.text);
+          if (derived.ok) {
+            const updated = await this.itemBank.updateQuestion(ctx, derived.value, {
+              text: question.text, hint: question.hint ?? null, explanation: question.explanation ?? null,
+              points: question.points, difficulty01: question.difficulty01,
+              origin: (question.origin ?? 'UNKNOWN') as QuestionOrigin,
+              textbookRole: (question.textbookRole ?? null) as TextbookQuestionRole | null,
+              sourceRef: question.sourceRef ?? null,
+              choices: question.choices.map((choice) => ({
+                id: choice.id, text: choice.text, misconceptionKey: choice.misconceptionKey ?? null,
+                feedback: choice.feedback ?? null,
+              })),
+              answerKey: question.answerKey,
+            });
+            if (!updated.ok) {
+              problems.push(this.toProblem('questions', index, question.text.slice(0, 60), updated.error));
+            } else if (question.concepts.length > 0) {
+              const relinked = await this.itemBank.setQuestionConcepts(
+                ctx, derived.value, question.concepts.map((link) => ({
+                  conceptKey: conceptKeyByPath.get(link.unitSlug + '/' + link.lessonSlug + '/' + link.conceptSlug) ?? link.conceptKey,
+                  weight: link.weight, isPrimary: link.isPrimary,
+                })),
+              );
+              if (!relinked.ok) problems.push(this.toProblem('questions', index, question.text.slice(0, 60), relinked.error));
+            }
+          }
+        }
         unchanged.questions += 1;
       } else {
         problems.push(this.toProblem('questions', index, question.text.slice(0, 60), result.error));
