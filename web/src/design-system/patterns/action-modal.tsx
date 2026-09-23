@@ -64,12 +64,58 @@ export function ActionModal({
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onKey = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') onClose();
+    const dialog = dialogRef.current;
+    const doc = dialog?.ownerDocument;
+    if (!dialog || !doc) return;
+
+    const previousActive = doc.activeElement as HTMLElement | null;
+    const focusableSelector = [
+      'a[href]',
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])',
+    ].join(',');
+
+    const focusInitial = (): void => {
+      const first = dialog.querySelector<HTMLElement>(focusableSelector);
+      first?.focus();
     };
-    const doc = dialogRef.current?.ownerDocument;
-    doc?.addEventListener('keydown', onKey);
-    return () => doc?.removeEventListener('keydown', onKey);
+
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusables = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter((element) => element.offsetParent !== null);
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && doc.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && doc.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    doc.addEventListener('keydown', onKey);
+    const previousOverflow = doc.body.style.overflow;
+    doc.body.style.overflow = 'hidden';
+    window.requestAnimationFrame(focusInitial);
+
+    return () => {
+      doc.removeEventListener('keydown', onKey);
+      doc.body.style.overflow = previousOverflow;
+      previousActive?.focus();
+    };
   }, [onClose]);
 
   return (
@@ -84,7 +130,7 @@ export function ActionModal({
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-lg"
+        className="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-border bg-surface-raised shadow-xl sm:max-h-[90vh]"
       >
         <header className={cn('flex items-start justify-between gap-3 border-b border-border px-5 py-4', HEADER_BAND[kind])}>
           <div className="flex min-w-0 items-start gap-3">
