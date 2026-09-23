@@ -90,8 +90,8 @@ function ExamCreateModal({ onClose }: { readonly onClose: () => void }): ReactNo
   const [lastExam, setLastExam] = useState<ExamRecord | null>(null);
 
   const textbooks = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'PUBLISHED', limit: 200 }),
-    queryFn: () => textbookAdministrationApi.textbooks({ status: 'PUBLISHED', limit: 200 }),
+    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'PUBLISHED', limit: 100 }),
+    queryFn: () => textbookAdministrationApi.textbooks({ status: 'PUBLISHED', limit: 100 }),
   });
   const outline = useQuery({
     queryKey: queryKeys.content.outline(textbookKey),
