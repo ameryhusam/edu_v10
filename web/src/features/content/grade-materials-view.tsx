@@ -38,6 +38,8 @@ export interface GradeMaterialsViewProps {
   readonly onOpenCreateModal: () => void;
   readonly onOpenBulkModal: () => void;
   readonly onNavigateToContentManager: (textbookKey: string) => void;
+  readonly canApprove?: boolean;
+  readonly canManageDeployment?: boolean;
 }
 
 const transitionFor: Partial<Record<PublicationStatus, PublicationAction>> = {
@@ -68,6 +70,8 @@ export function GradeMaterialsView({
   onOpenCreateModal,
   onOpenBulkModal,
   onNavigateToContentManager,
+  canApprove = false,
+  canManageDeployment = false,
 }: GradeMaterialsViewProps): ReactNode {
   const { t, direction } = useI18n();
   const isRtl = direction === 'rtl';
@@ -130,7 +134,7 @@ export function GradeMaterialsView({
 
       {filteredMaterials.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center space-y-3"><BookOpen className="mx-auto size-12 text-text-muted/30" /><h3 className="text-sm font-bold text-text">{t('textbookAdmin.noSubjectsInPart')}</h3><p className="text-xs text-text-muted">{t('textbookAdmin.emptyBody')}</p><Button variant="primary" size="sm" onClick={onOpenBulkModal}>{t('textbookAdmin.bulkSetupButton')}</Button></div> : <div className="space-y-4">{filteredMaterials.map((book) => {
         const subject = subjectsMap.get(book.subjectKey);
-        const action = transitionFor[book.status];
+        const action = canApprove ? transitionFor[book.status] : book.status === 'DRAFT' ? 'SUBMIT' : undefined;
         return <div key={book.key} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs transition-all hover:border-accent/30 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-start gap-4"><div className="size-16 shrink-0 overflow-hidden rounded-xl border border-border bg-surface-subtle">{book.coverUrl ? <img src={book.coverUrl} alt={book.title} className="size-full object-cover" loading="lazy" /> : <span className="grid size-full place-items-center text-accent"><BookOpen className="size-6" /></span>}</div><div className="min-w-0 space-y-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-base font-black text-text truncate">{book.title}</h3><Badge tone={statusTone[book.status]}>{t(`publication.${book.status}` as never)}</Badge>{book.edition ? <Badge tone="neutral">{book.edition}</Badge> : null}</div><div className="flex flex-wrap items-center gap-3 text-2xs text-text-muted font-medium"><span>{subject?.name || book.subjectKey}</span><span>·</span><span dir="ltr" className="font-mono">{book.key}</span><span>·</span><span>{t('textbookAdmin.outlineUnitsCount', { count: book.unitCount ?? 0 })}</span><span>·</span><span>{t('textbookAdmin.outlineQuestionsCount', { count: book.questionCount ?? 0 })}</span></div><div className="pt-1">{book.totalPages ? <span className="inline-flex items-center gap-1.5 rounded-md bg-surface-subtle px-2 py-0.5 text-2xs font-semibold text-text-muted border border-border"><FileText className="size-3 text-accent" />{t('textbookAdmin.totalPages')}: {book.totalPages}</span> : <span className="inline-flex items-center gap-1 text-2xs text-text-muted"><FileText className="size-3 opacity-60" />{t('textbookAdmin.pdfNoneAttached')}</span>}</div></div></div>
           <div className="flex flex-wrap items-center gap-2 self-end lg:self-center">{action ? <Button variant="primary" size="sm" onClick={() => setTransitionTarget({ textbook: book, action })} className="gap-1.5 text-xs font-bold"><CheckCircle2 className="size-3.5" />{t(`textbookAdmin.${action === 'SUBMIT' ? 'submit' : action === 'APPROVE' ? 'approve' : 'archive'}` as never)}</Button> : null}<Button variant="secondary" size="sm" onClick={() => onNavigateToContentManager(book.key)} className="gap-1.5 text-xs font-bold"><ListTree className="size-3.5 text-accent" />{t('textbookAdmin.manageContentBtn')}</Button><Button variant="secondary" size="sm" onClick={() => onOpenPdfModal(book)} className="gap-1.5 text-xs"><FileText className="size-3.5 text-text-muted" />{t('textbookAdmin.pdfModalBtn')}</Button><Button variant="ghost" size="sm" onClick={() => onOpenImportModal(book.key)} className="gap-1 text-xs text-text-muted"><Upload className="size-3.5" />{t('content.importPackageTitle')}</Button><Button variant="ghost" size="sm" onClick={() => downloadJson(`${book.key}-export.json`, book)} className="gap-1 text-xs text-text-muted"><Download className="size-3.5" />{t('textbookAdmin.downloadExport')}</Button><Button variant="ghost" size="sm" onClick={() => onOpenOutlineModal(book)} className="gap-1 text-xs text-text-muted"><ExternalLink className="size-3.5" />{t('textbookAdmin.viewOutline')}</Button><Button variant="ghost" size="iconSm" onClick={() => onOpenEditModal(book)} aria-label={t('textbookAdmin.editTextbook')} className="text-text-muted"><Edit3 className="size-4" /></Button></div>
