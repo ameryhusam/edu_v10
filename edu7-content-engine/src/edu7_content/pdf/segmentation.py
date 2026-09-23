@@ -298,6 +298,42 @@ class LessonSegmenter:
                     "version": 1,
                 })
 
+                question_groups = group_cross_page_questions(lesson_page_semantics)
+                (l_dir / "segments.json").write_text(
+                    json.dumps(
+                        {
+                            "schemaVersion": "1.0",
+                            "printedPageIsCanonical": True,
+                            "pdfPageIsPhysical": True,
+                            "pages": lesson_page_semantics,
+                            "questionGroups": question_groups,
+                            "review": any(p.get("review") for p in lesson_page_semantics),
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+                (l_dir / "questions.json").write_text(
+                    json.dumps(
+                        {
+                            "schemaVersion": "1.0",
+                            "pages": [
+                                {
+                                    "pdfPage": p.get("pdfPage"),
+                                    "printedPage": p.get("printedPage"),
+                                    "blocks": p.get("questionBlocks", []),
+                                }
+                                for p in lesson_page_semantics
+                            ],
+                            "groups": question_groups,
+                        },
+                        ensure_ascii=False,
+                        indent=2,
+                    ),
+                    encoding="utf-8",
+                )
+
                 (l_dir / "lesson_full_text.txt").write_text("\n\n".join(aggregated_text), encoding="utf-8")
                 grounding_manifest = {
                     "schemaVersion": "1.0",
