@@ -123,7 +123,7 @@ export function GradeMaterialsView({
             <button type="button" onClick={() => onSelectPartOrdinal(2)} className={`rounded-lg px-3.5 py-1.5 text-xs font-bold ${selectedPartOrdinal === 2 ? 'bg-surface-raised text-accent shadow-xs' : 'text-text-muted'}`}>{t('textbookAdmin.part2')}</button>
           </div>
           <Button variant="primary" size="sm" onClick={onOpenCreateModal} className="gap-1.5 text-xs"><Plus className="size-4" />{t('textbookAdmin.addTextbookButton')}</Button>
-          <Button variant="secondary" size="sm" onClick={onOpenBulkModal} className="gap-1.5 text-xs"><Sparkles className="size-4 text-accent" />{t('textbookAdmin.bulkSetupButton')}</Button>
+          {canManageDeployment ? <Button variant="secondary" size="sm" onClick={onOpenBulkModal} className="gap-1.5 text-xs"><Sparkles className="size-4 text-accent" />{t('textbookAdmin.bulkSetupButton')}</Button> : null}
         </div>
       </div>
 
@@ -132,7 +132,7 @@ export function GradeMaterialsView({
         <div className="relative w-full md:w-64"><Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-text-muted" /><Input type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder={t('catalogue.search')} className="ps-9 text-xs" /></div>
       </div>
 
-      {filteredMaterials.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center space-y-3"><BookOpen className="mx-auto size-12 text-text-muted/30" /><h3 className="text-sm font-bold text-text">{t('textbookAdmin.noSubjectsInPart')}</h3><p className="text-xs text-text-muted">{t('textbookAdmin.emptyBody')}</p><Button variant="primary" size="sm" onClick={onOpenBulkModal}>{t('textbookAdmin.bulkSetupButton')}</Button></div> : <div className="space-y-4">{filteredMaterials.map((book) => {
+      {filteredMaterials.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-surface p-12 text-center space-y-3"><BookOpen className="mx-auto size-12 text-text-muted/30" /><h3 className="text-sm font-bold text-text">{t('textbookAdmin.noSubjectsInPart')}</h3><p className="text-xs text-text-muted">{t('textbookAdmin.emptyBody')}</p>{canManageDeployment ? <Button variant="primary" size="sm" onClick={onOpenBulkModal}>{t('textbookAdmin.bulkSetupButton')}</Button> : null}</div> : <div className="space-y-4">{filteredMaterials.map((book) => {
         const subject = subjectsMap.get(book.subjectKey);
         const action = canApprove ? transitionFor[book.status] : book.status === 'DRAFT' ? 'SUBMIT' : undefined;
         return <div key={book.key} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-5 shadow-xs transition-all hover:border-accent/30 lg:flex-row lg:items-center lg:justify-between">
