@@ -37,13 +37,38 @@ export function TextbookWorkspaceModal({ open, onClose, initialCoordinates, onIm
   const prepare = useMutation({
     mutationFn: async (confirm = false) => {
       if (!file) throw new Error('اختر ملف PDF أولاً.');
-      return textbookAdministrationApi.workspacePrepareUpload({ file, grade: grade.trim(), subject: subject.trim(), autoSegment: true, confirmDetectedIdentity: confirm });
+      return textbookAdministrationApi.workspacePrepareUpload({
+        file,
+        part: initialCoordinates?.part === 'PART_1' || initialCoordinates?.part === 'PART_2' ? initialCoordinates.part : undefined,
+        grade: grade.trim(),
+        subject: subject.trim(),
+        edition: initialCoordinates?.edition,
+        title: initialCoordinates?.title,
+        autoSegment: true,
+        confirmDetectedIdentity: confirm,
+      });
     },
     onSuccess: data => {
       if (data?.status === 'CONFIRM_REQUIRED') { setIdentity(data); setStep(1); return; }
-      const first = data?.workspaceDir ?? data?.workspaces?.[0]?.workspaceDir;
-      if (!first) throw new Error('تم التحليل لكن لم تُنتج Workspace قابلة للمراجعة.');
-      setIdentity(null); setWorkspace(first); setStep(2); setError(null); void workspaces.refetch();
+      if (data?.status === 'NEEDS_REVIEW') {
+        const detected = data?.proposal?.identity ?? {};
+        const missing = ['subjectKey', 'gradeKey', 'part', 'edition'].filter(key => !detected?.[key]);
+        const detail = missing.length ? `البيانات غير المحسومة: ${missing.join('، ')}.` : 'توجد أدلة متعارضة أو غير كافية في المصدر.';
+        setError(`لم تكتمل هوية الكتاب، لذلك أوقف المحرك إنشاء Workspace للمراجعة الآلية. ${detail}`);
+        setIdentity(data);
+        setStep(1);
+        return;
+      }
+      const candidates = [
+        ...(data?.workspaceDir ? [{ workspaceDir: data.workspaceDir, part: data?.proposal?.identity?.part }] : []),
+        ...((data?.workspaces ?? []).filter((item: any) => item?.workspaceDir)),
+      ];
+      const unique = Array.from(new Map(candidates.map((item: any) => [item.workspaceDir, item])).values());
+      if (unique.length === 0) {
+        setError('اكتمل التحليل دون إنتاج Workspace قابلة للمراجعة. أعد المحاولة بعد التأكد من الهوية والفهرس، أو راجع سجل التحليل.');
+        return;
+      }
+      setIdentity(null); setWorkspace(unique[0].workspaceDir); setStep(2); setError(null); void workspaces.refetch();
     },
     onError: e => setError(e instanceof Error ? e.message : 'فشل تجهيز Workspace.'),
   });
