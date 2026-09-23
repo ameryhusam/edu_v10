@@ -64,8 +64,8 @@ function QuestionQuickImportModal({ onClose }: { readonly onClose: () => void })
   useEffect(() => setConceptKey(''), [link.lessonKey]);
 
   const textbooks = useQuery({
-    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'PUBLISHED', limit: 200 }),
-    queryFn: () => textbookAdministrationApi.textbooks({ status: 'PUBLISHED', limit: 200 }),
+    queryKey: queryKeys.textbookAdministration.textbooks({ status: 'PUBLISHED', limit: 100 }),
+    queryFn: () => textbookAdministrationApi.textbooks({ status: 'PUBLISHED', limit: 100 }),
   });
   const outline = useQuery({
     queryKey: queryKeys.content.outline(link.textbookKey),
