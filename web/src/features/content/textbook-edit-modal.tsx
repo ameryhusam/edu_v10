@@ -1,7 +1,7 @@
 /** Modal for editing canonical textbook metadata. */
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { BookPen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';
 import { Textarea } from '../../design-system/ui/textarea';
@@ -24,7 +24,7 @@ function TextbookEditForm({ textbook, onClose }: { readonly textbook:TextbookAdm
   const update=useMutation({mutationFn:async()=>{await textbookAdministrationApi.updateNode({kind:'textbook',key:textbook.key,patch:{title:title.trim(),description:description.trim()||null,issuer:issuer.trim()||null,isbn:isbn.trim()||null,publishYear:publishYear?Number(publishYear):null,totalPages:totalPages?Number(totalPages):null}});if(status!==textbook.status)await textbookAdministrationApi.updateTextbookStatus(textbook.key,status);},onSuccess:async()=>{await qc.invalidateQueries({queryKey:queryKeys.textbookAdministration.all});onClose();}});
   const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();update.mutate();};
   const part=textbook.part==='PART_1'?t('textbookAdmin.part1'):t('textbookAdmin.part2');
-  return <ActionModal kind="textbook" icon={<BookPen/>} title={t('textbookAdmin.editBookTitle')} subtitle={[textbook.gradeName,textbook.subjectName,part].filter(Boolean).join(' · ')} onClose={onClose}
+  return <ActionModal kind="textbook" icon={<BookOpen/>} title={t('textbookAdmin.editBookTitle')} subtitle={[textbook.gradeName,textbook.subjectName,part].filter(Boolean).join(' · ')} onClose={onClose}
     footer={<><Button variant="ghost" type="button" disabled={update.isPending} onClick={onClose}>{t('common.cancel')}</Button><Button variant="primary" type="submit" form="textbook-edit-form" disabled={update.isPending||!title.trim()}>{update.isPending?t('common.working'):t('catalogue.save')}</Button></>}>
     <form id="textbook-edit-form" onSubmit={submit} className="space-y-4">
       <ActionStepCard step={1} title={t('textbookAdmin.titleLabel')}>
