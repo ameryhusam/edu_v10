@@ -380,6 +380,15 @@ class LessonSegmenter:
                     ],
                     "resourceDir": f"{u_dir_name}/{l_dir_name}/resource",
                     "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
+                    "segmentsFile": f"{u_dir_name}/{l_dir_name}/segments.json",
+                    "questionsFile": f"{u_dir_name}/{l_dir_name}/questions.json",
+                    "semanticStructure": {
+                        "pageCount": len(lesson_page_semantics),
+                        "segmentCount": sum(len(p.get("segments", [])) for p in lesson_page_semantics),
+                        "questionBlockCount": sum(len(p.get("questionBlocks", [])) for p in lesson_page_semantics),
+                        "crossPageQuestionGroupCount": len(question_groups),
+                        "reviewRequired": any(p.get("review") for p in lesson_page_semantics),
+                    },
                     "grounding": {
                         "pageCount": len(grounding_pages),
                         "chunkCount": len(grounding_chunks),
