@@ -203,6 +203,101 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   return envelope.data;
 }
 
+
+export interface UploadProgress {
+  readonly loaded: number;
+  readonly total: number;
+  readonly percent: number;
+}
+
+/**
+ * Upload a raw body with browser-visible request progress.
+ *
+ * fetch() does not expose upload progress in browsers, so XHR is used only
+ * for this transport primitive. The request remains behind the shared API
+ * client so authentication, refresh and envelope handling stay centralized.
+ *
+ * 100% here means the PDF bytes reached the server. It does NOT mean Python
+ * preparation finished; callers must keep a separate processing phase until
+ * the HTTP response returns.
+ */
+async function postRawWithProgress<T>(
+  path: string,
+  body: BodyInit,
+  options: Omit<RequestOptions, 'method' | 'body' | 'rawBody'> = {},
+  onProgress?: (progress: UploadProgress) => void,
+): Promise<T> {
+  const send = (): Promise<{ status: number; statusText: string; body: string }> =>
+    new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', buildUrl(path, options.query), true);
+      xhr.withCredentials = true;
+      xhr.setRequestHeader('accept', 'application/json');
+      xhr.setRequestHeader('content-type', options.rawContentType ?? 'application/octet-stream');
+      if (accessToken) xhr.setRequestHeader('authorization', `Bearer ${accessToken}`);
+
+      const abort = () => xhr.abort();
+      if (options.signal) {
+        if (options.signal.aborted) {
+          xhr.abort();
+          reject(ApiError.offline());
+          return;
+        }
+        options.signal.addEventListener('abort', abort, { once: true });
+        xhr.addEventListener('loadend', () => options.signal?.removeEventListener('abort', abort), { once: true });
+      }
+
+      xhr.upload.onprogress = event => {
+        if (!event.lengthComputable) return;
+        onProgress?.({
+          loaded: event.loaded,
+          total: event.total,
+          percent: Math.min(100, Math.round((event.loaded / event.total) * 100)),
+        });
+      };
+      xhr.onerror = () => reject(ApiError.offline());
+      xhr.onabort = () => reject(ApiError.offline());
+      xhr.onload = () => resolve({ status: xhr.status, statusText: xhr.statusText, body: xhr.responseText });
+      xhr.send(body);
+    });
+
+  const result = await send();
+
+  if (result.status === 401 && !options.skipAuthRefresh) {
+    const refreshed = await restoreAccessToken();
+    if (refreshed) {
+      return postRawWithProgress(path, body, { ...options, skipAuthRefresh: true }, onProgress);
+    }
+  }
+
+  let envelope: Envelope<T> | null = null;
+  try {
+    envelope = JSON.parse(result.body) as Envelope<T>;
+  } catch {
+    throw ApiError.fromEnvelope(
+      { code: `http.${result.status}`, message: result.statusText || 'Request failed.' },
+      result.status,
+    );
+  }
+
+  if (result.status < 200 || result.status >= 300) {
+    if (envelope && !envelope.ok) {
+      throw ApiError.fromEnvelope(envelope.error, result.status, envelope.meta.requestId);
+    }
+    throw ApiError.fromEnvelope(
+      { code: `http.${result.status}`, message: result.statusText || 'Request failed.' },
+      result.status,
+    );
+  }
+
+  if (!envelope.ok) {
+    throw ApiError.fromEnvelope(envelope.error, result.status, envelope.meta.requestId);
+  }
+
+  onProgress?.({ loaded: 1, total: 1, percent: 100 });
+  return envelope.data;
+}
+
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'GET' }),
@@ -210,6 +305,12 @@ export const api = {
     request<T>(path, { ...options, method: 'POST', ...(body !== undefined ? { body } : {}) }),
   postRaw: <T>(path: string, body: BodyInit, options?: Omit<RequestOptions, 'method' | 'body' | 'rawBody'>) =>
     request<T>(path, { ...options, method: 'POST', rawBody: body }),
+  postRawWithProgress: <T>(
+    path: string,
+    body: BodyInit,
+    options?: Omit<RequestOptions, 'method' | 'body' | 'rawBody'>,
+    onProgress?: (progress: UploadProgress) => void,
+  ) => postRawWithProgress<T>(path, body, options, onProgress),
   patch: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>
     request<T>(path, { ...options, method: 'PATCH', ...(body !== undefined ? { body } : {}) }),
   put: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>

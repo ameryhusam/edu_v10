@@ -8,6 +8,7 @@ export interface TextbookWorkspaceUploadStepProps {
   readonly fileInputRef: RefObject<HTMLInputElement | null>;
   readonly onFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
   readonly isPreparePending: boolean;
+  readonly uploadProgress: number | null;
   readonly onPrepare: () => void;
 }
 
@@ -16,6 +17,7 @@ export function TextbookWorkspaceUploadStep({
   fileInputRef,
   onFileChange,
   isPreparePending,
+  uploadProgress,
   onPrepare,
 }: TextbookWorkspaceUploadStepProps): ReactNode {
   return (
@@ -60,6 +62,19 @@ export function TextbookWorkspaceUploadStep({
       </section>
 
       <div className="flex justify-end">
+        {isPreparePending && uploadProgress !== null ? (
+          <div className="mt-4 rounded-xl border border-border bg-surface-subtle p-3 text-start" aria-live="polite">
+            <div className="flex items-center justify-between gap-3 text-xs font-bold text-text">
+              <span>{uploadProgress < 100 ? 'رفع الملف إلى المحرك' : 'اكتمل رفع الملف — جارٍ تجهيز الكتاب'}</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-border" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress}>
+              <div className="h-full rounded-full bg-accent transition-[width] duration-150" style={{ width: `${uploadProgress}%` }} />
+            </div>
+            {uploadProgress === 100 ? <p className="mt-2 text-2xs text-text-muted">تم إرسال ملف PDF بالكامل. انتظر تأكيد المحرك قبل الانتقال إلى Workspace.</p> : null}
+          </div>
+        ) : null}
+
         <Button
           type="button"
           variant="primary"

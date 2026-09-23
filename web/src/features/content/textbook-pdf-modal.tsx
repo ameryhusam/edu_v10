@@ -30,6 +30,7 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [retire, setRetire] = useState<ResourceRecord | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const resources = useQuery({
     queryKey: ['admin-textbook-resources', textbook?.key],
@@ -40,6 +41,7 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
 
   const prepare = async (confirmDetectedIdentity: boolean): Promise<any> => {
     if (!textbook || !file) throw new Error('يرجى اختيار ملف PDF.');
+    setUploadProgress(0);
     const result = await textbookAdministrationApi.workspacePrepareUpload({
       file,
       part: textbook.part,
@@ -49,6 +51,7 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
       title: textbook.title,
       autoSegment: true,
       confirmDetectedIdentity,
+      onUploadProgress: progress => setUploadProgress(progress.percent),
     });
     if (result?.status === 'CONFIRM_REQUIRED' || result?.status === 'NEEDS_REVIEW') return result;
     if (result?.status !== 'PREPARED') throw new Error('تعذر تجهيز ملف الكتاب.');
@@ -91,7 +94,7 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
       setFile(null); setUrl(''); setTitle(''); setPages(''); setNotes('');
       await resources.refetch(); await queryClient.invalidateQueries({ queryKey: queryKeysCompat() }); onSaved?.();
     },
-    onError: (e: unknown) => { setError(e instanceof Error ? e.message : 'فشل حفظ ملف الكتاب.'); },
+    onError: (e: unknown) => { setUploadProgress(null); setError(e instanceof Error ? e.message : 'فشل حفظ ملف الكتاب.'); },
   });
 
   const retireMutation = useMutation({
@@ -127,6 +130,8 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
           {mode === 'FILE' ? <div className="mt-4"><input ref={fileRef} type="file" accept="application/pdf" className="hidden" onChange={e => chooseFile(e.target.files?.[0] ?? null)} /><button type="button" onClick={() => fileRef.current?.click()} className="w-full rounded-2xl border-2 border-dashed border-border bg-surface-subtle/40 p-8 text-center hover:border-accent/50"><UploadCloud className="mx-auto size-8 text-accent"/><p className="mt-2 text-sm font-black text-text">{file ? file.name : 'اختر ملف PDF'}</p><p className="mt-1 text-xs text-text-muted">سيتم استخراج الهوية والفهرس وبنية الصفحات آلياً، مع Gemini عند توفره.</p>{file ? <Badge tone="neutral" className="mt-3">{(file.size / 1048576).toFixed(2)} MB</Badge> : null}</button></div>
           : <div className="mt-4 space-y-3"><label className="block text-xs font-bold text-text">رابط PDF<input value={url} onChange={e => setUrl(e.target.value)} dir="ltr" className="mt-1.5 h-11 w-full rounded-xl border border-border bg-surface px-3 text-sm text-text outline-none focus:border-accent"/></label><p className="text-2xs text-text-muted">المعالجة الآلية الكاملة متاحة عند رفع الملف مباشرة.</p></div>}
           <div className="mt-4 grid gap-3 sm:grid-cols-2"><label className="text-xs font-bold text-text">اسم المصدر<Input value={title} onChange={e => setTitle(e.target.value)} placeholder={textbook.title}/></label><label className="text-xs font-bold text-text">عدد الصفحات<Input type="number" min="1" value={pages} onChange={e => setPages(e.target.value)} placeholder={String(textbook.totalPages ?? '')}/></label></div>
+          {mode === 'FILE' && save.isPending && uploadProgress !== null ? <div className="mt-4 rounded-xl border border-border bg-surface-subtle p-3" aria-live="polite"><div className="flex items-center justify-between gap-3 text-xs font-bold text-text"><span>{uploadProgress < 100 ? 'رفع PDF إلى المحرك' : 'اكتمل الرفع — جارٍ تجهيز Workspace'}</span><span>{uploadProgress}%</span></div><div className="mt-2 h-2 overflow-hidden rounded-full bg-border" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress}><div className="h-full rounded-full bg-accent transition-[width] duration-150" style={{ width: `${uploadProgress}%` }} /></div>{uploadProgress === 100 ? <p className="mt-2 text-2xs text-text-muted">تم إرسال الملف بالكامل. سيبقى الحفظ مقفلاً حتى يؤكد المحرك اكتمال التجهيز.</p> : null}</div> : null}
+
           <label className="mt-3 block text-xs font-bold text-text">ملاحظات<Textarea rows={2} value={notes} onChange={e => setNotes(e.target.value)} /></label>
         </section>
       </div>

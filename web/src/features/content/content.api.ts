@@ -512,11 +512,12 @@ export const textbookAdministrationApi = {
     part?: 'PART_1' | 'PART_2';
     grade?: string;
     subject?: string;
-    edition?: string | undefined;
-    title?: string | undefined;
-    autoSegment?: boolean | undefined;
+    edition?: string;
+    title?: string;
+    autoSegment?: boolean;
     confirmDetectedIdentity?: boolean | undefined;
-  }) => api.postRaw<any>('content/workspace/prepare-upload', input.file, {
+    onUploadProgress?: (progress: { loaded: number; total: number; percent: number }) => void;
+  }) => api.postRawWithProgress<any>('content/workspace/prepare-upload', input.file, {
     query: {
       part: input.part,
       grade: input.grade,
@@ -527,8 +528,7 @@ export const textbookAdministrationApi = {
       confirmDetectedIdentity: input.confirmDetectedIdentity,
     },
     rawContentType: 'application/pdf',
-  }),
-
+  }, input.onUploadProgress),
   workspacePrepare: (input: {
     part: 'PART_1' | 'PART_2';
     grade: string;
