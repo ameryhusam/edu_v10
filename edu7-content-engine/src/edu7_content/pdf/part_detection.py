@@ -189,6 +189,17 @@ def detect_combined_part_boundary(
     p1_pages = [p["pdfPage"] for p in all_evidence if p["part1"]]
     p2_pages = [p["pdfPage"] for p in all_evidence if p["part2"]]
 
+    # Seeing first- and second-part/semester terminology in the same source is
+    # combined-book evidence. It establishes BOTH identity, but not the split
+    # page. The latter still requires a structural boundary.
+    if p1_pages and p2_pages:
+        result["detectedPart"] = "BOTH"
+        result["confidence"] = "HIGH" if both_early else "MEDIUM"
+        result["reason"] = (
+            "Both first- and second-semester/part terminology occurs in the "
+            "same source; physical split is resolved separately."
+        )
+
     if p1_pages and p2_pages:
         later_candidates = [
             p for p in all_evidence
