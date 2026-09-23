@@ -9,6 +9,7 @@ from .reader import PdfReader
 from .workspace_validation import validate_segmentation_input
 from .semantic_blocks import extract_page_semantic_blocks
 from .question_extraction import extract_question_blocks, group_cross_page_questions
+from .lesson_detection import reconcile_lesson_range
 
 
 def slugify(text: str, fallback: str = "item") -> str:
@@ -229,6 +230,23 @@ class LessonSegmenter:
 
                 start_p = les.get("startPage", unit_start_page)
                 end_p = les.get("endPage", start_p)
+                next_lesson = lessons[l_idx] if l_idx < len(lessons) else None
+                next_lesson_pdf = (
+                    self.mapper.get_pdf_page(int(next_lesson.get("startPage")))
+                    if next_lesson and next_lesson.get("startPage") is not None
+                    else None
+                )
+                boundary_evidence = reconcile_lesson_range(
+                    self.reader,
+                    toc_start_pdf=self.mapper.get_pdf_page(int(start_p)),
+                    toc_end_pdf=self.mapper.get_pdf_page(int(end_p)),
+                    next_lesson_start_pdf=next_lesson_pdf,
+                    expected_title=str(l_title),
+                )
+                (l_dir / "boundary_evidence.json").write_text(
+                    json.dumps(boundary_evidence, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
                 printed_pages = list(range(start_p, end_p + 1))
                 pdf_pages = [self.mapper.get_pdf_page(p) for p in printed_pages]
 
@@ -395,6 +413,9 @@ class LessonSegmenter:
                     ],
                     "resourceDir": f"{u_dir_name}/{l_dir_name}/resource",
                     "groundingFile": f"{u_dir_name}/{l_dir_name}/grounding_manifest.json",
+                    "boundaryEvidenceFile": f"{u_dir_name}/{l_dir_name}/boundary_evidence.json",
+                    "boundaryStatus": boundary_evidence.get("status"),
+                    "boundaryReviewReasons": boundary_evidence.get("reviewReasons", []),
                     "segmentsFile": f"{u_dir_name}/{l_dir_name}/segments.json",
                     "questionsFile": f"{u_dir_name}/{l_dir_name}/questions.json",
                     "semanticStructure": {
