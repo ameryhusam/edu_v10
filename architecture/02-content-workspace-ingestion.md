@@ -151,6 +151,8 @@ For PARTIAL packages, omitted files never mean deletion. For FULL packages, dele
 - Python never writes PostgreSQL directly.
 - Workspace files are evidence/assets, not implicit semantic rows.
 - Same fingerprint → idempotent no-op.
+- Incomplete Workspace → resume from the first invalid checkpoint; do not repeat valid upstream stages.
+- Full re-extraction requires a changed/invalid upstream dependency or an explicit rebuild request.
 - New artifact → create/reconcile through canonical service.
 - Changed artifact → staged replacement and review according to policy.
 - Identity conflict → stop; never silently overwrite.
