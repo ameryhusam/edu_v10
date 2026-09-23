@@ -65,13 +65,19 @@ export function TextbookWorkspaceUploadStep({
         {isPreparePending && uploadProgress !== null ? (
           <div className="mt-4 rounded-xl border border-border bg-surface-subtle p-3 text-start" aria-live="polite">
             <div className="flex items-center justify-between gap-3 text-xs font-bold text-text">
-              <span>{uploadProgress < 100 ? 'رفع الملف إلى المحرك' : 'اكتمل رفع الملف — جارٍ تجهيز الكتاب'}</span>
+              <span>{uploadProgress < 100 ? 'رفع الملف إلى المحرك' : 'اكتمل رفع الملف'}</span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="mt-2 h-2 overflow-hidden rounded-full bg-border" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={uploadProgress}>
               <div className="h-full rounded-full bg-accent transition-[width] duration-150" style={{ width: `${uploadProgress}%` }} />
             </div>
-            {uploadProgress === 100 ? <p className="mt-2 text-2xs text-text-muted">تم إرسال ملف PDF بالكامل. انتظر تأكيد المحرك قبل الانتقال إلى Workspace.</p> : null}
+            {uploadProgress === 100 ? <div className="mt-3">
+              <div className="text-xs font-bold text-text">جارٍ تجهيز الكتاب وWorkspace…</div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-border" aria-hidden="true">
+                <div className="h-full w-1/3 animate-pulse rounded-full bg-accent" />
+              </div>
+              <p className="mt-2 text-2xs text-text-muted">تم إرسال ملف PDF بالكامل. لا يمكن الانتقال إلى Workspace حتى يؤكد المحرك اكتمال التجهيز.</p>
+            </div> : null}
           </div>
         ) : null}
 
