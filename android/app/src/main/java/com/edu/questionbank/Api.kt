@@ -34,6 +34,6 @@ interface QuestionBankApi {
  @GET("v1/learners/{learnerId}/report") suspend fun report(@Header("Authorization") token:String,@Path("learnerId") learnerId:String):List<ConceptReport>
 }
 object Api {
- private const val BASE_URL="http://10.0.2.2:3000/"
+ private val BASE_URL=BuildConfig.API_BASE_URL
  val service:QuestionBankApi by lazy { Retrofit.Builder().baseUrl(BASE_URL).addConverterFactory(GsonConverterFactory.create()).build().create(QuestionBankApi::class.java) }
 }
