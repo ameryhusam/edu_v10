@@ -926,7 +926,8 @@ const ar = {
 
   // ── Catalogue administration ─────────────────────────────────────────────
   'catalogue.title': 'البنية الأكاديميّة',
-  'catalogue.subtitle': 'الموادّ والصفوف والأعوام والفصول والمدارس.',
+  'catalogue.subtitle': 'الموادّ والصفوف والأعوام والفصول في مساحة إدارة واحدة.',
+  'catalogue.distribution': 'توزيع الموادّ',
   'catalogue.tab.subjects': 'الموادّ',
   'catalogue.tab.grades': 'الصفوف',
   'catalogue.tab.academicYears': 'الأعوام',
@@ -2410,7 +2411,8 @@ const en: Record<MessageKey, string> = {
 
   // ── Catalogue administration ─────────────────────────────────────────────
   'catalogue.title': 'Academic structure',
-  'catalogue.subtitle': 'Subjects, grades, years, terms and schools.',
+  'catalogue.subtitle': 'Subjects, grades, academic years and terms in one management workspace.',
+  'catalogue.distribution': 'Subject distribution',
   'catalogue.tab.subjects': 'Subjects',
   'catalogue.tab.grades': 'Grades',
   'catalogue.tab.academicYears': 'Years',
