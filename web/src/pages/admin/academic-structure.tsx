@@ -186,7 +186,7 @@ export function AcademicStructurePage(): ReactNode {
                   onClick={() => setDistributionGrade(filteredGrades[0] ?? grades.data?.[0] ?? null)}
                 >
                   <SlidersHorizontal className="size-4" />
-                  {t('matrix.saveDistribution')}
+                  {t('catalogue.distribution')}
                 </Button>
               ) : null}
               <div className="relative w-full sm:w-64">
