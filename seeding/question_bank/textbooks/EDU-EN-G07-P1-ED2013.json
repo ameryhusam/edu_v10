@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "package_type": "TEXTBOOK_CATALOG_SEED",
+  "package_key": "EDU-EN-G07-P1-ED2013",
+  "textbook": {
+    "key": "EDU-EN-G07-P1-ED2013",
+    "title": "English Course - Pupil's Book 1",
+    "subject": "اللغة الإنجليزية",
+    "grade": "G07",
+    "part": "PART_1",
+    "edition": "2013/2014",
+    "publishYear": 2013,
+    "publisher": "Ministry Of Education"
+  },
+  "source": {
+    "file": "english_pubils_7th (1).pdf",
+    "tocPdfStartPage": null,
+    "tocPdfEndPage": null
+  },
+  "toc": [
+    {
+      "order": 1,
+      "text": "",
+      "printedPage": null
+    }
+  ]
+}
