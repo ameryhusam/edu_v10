@@ -7,6 +7,9 @@
 
 import { api } from '../../shared/api/client';
 
+export const QUESTION_BANK_SUPPORTED_GRADES = ['G04', 'G05', 'G06', 'G07', 'G08', 'G09'] as const;
+export type QuestionBankSupportedGrade = (typeof QUESTION_BANK_SUPPORTED_GRADES)[number];
+
 export const QUESTION_TYPES = [
   'MCQ_SINGLE',
   'MCQ_MULTI',
