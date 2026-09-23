@@ -344,6 +344,75 @@ class TocParser:
 
 # ─── توليد مخرجات JSON و Excel المتوافقة مع Edu7 ────────────────────────────
 
+def generate_edu7_index_json(
+    units: List[Dict[str, Any]],
+    textbook_title: str,
+    subject_key: str,
+    grade_key: str,
+    part: str,
+    edition: str = "2026",
+    output_path: str = "index.json"
+) -> Dict[str, Any]:
+    """
+    Generate the canonical textbook index only.
+
+    The index is intentionally structural: Textbook -> Unit -> Lesson.
+    It does not contain concepts, questions, misconceptions, or learning
+    resources. A unit is always a top-level container; there is no
+    parentUnitSlug/branch layer. Concepts and questions are authored in their
+    own JSON files and reference the lesson path.
+    """
+    pad_grade = grade_key.replace("G", "").zfill(2)
+    part_code = {"PART_1": "P1", "PART_2": "P2", "BOTH": "PB"}.get(str(part).upper())
+    if not part_code:
+        raise ValueError("Physical part must be PART_1, PART_2, or BOTH")
+
+    textbook_key = f"EDU-{subject_key}-G{pad_grade}-{part_code}-ED{edition}"
+
+    index = {
+        "meta": {
+            "profile": "edu7.textbook-index",
+            "profileVersion": "1.0",
+            "scope": "FULL",
+            "exportedAt": "2026-09-23T00:00:00.000Z"
+        },
+        "textbook": {
+            "key": textbook_key,
+            "subjectKey": subject_key,
+            "gradeKey": grade_key,
+            "part": part,
+            "title": textbook_title,
+            "edition": edition
+        },
+        "units": [
+            {
+                "slug": u["slug"],
+                "name": u["name"],
+                "orderIndex": u["orderIndex"],
+                "startPage": u.get("startPage"),
+                "endPage": u.get("endPage"),
+                "lessons": [
+                    {
+                        "slug": lesson["slug"],
+                        "name": lesson["name"],
+                        "orderIndex": lesson["orderIndex"],
+                        "startPage": lesson.get("startPage"),
+                        "endPage": lesson.get("endPage")
+                    }
+                    for lesson in u.get("lessons", [])
+                ]
+            }
+            for u in units
+        ]
+    }
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(index, f, ensure_ascii=False, indent=2)
+
+    print(f"✅ تم إنشاء فهرس Edu7 القياسي: {output_path}")
+    return index
+
+
 def generate_edu7_json(
     units: List[Dict[str, Any]],
     textbook_title: str,
@@ -618,6 +687,17 @@ def main():
     base_name = f"{grade}-{subject}-{part.replace("PART_", "P")}"
     json_path = os.path.join(args.output_dir, f"{base_name}.json")
     xlsx_path = os.path.join(args.output_dir, f"{base_name}.xlsx")
+
+    index_path = os.path.join(args.output_dir, "index.json")
+    generate_edu7_index_json(
+        units=units,
+        textbook_title=title,
+        subject_key=subject,
+        grade_key=grade,
+        part=part,
+        edition=args.edition,
+        output_path=index_path
+    )
 
     generate_edu7_json(
         units=units,
