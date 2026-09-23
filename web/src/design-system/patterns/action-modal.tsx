@@ -97,6 +97,7 @@ export function ActionModal({
 
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
+      if (!first || !last) return;
       if (event.shiftKey && doc.activeElement === first) {
         event.preventDefault();
         last.focus();
