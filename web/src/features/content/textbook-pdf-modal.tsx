@@ -43,9 +43,16 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
   const prepare = async (confirmDetectedIdentity: boolean): Promise<any> => {
     if (!textbook || !file) throw new Error('يرجى اختيار ملف PDF.');
     const result = await textbookAdministrationApi.workspacePrepareUpload({
-      file, grade: textbook.gradeKey, subject: textbook.subjectKey, autoSegment: true, confirmDetectedIdentity,
+      file,
+      part: textbook.part,
+      grade: textbook.gradeKey,
+      subject: textbook.subjectKey,
+      edition: textbook.edition,
+      title: textbook.title,
+      autoSegment: true,
+      confirmDetectedIdentity,
     });
-    if (result?.status === 'CONFIRM_REQUIRED') return result;
+    if (result?.status === 'CONFIRM_REQUIRED' || result?.status === 'NEEDS_REVIEW') return result;
     if (result?.status !== 'PREPARED') throw new Error('تعذر تجهيز ملف الكتاب.');
     return result;
   };
@@ -56,7 +63,7 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
       if (!textbook) throw new Error('لم يتم اختيار كتاب.');
       if (mode === 'FILE') {
         const result = await prepare(false);
-        if (result?.status === 'CONFIRM_REQUIRED') return result;
+        if (result?.status === 'CONFIRM_REQUIRED' || result?.status === 'NEEDS_REVIEW') return result;
       } else {
         if (!url.trim()) throw new Error('أدخل رابط PDF صالحاً.');
         await textbookAdministrationApi.createLearningResource({
@@ -76,6 +83,12 @@ export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookP
     },
     onSuccess: async (result) => {
       if (result?.status === 'CONFIRM_REQUIRED') { setConflict(result); return; }
+      if (result?.status === 'NEEDS_REVIEW') {
+        const identity = result?.proposal?.identity ?? {};
+        const missing = ['subjectKey', 'gradeKey', 'part', 'edition'].filter(key => !identity?.[key]);
+        setError(missing.length ? `لم تكتمل هوية الكتاب: ${missing.join('، ')}.` : 'توجد أدلة متعارضة أو غير كافية في المصدر؛ راجع الهوية ثم أعد التجهيز.');
+        return;
+      }
       setSuccess(mode === 'FILE' ? 'تم تجهيز PDF للمراجعة. لم يتم استيراد المحتوى بعد.' : 'تم حفظ مصدر الكتاب بنجاح.');
       setFile(null); setUrl(''); setTitle(''); setPages(''); setNotes('');
       await resources.refetch(); await queryClient.invalidateQueries({ queryKey: queryKeysCompat() }); onSaved?.();
