@@ -1,0 +1,4 @@
+import jwt from "jsonwebtoken"; import bcrypt from "bcryptjs"; import type {Request,Response,NextFunction} from "express"; import {db} from "./db.js";
+const secret=process.env.JWT_SECRET??"dev-only-change-me";
+export async function login(username:string,pin:string){const u=await db.user.findUnique({where:{username}});if(!u||!(await bcrypt.compare(pin,u.pinHash)))return null;return {token:jwt.sign({sub:u.id,role:u.role},secret,{expiresIn:"7d"}),user:{id:u.id,username:u.username,displayName:u.displayName,role:u.role}};}
+export async function auth(req:Request,res:Response,next:NextFunction){try{const h=req.headers.authorization;if(!h?.startsWith("Bearer "))return res.status(401).json({error:"UNAUTHORIZED"});const p=jwt.verify(h.slice(7),secret) as {sub:string};const u=await db.user.findUnique({where:{id:p.sub}});if(!u)return res.status(401).json({error:"UNAUTHORIZED"});res.locals.user=u;next();}catch{return res.status(401).json({error:"UNAUTHORIZED"});}}
