@@ -111,6 +111,7 @@ export function TextbooksAdminPage(): ReactNode {
           onOpenCreateModal={() => setCreateModalOpen(true)}
           onOpenBulkModal={() => setBulkModalOpen(true)}
           onNavigateToContentManager={(key: string) => navigate(`/admin/content?textbook=${encodeURIComponent(key)}`)}
+          onOpenWorkspaceModal={() => setWorkspaceModalOpen(true)}
           canApprove={canApprove}
           canManageDeployment={canManageDeployment}
         />
