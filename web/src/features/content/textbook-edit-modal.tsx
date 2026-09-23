@@ -96,7 +96,7 @@ function TextbookEditForm({
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div>
             <h2 className="text-lg font-bold text-text">{t('textbookAdmin.editBookTitle')}</h2>
-            <p className="text-xs font-mono text-text-muted">{textbook.key}</p>
+            <p className="text-xs text-text-muted">{textbook.gradeName} · {textbook.subjectName} · {textbook.part === 'PART_1' ? t('textbookAdmin.part1') : t('textbookAdmin.part2')}</p>
           </div>
           <button
             type="button"
