@@ -277,7 +277,7 @@ The production gate remains incomplete until per-textbook operation locking/idem
 
 1. Define configurable page/content labels.
 2. Add manual page_classification.json support at lesson root.
-3. Support unit defaults with lesson-level override.
+3. Store branch/domain classification on Lesson; do not use Unit as the owner of subject branch classification.
 4. Keep page_{number} filenames unchanged.
 5. Add TOC/deterministic classification.
 6. Add Arabic/Islamic/Quran branch-aware profiles.
