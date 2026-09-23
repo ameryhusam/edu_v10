@@ -38,7 +38,7 @@ import {
   type PublicationStatus,
   type PublicationAction,
 } from '../../features/content/content.api';
-import { administrationApi, type GradeRecord } from '../../features/administration/administration.api';
+import { administrationApi } from '../../features/administration/administration.api';
 import { queryKeys } from '../../shared/api/query-keys';
 import { useSession } from '../../shared/auth/session';
 import { useI18n } from '../../shared/i18n/i18n';
@@ -258,7 +258,7 @@ export function TextbooksAdminPage(): ReactNode {
                     >
                       <span className="min-w-0">
                         <span className={`block truncate text-xs font-bold ${selected ? 'text-accent' : 'text-text'}`}>{grade.name}</span>
-                        <span className="mt-0.5 block text-2xs text-text-muted">{stats.total} {t('textbookAdmin.materialsInGrade', { count: stats.total }).replace(String(stats.total), '').trim()}</span>
+                        <span className="mt-0.5 block text-2xs text-text-muted">{t('textbookAdmin.materialsInGrade', { count: stats.total })}</span>
                       </span>
                       <span className="rounded-lg bg-surface px-2 py-1 text-2xs font-bold text-text-muted">{stats.published}/{stats.total}</span>
                     </button>
