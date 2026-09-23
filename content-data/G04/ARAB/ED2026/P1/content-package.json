@@ -1,0 +1,594 @@
+{
+  "meta": {
+    "profile": "edu7.textbook-content",
+    "profileVersion": "1.1",
+    "scope": "FULL",
+    "exportedAt": "2026-09-23T20:42:48.763Z"
+  },
+  "textbook": {
+    "key": "EDU-ARAB-G04-P1-ED2026",
+    "subjectKey": "ARAB",
+    "gradeKey": "G04",
+    "part": "PART_1",
+    "title": "كتاب لغتي العربية — الصف الرابع",
+    "edition": "2026",
+    "status": "DRAFT",
+    "issuer": "وزارة التربية والتعليم — الجمهورية اليمنية",
+    "totalPages": 112,
+    "description": "قالب هيكل المنهج النموذجي لمدارس الجمهورية اليمنية: يحتوي على وحدات دراسية، دروس، مفاهيم، مصادر تعلم، مفاهيم خاطئة، وأسئلة تقويمية."
+  },
+  "units": [
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS",
+      "slug": "ETHICS-AND-MANNERS",
+      "name": "الوحدة الأولى: مكارم الأخلاق والآداب",
+      "orderIndex": 1,
+      "startPage": 6,
+      "endPage": 28,
+      "parentUnitSlug": null,
+      "isActive": true
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING",
+      "slug": "HOMELAND-AND-BELONGING",
+      "name": "الوحدة الثانية: حب الوطن والاعتزاز بهويتنا",
+      "orderIndex": 2,
+      "startPage": 29,
+      "endPage": 52,
+      "parentUnitSlug": null,
+      "isActive": true
+    }
+  ],
+  "lessons": [
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "slug": "HONESTY",
+      "name": "الدرس الأول: الصدق منجاة",
+      "orderIndex": 1,
+      "estimatedMins": 45,
+      "startPage": 7,
+      "endPage": 13,
+      "description": null,
+      "isActive": true
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-PARENTS-RESPECT",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "slug": "PARENTS-RESPECT",
+      "name": "الدرس الثاني: بر الوالدين والإحسان إليهما",
+      "orderIndex": 2,
+      "estimatedMins": 45,
+      "startPage": 14,
+      "endPage": 22,
+      "description": null,
+      "isActive": true
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-YEMEN-LANDMARKS",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "slug": "YEMEN-LANDMARKS",
+      "name": "الدرس الأول: معالم من وطني اليمن",
+      "orderIndex": 1,
+      "estimatedMins": 45,
+      "startPage": 30,
+      "endPage": 38,
+      "description": null,
+      "isActive": true
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-NATIONAL-DUTY",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "slug": "NATIONAL-DUTY",
+      "name": "الدرس الثاني: واجبنا نحو بناء الوطن وحمايته",
+      "orderIndex": 2,
+      "estimatedMins": 45,
+      "startPage": 39,
+      "endPage": 48,
+      "description": null,
+      "isActive": true
+    }
+  ],
+  "concepts": [
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-C-CONCEPT-HONESTY",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "slug": "CONCEPT-HONESTY",
+      "name": "مفهوم الصدق وأهميته في بناء المجتمع",
+      "orderIndex": 1,
+      "difficulty": 0.2,
+      "importance": 0.9,
+      "masteryThreshold": 0.7,
+      "isCore": true,
+      "isActive": true,
+      "pageNumber": 8,
+      "description": null
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-C-CONCEPT-TRUTH-EXPRESSION",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "slug": "CONCEPT-TRUTH-EXPRESSION",
+      "name": "التعبير عن الصدق في الجملة المفيدة",
+      "orderIndex": 2,
+      "difficulty": 0.3,
+      "importance": 0.9,
+      "masteryThreshold": 0.7,
+      "isCore": true,
+      "isActive": true,
+      "pageNumber": 10,
+      "description": null
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-PARENTS-RESPECT-C-CONCEPT-PARENTS-RIGHTS",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "PARENTS-RESPECT",
+      "slug": "CONCEPT-PARENTS-RIGHTS",
+      "name": "حقوق الوالدين وواجب الأبناء نحوهما",
+      "orderIndex": 1,
+      "difficulty": 0.25,
+      "importance": 0.9,
+      "masteryThreshold": 0.7,
+      "isCore": true,
+      "isActive": true,
+      "pageNumber": 16,
+      "description": null
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-YEMEN-LANDMARKS-C-CONCEPT-HISTORIC-LANDMARKS",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "YEMEN-LANDMARKS",
+      "slug": "CONCEPT-HISTORIC-LANDMARKS",
+      "name": "الآثار والمعالم التاريخية اليمنية ومكانتها العالمية",
+      "orderIndex": 1,
+      "difficulty": 0.25,
+      "importance": 0.9,
+      "masteryThreshold": 0.7,
+      "isCore": true,
+      "isActive": true,
+      "pageNumber": 32,
+      "description": null
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-NATIONAL-DUTY-C-CONCEPT-NATIONAL-RESPONSIBILITY",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "NATIONAL-DUTY",
+      "slug": "CONCEPT-NATIONAL-RESPONSIBILITY",
+      "name": "المسؤولية الفردية والجماعية تجاه رفعة الوطن",
+      "orderIndex": 1,
+      "difficulty": 0.2,
+      "importance": 0.9,
+      "masteryThreshold": 0.7,
+      "isCore": true,
+      "isActive": true,
+      "pageNumber": 41,
+      "description": null
+    }
+  ],
+  "prerequisites": [
+    {
+      "conceptKey": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-C-CONCEPT-TRUTH-EXPRESSION",
+      "prerequisiteKey": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-C-CONCEPT-HONESTY",
+      "strength": 1,
+      "requiredMastery": 0.7
+    },
+    {
+      "conceptKey": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-NATIONAL-DUTY-C-CONCEPT-NATIONAL-RESPONSIBILITY",
+      "prerequisiteKey": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-YEMEN-LANDMARKS-C-CONCEPT-HISTORIC-LANDMARKS",
+      "strength": 1,
+      "requiredMastery": 0.7
+    }
+  ],
+  "misconceptions": [
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-C-CONCEPT-HONESTY-MIS-MIS-JUSTIFIED-LIE",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "conceptSlug": "CONCEPT-HONESTY",
+      "slug": "MIS-JUSTIFIED-LIE",
+      "name": "جواز الكذب لتفادي الحرج البسيط",
+      "description": "اعتقاد بعض الناشئة أن الكذب في المواقف الصغيرة جائز لتفادي العتاب أو الحرج اليومي.",
+      "correction": "الصدق فضيلة ملزمة في كل المواقف؛ والشجاعة في الاعتراف بالخطأ والالتزام بالحق هو طريق النجاة الدائم."
+    }
+  ],
+  "learningResources": [
+    {
+      "scope": "LESSON",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "slug": "READING-L1",
+      "kind": "READING",
+      "title": "الدرس الأول: الصدق منجاة",
+      "body": "الصدق فضيلة سامية وخلق إسلامي أصيل، به تُبنى الثقة بين أفراد المجتمع، وينال صاحبه محبة الناس ورضا الخالق. قال رسول الله صلى الله عليه وسلم: «عليكم بالصدق فإن الصدق يهدي إلى البر وإن البر يهدي إلى الجنة». والصدق يظهر في الأقوال والأفعال والمعاملات، وتجنب شهادة الزور والغش في البيع والشراء.",
+      "orderIndex": 1,
+      "pageStart": 7,
+      "pageEnd": 13,
+      "estimatedMins": 45
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "slug": "RES-2",
+      "kind": "READING",
+      "title": "قراءة إثرائية: الصدق في المعاملات والتجارة",
+      "body": "كان التاجر الأمين يُعرف بين أهل قريته بوفائه وحسن معاملته، فلم يغش قط ولم يخلف موعداً، فبارك الله في تجارته وأحبه الجميع.",
+      "url": null,
+      "orderIndex": 2,
+      "pageStart": null,
+      "pageEnd": null,
+      "estimatedMins": null
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "slug": "RES-3",
+      "kind": "WORKED_EXAMPLE",
+      "title": "تطبيق لغوي: استخراج الأفعال الدالة على الصدق",
+      "body": "الأفعال والصفات: صدق، يفي، يخلص، أمين، ناصح. استخدمها في تركيب جمل مفيدة تُعبر عن مكارم الأخلاق.",
+      "url": null,
+      "orderIndex": 3,
+      "pageStart": null,
+      "pageEnd": null,
+      "estimatedMins": null
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "PARENTS-RESPECT",
+      "slug": "READING-L2",
+      "kind": "READING",
+      "title": "الدرس الثاني: بر الوالدين والإحسان إليهما",
+      "body": "بر الوالدين من أوجب الواجبات الإنسانية والشرعية، فقد تعب الأب في الكد على أسرته، وسهرت الأم في رعاية أطفالها وتغذيتهم. ولهذا قرن الله تعالى عبادته بالإحسان إليهما في قوله الكريم: «وقضى ربك ألا تعبدوا إلا إياه وبالوالدين إحساناً».",
+      "orderIndex": 1,
+      "pageStart": 14,
+      "pageEnd": 22,
+      "estimatedMins": 45
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "PARENTS-RESPECT",
+      "slug": "RES-2",
+      "kind": "READING",
+      "title": "قصة وفاء: كيف كان السلف يعاملون آباءهم وأمهاتهم",
+      "body": "روي عن ابن عمر أنه كان يُنزل والديه منزلة التكريم فلا يمشي أمامهما ولا يرفع صوته بحضرتهما احتراماً وإجلالاً.",
+      "url": null,
+      "orderIndex": 2,
+      "pageStart": null,
+      "pageEnd": null,
+      "estimatedMins": null
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "YEMEN-LANDMARKS",
+      "slug": "READING-L1",
+      "kind": "READING",
+      "title": "الدرس الأول: معالم من وطني اليمن",
+      "body": "اليمن مهد الحضارات العريقة وأرض السدود والقصور التاريخية الفريدة. من سد مأرب العظيم الذي روى الجنتين، إلى صنعاء القديمة بطرازها المعماري الساحر وقصر غمدان، وصولاً إلى مدينة شبام حضرموت الشاهقة التي تُعد أقدم ناطحات سحاب طينية في تاريخ البشرية.",
+      "orderIndex": 1,
+      "pageStart": 30,
+      "pageEnd": 38,
+      "estimatedMins": 45
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "YEMEN-LANDMARKS",
+      "slug": "RES-2",
+      "kind": "READING",
+      "title": "بطاقة وثائقية: شبام حضرموت وتحفة العمارة الطينية",
+      "body": "بُنيت مباني شبام حضرموت من الطين واللبن المقوى بالتبن لترتفع عدة طوابق شامخة، محاطة بسور تاريخي حماها عبر القرون.",
+      "url": null,
+      "orderIndex": 2,
+      "pageStart": null,
+      "pageEnd": null,
+      "estimatedMins": null
+    },
+    {
+      "scope": "LESSON",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "NATIONAL-DUTY",
+      "slug": "READING-L2",
+      "kind": "READING",
+      "title": "الدرس الثاني: واجبنا نحو بناء الوطن وحمايته",
+      "body": "حب الوطن لا يقتصر على الكلمات، بل يُترجم بالعمل الصادق، والاجتهاد في طلب العلم والمعرفة، والمحافظة على الممتلكات العامة والبيئة، والتعاون بين أبناء المجتمع لبناء يمن مشرق وناهض.",
+      "orderIndex": 1,
+      "pageStart": 39,
+      "pageEnd": 48,
+      "estimatedMins": 45
+    }
+  ],
+  "questions": [
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-Qb04ef484",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "type": "MCQ_SINGLE",
+      "text": "ما هي الثمرة الكبرى لالتزام الصدق في الأقوال والمعاملات؟",
+      "hint": null,
+      "explanation": null,
+      "points": 1,
+      "origin": "TEXTBOOK",
+      "textbookRole": "EXERCISE",
+      "status": "DRAFT",
+      "difficulty01": 0.2,
+      "choices": [
+        {
+          "id": "c1",
+          "text": "نيل رضا الله وكسب ثقة واحترام المجتمع",
+          "orderIndex": 0,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c2",
+          "text": "الحصول على مكاسب مادية سريعة فقط",
+          "orderIndex": 1,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c3",
+          "text": "تفادي العتاب حتى لو خالف الحقيقة",
+          "orderIndex": 2,
+          "misconceptionKey": "MIS-JUSTIFIED-LIE",
+          "feedback": null
+        },
+        {
+          "id": "c4",
+          "text": "إرضاء الآخرين على حساب الحق",
+          "orderIndex": 3,
+          "misconceptionKey": null,
+          "feedback": null
+        }
+      ],
+      "answerKey": {
+        "correctChoiceIds": [
+          "c1"
+        ],
+        "acceptedTexts": [],
+        "numericMin": null,
+        "numericMax": null,
+        "caseSensitive": false,
+        "allowPartialCredit": false
+      },
+      "concepts": [
+        {
+          "unitSlug": "ETHICS-AND-MANNERS",
+          "lessonSlug": "HONESTY",
+          "conceptSlug": "CONCEPT-HONESTY",
+          "weight": 1,
+          "isPrimary": true
+        }
+      ]
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-HONESTY-Qf7d15e12",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "HONESTY",
+      "type": "MCQ_SINGLE",
+      "text": "عيّن الجملة التي تشتمل على معنى يعزز قيمة الصدق والأمانة:",
+      "hint": null,
+      "explanation": null,
+      "points": 1,
+      "origin": "TEXTBOOK",
+      "textbookRole": "EXERCISE",
+      "status": "DRAFT",
+      "difficulty01": 0.3,
+      "choices": [
+        {
+          "id": "c1",
+          "text": "صدق التلميذ في قوله واعترف بخطئه بشجاعة",
+          "orderIndex": 0,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c2",
+          "text": "أخفى المسافر بعض الأمتعة دون إشعار",
+          "orderIndex": 1,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c3",
+          "text": "تجاهل العامل التنبيهات الموجهة إليه",
+          "orderIndex": 2,
+          "misconceptionKey": null,
+          "feedback": null
+        }
+      ],
+      "answerKey": {
+        "correctChoiceIds": [
+          "c1"
+        ],
+        "acceptedTexts": [],
+        "numericMin": null,
+        "numericMax": null,
+        "caseSensitive": false,
+        "allowPartialCredit": false
+      },
+      "concepts": [
+        {
+          "unitSlug": "ETHICS-AND-MANNERS",
+          "lessonSlug": "HONESTY",
+          "conceptSlug": "CONCEPT-TRUTH-EXPRESSION",
+          "weight": 1,
+          "isPrimary": true
+        }
+      ]
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-ETHICS-AND-MANNERS-L-PARENTS-RESPECT-Q5711e4ae",
+      "unitSlug": "ETHICS-AND-MANNERS",
+      "lessonSlug": "PARENTS-RESPECT",
+      "type": "MCQ_SINGLE",
+      "text": "أي السلوكيات الآتية تمثل مظهراً حقيقياً من مظاهر بر الوالدين؟",
+      "hint": null,
+      "explanation": null,
+      "points": 1,
+      "origin": "TEXTBOOK",
+      "textbookRole": "EXERCISE",
+      "status": "DRAFT",
+      "difficulty01": 0.25,
+      "choices": [
+        {
+          "id": "c1",
+          "text": "طاعتهما في المعروف والتحدث إليهما بلطف وأدب وخفض الجناح",
+          "orderIndex": 0,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c2",
+          "text": "الاعتراض بصوت مرتفع عند اختلاف الرأي",
+          "orderIndex": 1,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c3",
+          "text": "تأجيل مساعدة المنزل حتى يطلب أحد الوالدين بإلحاح",
+          "orderIndex": 2,
+          "misconceptionKey": null,
+          "feedback": null
+        }
+      ],
+      "answerKey": {
+        "correctChoiceIds": [
+          "c1"
+        ],
+        "acceptedTexts": [],
+        "numericMin": null,
+        "numericMax": null,
+        "caseSensitive": false,
+        "allowPartialCredit": false
+      },
+      "concepts": [
+        {
+          "unitSlug": "ETHICS-AND-MANNERS",
+          "lessonSlug": "PARENTS-RESPECT",
+          "conceptSlug": "CONCEPT-PARENTS-RIGHTS",
+          "weight": 1,
+          "isPrimary": true
+        }
+      ]
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-YEMEN-LANDMARKS-Qe073fc0e",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "YEMEN-LANDMARKS",
+      "type": "MCQ_SINGLE",
+      "text": "ما هو الوصف المعماري المشهور عالمياً لمدينة شبام في حضرموت؟",
+      "hint": null,
+      "explanation": null,
+      "points": 1,
+      "origin": "TEXTBOOK",
+      "textbookRole": "EXERCISE",
+      "status": "DRAFT",
+      "difficulty01": 0.25,
+      "choices": [
+        {
+          "id": "c1",
+          "text": "أقدم ناطحات سحاب طينية في العالم",
+          "orderIndex": 0,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c2",
+          "text": "أطول برج زجاجي في الشرق الأوسط",
+          "orderIndex": 1,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c3",
+          "text": "أكبر قلعة جبلية صخرية مغلقة",
+          "orderIndex": 2,
+          "misconceptionKey": null,
+          "feedback": null
+        }
+      ],
+      "answerKey": {
+        "correctChoiceIds": [
+          "c1"
+        ],
+        "acceptedTexts": [],
+        "numericMin": null,
+        "numericMax": null,
+        "caseSensitive": false,
+        "allowPartialCredit": false
+      },
+      "concepts": [
+        {
+          "unitSlug": "HOMELAND-AND-BELONGING",
+          "lessonSlug": "YEMEN-LANDMARKS",
+          "conceptSlug": "CONCEPT-HISTORIC-LANDMARKS",
+          "weight": 1,
+          "isPrimary": true
+        }
+      ]
+    },
+    {
+      "key": "EDU-ARAB-G04-P1-ED2026-U-HOMELAND-AND-BELONGING-L-NATIONAL-DUTY-Q9f673860",
+      "unitSlug": "HOMELAND-AND-BELONGING",
+      "lessonSlug": "NATIONAL-DUTY",
+      "type": "MCQ_SINGLE",
+      "text": "كيف يساهم التلميذ في الصف الرابع عملياً في خدمة وطنه؟",
+      "hint": null,
+      "explanation": null,
+      "points": 1,
+      "origin": "TEXTBOOK",
+      "textbookRole": "EXERCISE",
+      "status": "DRAFT",
+      "difficulty01": 0.2,
+      "choices": [
+        {
+          "id": "c1",
+          "text": "بالجد والاجتهاد في دراسته والحفاظ على أثاث مدرسته ونظافة مدينته",
+          "orderIndex": 0,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c2",
+          "text": "بإهمال الواجبات المدرسية والانشغال بالألعاب فقط",
+          "orderIndex": 1,
+          "misconceptionKey": null,
+          "feedback": null
+        },
+        {
+          "id": "c3",
+          "text": "بترك المسؤولية للآخرين دون مشاركة إيجابية",
+          "orderIndex": 2,
+          "misconceptionKey": null,
+          "feedback": null
+        }
+      ],
+      "answerKey": {
+        "correctChoiceIds": [
+          "c1"
+        ],
+        "acceptedTexts": [],
+        "numericMin": null,
+        "numericMax": null,
+        "caseSensitive": false,
+        "allowPartialCredit": false
+      },
+      "concepts": [
+        {
+          "unitSlug": "HOMELAND-AND-BELONGING",
+          "lessonSlug": "NATIONAL-DUTY",
+          "conceptSlug": "CONCEPT-NATIONAL-RESPONSIBILITY",
+          "weight": 1,
+          "isPrimary": true
+        }
+      ]
+    }
+  ]
+}

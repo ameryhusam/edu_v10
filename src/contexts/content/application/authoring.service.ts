@@ -231,19 +231,19 @@ export class ContentAuthoringService {
     const parentKind: ContentNodeKind = input.parentUnitKey ? 'unit' : 'textbook';
     const parentKey = input.parentUnitKey ?? input.textbookKey;
 
-    const parent = await this.assertParentAcceptsChildren(parentKind, parentKey);
-    if (!parent.ok) return parent;
-
     const slug = resolveSlugAtCreation(input.name, input.slug);
     if (!slug.ok) return slug;
+
+    const taken = await this.repo.slugTaken('unit', parentKey, slug.value);
+    if (taken) return slugConflict('unit', slug.value, parentKey);
+
+    const parent = await this.assertParentAcceptsChildren(parentKind, parentKey);
+    if (!parent.ok) return parent;
 
     // A nested unit still keys off the textbook: nesting is presentation, and
     // a key that encoded depth would change if a section were promoted.
     const key = buildUnitKey(input.textbookKey as TextbookKey, slug.value);
     if (!key.ok) return key;
-
-    const taken = await this.repo.slugTaken('unit', parentKey, slug.value);
-    if (taken) return slugConflict('unit', slug.value, parentKey);
 
     const orderIndex = await this.repo.nextOrderIndex('unit', parentKey);
     const created = await this.repo.createUnit({
@@ -275,18 +275,18 @@ export class ContentAuthoringService {
       sourceRef?: string | null;
     },
   ): Promise<Result<CreatedNode>> {
-    const parent = await this.assertParentAcceptsChildren('unit', input.unitKey);
-    if (!parent.ok) return parent;
-
     const slug = resolveSlugAtCreation(input.name, input.slug);
     if (!slug.ok) return slug;
-
-    const key = buildLessonKey(input.unitKey as UnitKey, slug.value);
-    if (!key.ok) return key;
 
     if (await this.repo.slugTaken('lesson', input.unitKey, slug.value)) {
       return slugConflict('lesson', slug.value, input.unitKey);
     }
+
+    const parent = await this.assertParentAcceptsChildren('unit', input.unitKey);
+    if (!parent.ok) return parent;
+
+    const key = buildLessonKey(input.unitKey as UnitKey, slug.value);
+    if (!key.ok) return key;
 
     const orderIndex = await this.repo.nextOrderIndex('lesson', input.unitKey);
     const created = await this.repo.createLesson({
@@ -323,18 +323,18 @@ export class ContentAuthoringService {
       bloomsLevel?: string | null;
     },
   ): Promise<Result<CreatedNode>> {
-    const parent = await this.assertParentAcceptsChildren('lesson', input.lessonKey);
-    if (!parent.ok) return parent;
-
     const slug = resolveSlugAtCreation(input.name, input.slug);
     if (!slug.ok) return slug;
-
-    const key = buildConceptKey(input.lessonKey as LessonKey, slug.value);
-    if (!key.ok) return key;
 
     if (await this.repo.slugTaken('concept', input.lessonKey, slug.value)) {
       return slugConflict('concept', slug.value, input.lessonKey);
     }
+
+    const parent = await this.assertParentAcceptsChildren('lesson', input.lessonKey);
+    if (!parent.ok) return parent;
+
+    const key = buildConceptKey(input.lessonKey as LessonKey, slug.value);
+    if (!key.ok) return key;
 
     const ranges = checkConceptRanges(input);
     if (!ranges.ok) return ranges;
@@ -397,14 +397,19 @@ export class ContentAuthoringService {
       correction?: string | null;
     },
   ): Promise<Result<{ key: string; created: boolean }>> {
-    const parent = await this.assertParentAcceptsChildren('concept', input.conceptKey);
-    if (!parent.ok) return parent;
-
     const slug = resolveSlugAtCreation(input.name, input.slug);
     if (!slug.ok) return slug;
 
     const key = buildMisconceptionKey(input.conceptKey as ConceptKey, slug.value);
     if (!key.ok) return key;
+
+    const taken = await this.repo.slugTaken('misconception', input.conceptKey, slug.value);
+    if (taken) {
+      return Ok({ key: key.value, created: false });
+    }
+
+    const parent = await this.assertParentAcceptsChildren('concept', input.conceptKey);
+    if (!parent.ok) return parent;
 
     const created = await this.repo.createMisconception({
       conceptKey: input.conceptKey,

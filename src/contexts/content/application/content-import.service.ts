@@ -34,6 +34,7 @@ import {
   textbookKey as buildTextbookKey,
   normalizeSlug,
   questionKey as buildQuestionKey,
+  stableKeyFingerprint,
   type TextbookKey,
   type UnitKey,
 } from '../../../shared/kernel/identifiers.js';
@@ -143,7 +144,7 @@ export function normalizeOrConvertPackage(
     const part = rawPart === 'P1' || rawPart === 'PART_1' ? 'PART_1' : rawPart === 'P2' || rawPart === 'PART_2' ? 'PART_2' : null;
     let derivedKey = raw.textbook?.key ?? '';
     if (!derivedKey && raw.subjectKey && raw.gradeKey && part && raw.edition) {
-      const gradeMatch = /^G?(\\d{1,2})$/i.exec(String(raw.gradeKey).trim());
+      const gradeMatch = /^G?(\d{1,2})$/i.exec(String(raw.gradeKey).trim());
       if (gradeMatch) {
         const built = buildTextbookKey({ subject: raw.subjectKey, grade: Number(gradeMatch[1]), part, edition: String(raw.edition) });
         if (built.ok) derivedKey = built.value;
@@ -158,21 +159,25 @@ export function normalizeOrConvertPackage(
     const flatMisconceptions: any[] = [];
     const flatQuestions: any[] = [];
     const flatPrerequisites: any[] = [];
+    const conceptSlugToKey = new Map<string, string>();
 
     for (const [uIdx, u] of (raw.units ?? []).entries()) {
       const unitSlug = u.slug || slugifyOrFallback(u.name, `UNIT-${uIdx + 1}`);
       flatUnits.push({
+        key: `${tbKey}-U-${unitSlug}`,
         slug: unitSlug,
         name: u.name || `الوحدة ${uIdx + 1}`,
         orderIndex: u.orderIndex ?? uIdx + 1,
         startPage: u.startPage ?? null,
         endPage: u.endPage ?? null,
         parentUnitSlug: u.parentUnitSlug ?? null,
+        isActive: true,
       });
 
       for (const [lIdx, l] of (u.lessons ?? []).entries()) {
         const lessonSlug = l.slug || slugifyOrFallback(l.name, `LESSON-${lIdx + 1}`);
         flatLessons.push({
+          key: `${tbKey}-U-${unitSlug}-L-${lessonSlug}`,
           unitSlug,
           slug: lessonSlug,
           name: l.name || `الدرس ${lIdx + 1}`,
@@ -181,11 +186,12 @@ export function normalizeOrConvertPackage(
           startPage: l.startPage ?? null,
           endPage: l.endPage ?? null,
           description: l.description ?? null,
+          isActive: true,
         });
 
         if (l.reading) {
           flatResources.push({
-            targetKind: 'LESSON',
+            scope: 'LESSON',
             unitSlug,
             lessonSlug,
             slug: `READING-L${lIdx + 1}`,
@@ -201,7 +207,7 @@ export function normalizeOrConvertPackage(
 
         for (const [rIdx, res] of (l.extraResources ?? l.materials ?? []).entries()) {
           flatResources.push({
-            targetKind: 'LESSON',
+            scope: 'LESSON',
             unitSlug,
             lessonSlug,
             slug: res.slug || slugifyOrFallback(res.title, `RES-${rIdx + 2}`),
@@ -218,7 +224,13 @@ export function normalizeOrConvertPackage(
 
         for (const [cIdx, c] of (l.concepts ?? []).entries()) {
           const conceptSlug = c.slug || slugifyOrFallback(c.name, `CONCEPT-${cIdx + 1}`);
+          const derivedConceptKey = (tbKey !== 'UNRESOLVED-TEXTBOOK-KEY')
+            ? `${tbKey}-U-${unitSlug}-L-${lessonSlug}-C-${conceptSlug}`
+            : `C-${conceptSlug}`;
+          conceptSlugToKey.set(conceptSlug, derivedConceptKey);
+
           flatConcepts.push({
+            key: derivedConceptKey,
             unitSlug,
             lessonSlug,
             slug: conceptSlug,
@@ -228,21 +240,14 @@ export function normalizeOrConvertPackage(
             importance: c.importance ?? 0.9,
             masteryThreshold: c.threshold ?? c.masteryThreshold ?? 0.7,
             isCore: c.isCore ?? true,
+            isActive: true,
             pageNumber: c.page ?? c.pageNumber ?? null,
             description: c.description ?? null,
           });
 
-          for (const p of c.prerequisites ?? []) {
-            flatPrerequisites.push({
-              conceptKey: conceptSlug,
-              prerequisiteKey: p,
-              strength: 1.0,
-              requiredMastery: 0.7,
-            });
-          }
-
           for (const [mIdx, m] of (c.misconceptions ?? []).entries()) {
             flatMisconceptions.push({
+              key: `${derivedConceptKey}-MIS-${m.slug || mIdx + 1}`,
               unitSlug,
               lessonSlug,
               conceptSlug,
@@ -257,11 +262,13 @@ export function normalizeOrConvertPackage(
             const choices = (q.choices ?? []).map((ch: any, chIdx: number) => ({
               id: ch.id || `c${chIdx + 1}`,
               text: ch.text,
-              misconceptionSlug: ch.misconception || ch.misconceptionSlug || undefined,
+              orderIndex: chIdx,
+              misconceptionKey: ch.misconception || ch.misconceptionSlug || null,
+              feedback: null,
             }));
-            const correctChoiceIds = choices
-              .filter((_: any, i: number) => q.choices[i]?.correct)
-              .map((ch: any) => ch.id);
+            const correctChoiceIds = (q.choices ?? [])
+              .map((ch: any, idx: number) => ch.correct ? (ch.id || `c${idx + 1}`) : null)
+              .filter(Boolean);
 
             const validCorrectIds =
               correctChoiceIds.length > 0
@@ -271,17 +278,28 @@ export function normalizeOrConvertPackage(
                   : ['c1'];
 
             flatQuestions.push({
-              key: q.key || `Q-${conceptSlug}-${flatQuestions.length + 1}`,
+              key: q.key || (tbKey !== 'UNRESOLVED-TEXTBOOK-KEY'
+                ? `${tbKey}-U-${unitSlug}-L-${lessonSlug}-Q${stableKeyFingerprint(q.text)}`
+                : `Q-${conceptSlug}-${flatQuestions.length + 1}`),
               unitSlug,
               lessonSlug,
               type: q.type || 'MCQ_SINGLE',
               text: q.text,
-              origin: 'TEXTBOOK_IMPORT',
-              role: 'ASSESSMENT',
+              hint: q.hint ?? null,
+              explanation: q.explanation ?? null,
+              points: q.points ?? 1,
+              origin: 'TEXTBOOK',
+              textbookRole: 'EXERCISE',
+              status: 'DRAFT',
               difficulty01: q.difficulty01 ?? c.difficulty ?? 0.3,
               choices,
               answerKey: {
                 correctChoiceIds: validCorrectIds,
+                acceptedTexts: [],
+                numericMin: null,
+                numericMax: null,
+                caseSensitive: false,
+                allowPartialCredit: false,
               },
               concepts: [
                 {
@@ -292,6 +310,26 @@ export function normalizeOrConvertPackage(
                   isPrimary: true,
                 },
               ],
+            });
+          }
+        }
+      }
+    }
+
+    // Resolve prerequisites against conceptSlugToKey
+    for (const u of (raw.units ?? [])) {
+      for (const l of (u.lessons ?? [])) {
+        for (const c of (l.concepts ?? [])) {
+          const cSlug = c.slug || slugifyOrFallback(c.name, '');
+          const cKey = conceptSlugToKey.get(cSlug);
+          if (!cKey) continue;
+          for (const p of c.prerequisites ?? []) {
+            const pKey = conceptSlugToKey.get(p) ?? p;
+            flatPrerequisites.push({
+              conceptKey: cKey,
+              prerequisiteKey: pKey,
+              strength: 1.0,
+              requiredMastery: 0.7,
             });
           }
         }
@@ -1055,12 +1093,9 @@ export class ContentImportService {
             });
             if (!updated.ok) {
               problems.push(this.toProblem('questions', index, question.text.slice(0, 60), updated.error));
-            } else if (question.concepts.length > 0) {
+            } else if (links.length > 0) {
               const relinked = await this.itemBank.setQuestionConcepts(
-                ctx, derived.value, question.concepts.map((link) => ({
-                  conceptKey: conceptKeyByPath.get(link.unitSlug + '/' + link.lessonSlug + '/' + link.conceptSlug) ?? link.conceptKey,
-                  weight: link.weight, isPrimary: link.isPrimary,
-                })),
+                ctx, derived.value, links,
               );
               if (!relinked.ok) problems.push(this.toProblem('questions', index, question.text.slice(0, 60), relinked.error));
             }

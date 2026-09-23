@@ -130,7 +130,7 @@ async function main(): Promise<void> {
     // batches safe: an invalid second file cannot leave the first half applied.
     let preflightOk = true;
     for (const [index, pkg] of packages.entries()) {
-      const result = await container.contentImport.importPackage(ctx, pkg, {
+      const result = await container.useCases.contentImport.importPackage(ctx, pkg, {
         dryRun: true,
         mode: args.mode,
         targetTextbookKey: args.targetTextbookKey,
@@ -151,7 +151,7 @@ async function main(): Promise<void> {
 
     let applyOk = true;
     for (const [index, pkg] of packages.entries()) {
-      const result = await container.contentImport.importPackage(ctx, pkg, {
+      const result = await container.useCases.contentImport.importPackage(ctx, pkg, {
         dryRun: false,
         mode: args.mode,
         targetTextbookKey: args.targetTextbookKey,

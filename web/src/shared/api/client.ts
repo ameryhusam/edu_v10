@@ -223,7 +223,7 @@ export interface UploadProgress {
  */
 async function postRawWithProgress<T>(
   path: string,
-  body: BodyInit,
+  body: XMLHttpRequestBodyInit,
   options: Omit<RequestOptions, 'method' | 'body' | 'rawBody'> = {},
   onProgress?: (progress: UploadProgress) => void,
 ): Promise<T> {
@@ -307,7 +307,7 @@ export const api = {
     request<T>(path, { ...options, method: 'POST', rawBody: body }),
   postRawWithProgress: <T>(
     path: string,
-    body: BodyInit,
+    body: XMLHttpRequestBodyInit,
     options?: Omit<RequestOptions, 'method' | 'body' | 'rawBody'>,
     onProgress?: (progress: UploadProgress) => void,
   ) => postRawWithProgress<T>(path, body, options, onProgress),
