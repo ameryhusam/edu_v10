@@ -144,10 +144,10 @@ export function AcademicStructurePage(): ReactNode {
       />
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <StructureStat label={t('catalogue.tab.subjects')} value={tab === 'subjects' ? list.data?.length ?? 0 : undefined} />
+        <StructureStat label={t('catalogue.tab.subjects')} {...(tab === 'subjects' ? { value: list.data?.length ?? 0 } : {})} />
         <StructureStat label={t('catalogue.tab.grades')} value={grades.data?.length ?? 0} />
-        <StructureStat label={t('catalogue.tab.academicYears')} value={tab === 'academicYears' ? list.data?.length ?? 0 : undefined} />
-        <StructureStat label={t('catalogue.tab.terms')} value={tab === 'terms' ? list.data?.length ?? 0 : undefined} />
+        <StructureStat label={t('catalogue.tab.academicYears')} {...(tab === 'academicYears' ? { value: list.data?.length ?? 0 } : {})} />
+        <StructureStat label={t('catalogue.tab.terms')} {...(tab === 'terms' ? { value: list.data?.length ?? 0 } : {})} />
       </section>
 
       <section className="overflow-hidden rounded-3xl border border-border bg-surface shadow-xs">
