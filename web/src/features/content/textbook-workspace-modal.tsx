@@ -369,8 +369,8 @@ export function TextbookWorkspaceModal({
             onSelectWorkspace={(ws) => {
               setSelectedWorkspaceDir(ws.workspaceDir);
               setPart(ws.manifest?.part || 'PART_1');
-              setGrade(ws.manifest?.grade || 'G07');
-              setSubject(ws.manifest?.subject || 'MATH');
+              setGrade(ws.manifest?.grade || '');
+              setSubject(ws.manifest?.subject || '');
               setEdition(ws.manifest?.edition || '');
               setTitle(ws.manifest?.title || '');
               setCurrentStep(2);
