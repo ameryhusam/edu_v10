@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   Archive,
   BookOpen,
@@ -18,23 +18,19 @@ import {
   Users,
 } from 'lucide-react';
 import { LoadingState, ErrorState } from '../../design-system/patterns/data-states';
-import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
 import { PageHeader } from '../../design-system/patterns/page-header';
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';
 import { Badge } from '../../design-system/ui/badge';
-import { TextbookCreateModal } from '../../features/content/textbook-create-modal';
-import { TextbookBulkGradeModal } from '../../features/content/textbook-bulk-grade-modal';
-import { TextbookAccreditModal } from '../../features/content/textbook-accredit-modal';
-import { TextbookEditModal } from '../../features/content/textbook-edit-modal';
-import { TextbookOutlineModal } from '../../features/content/textbook-outline-modal';
-import { TextbookPdfModal } from '../../features/content/textbook-pdf-modal';
-import { ContentImportModal } from '../../features/content/content-import-modal';
-import { TextbookWorkspaceModal } from '../../features/content/textbook-workspace-modal';
+import {
+  TextbookAdminModals,
+  useTextbookAdminModals,
+  SummaryCard,
+  Metric,
+} from '../../features/content/textbook-admin-modals';
 import {
   textbookAdministrationApi,
   type TextbookSummary,
-  type TextbookAdminSummary,
   type PublicationStatus,
   type PublicationAction,
 } from '../../features/content/content.api';
@@ -42,6 +38,7 @@ import { administrationApi } from '../../features/administration/administration.
 import { queryKeys } from '../../shared/api/query-keys';
 import { useSession } from '../../shared/auth/session';
 import { useI18n } from '../../shared/i18n/i18n';
+import { downloadJson } from '../../shared/platform/download';
 
 const statuses: readonly PublicationStatus[] = ['DRAFT', 'IN_REVIEW', 'PUBLISHED', 'ARCHIVED'];
 
@@ -60,7 +57,6 @@ const nextAction: Partial<Record<PublicationStatus, PublicationAction>> = {
 
 export function TextbooksAdminPage(): ReactNode {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { hasRole } = useSession();
   const { t, direction } = useI18n();
   const rtl = direction === 'rtl';
@@ -69,15 +65,8 @@ export function TextbooksAdminPage(): ReactNode {
   const [selectedGradeKey, setSelectedGradeKey] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | undefined>();
   const [search, setSearch] = useState('');
-  const [createOpen, setCreateOpen] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [accreditOpen, setAccreditOpen] = useState(false);
-  const [workspaceOpen, setWorkspaceOpen] = useState(false);
-  const [editBook, setEditBook] = useState<TextbookSummary | null>(null);
-  const [pdfBook, setPdfBook] = useState<TextbookSummary | null>(null);
-  const [outlineBook, setOutlineBook] = useState<TextbookSummary | null>(null);
-  const [importBookKey, setImportBookKey] = useState<string | null>(null);
-  const [transitionTarget, setTransitionTarget] = useState<{ book: TextbookSummary; action: PublicationAction } | null>(null);
+
+  const modals = useTextbookAdminModals();
 
   const gradesQuery = useQuery({
     queryKey: queryKeys.administration.catalogue('grades'),
@@ -90,15 +79,6 @@ export function TextbooksAdminPage(): ReactNode {
   const textbooksQuery = useQuery({
     queryKey: queryKeys.textbookAdministration.textbooks({ status: 'ALL', limit: 250 }),
     queryFn: () => textbookAdministrationApi.textbooks({ limit: 250 }),
-  });
-
-  const transitionMutation = useMutation({
-    mutationFn: ({ key, action }: { key: string; action: PublicationAction }) =>
-      textbookAdministrationApi.transition(key, action),
-    onSuccess: async () => {
-      setTransitionTarget(null);
-      await queryClient.invalidateQueries({ queryKey: queryKeys.textbookAdministration.all });
-    },
   });
 
   const grades = gradesQuery.data ?? [];
@@ -167,16 +147,16 @@ export function TextbooksAdminPage(): ReactNode {
         subtitle={t('textbookAdmin.gradesSubtitle')}
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="primary" size="sm" onClick={() => setWorkspaceOpen(true)} className="gap-1.5">
+            <Button variant="primary" size="sm" onClick={() => modals.setWorkspaceOpen(true)} className="gap-1.5">
               <Upload className="size-4" />
               تجهيز PDF
             </Button>
-            <Button variant="secondary" size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+            <Button variant="secondary" size="sm" onClick={() => modals.setCreateOpen(true)} className="gap-1.5">
               <Plus className="size-4" />
               {t('textbookAdmin.addTextbookButton')}
             </Button>
             {canManageDeployment ? (
-              <Button variant="ghost" size="sm" onClick={() => setBulkOpen(true)} className="gap-1.5">
+              <Button variant="ghost" size="sm" onClick={() => modals.setBulkOpen(true)} className="gap-1.5">
                 <Sparkles className="size-4" />
                 {t('textbookAdmin.bulkSetupButton')}
               </Button>
@@ -285,13 +265,13 @@ export function TextbooksAdminPage(): ReactNode {
               </div>
               <div className="flex flex-wrap gap-2">
                 {canManageDeployment ? (
-                  <Button variant="ghost" size="sm" onClick={() => setAccreditOpen(true)} className="gap-1.5">
+                  <Button variant="ghost" size="sm" onClick={() => modals.setAccreditOpen(true)} className="gap-1.5">
                     <Users className="size-3.5" />
                     {t('textbookAdmin.accreditToSchoolButton')}
                   </Button>
                 ) : null}
                 {selectedGrade ? (
-                  <Button variant="secondary" size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+                  <Button variant="secondary" size="sm" onClick={() => modals.setCreateOpen(true)} className="gap-1.5">
                     <Plus className="size-3.5" />
                     {t('textbookAdmin.addTextbookButton')}
                   </Button>
@@ -307,7 +287,7 @@ export function TextbooksAdminPage(): ReactNode {
                   </span>
                   <h3 className="text-sm font-black text-text">لا توجد كتب مطابقة</h3>
                   <p className="text-xs leading-5 text-text-muted">غيّر الفلتر أو ابحث عن كتاب آخر، أو ابدأ تجهيز PDF جديد من مساحة العمل.</p>
-                  <Button variant="primary" size="sm" onClick={() => setWorkspaceOpen(true)} className="gap-1.5">
+                  <Button variant="primary" size="sm" onClick={() => modals.setWorkspaceOpen(true)} className="gap-1.5">
                     <Upload className="size-3.5" />
                     تجهيز PDF
                   </Button>
@@ -341,7 +321,7 @@ export function TextbooksAdminPage(): ReactNode {
                         </div>
                         <div className="flex flex-wrap items-center gap-1.5 xl:max-w-[520px] xl:justify-end">
                           {action ? (
-                            <Button variant="primary" size="sm" onClick={() => setTransitionTarget({ book, action })} className="gap-1.5">
+                            <Button variant="primary" size="sm" onClick={() => modals.setTransitionTarget({ book, action })} className="gap-1.5">
                               <CheckCircle2 className="size-3.5" />
                               {t(`textbookAdmin.${action === 'SUBMIT' ? 'submit' : action === 'APPROVE' ? 'approve' : 'archive'}` as never)}
                             </Button>
@@ -350,31 +330,25 @@ export function TextbooksAdminPage(): ReactNode {
                             <FolderTree className="size-3.5" />
                             {t('textbookAdmin.manageContentBtn')}
                           </Button>
-                          <Button variant="secondary" size="sm" onClick={() => setPdfBook(book)} className="gap-1.5">
+                          <Button variant="secondary" size="sm" onClick={() => modals.setPdfBook(book)} className="gap-1.5">
                             <FileText className="size-3.5" />
                             {t('textbookAdmin.pdfModalBtn')}
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setOutlineBook(book)} className="gap-1.5">
+                          <Button variant="ghost" size="sm" onClick={() => modals.setOutlineBook(book)} className="gap-1.5">
                             <BookOpen className="size-3.5" />
                             {t('textbookAdmin.viewOutline')}
                           </Button>
-                          <Button variant="ghost" size="iconSm" onClick={() => setEditBook(book)} aria-label={t('textbookAdmin.editTextbook')}>
+                          <Button variant="ghost" size="iconSm" onClick={() => modals.setEditBook(book)} aria-label={t('textbookAdmin.editTextbook')}>
                             <Edit3 className="size-4" />
                           </Button>
                           <Button variant="ghost" size="iconSm" onClick={() => {
-                            textbookAdministrationApi.exportTextbook(book.key).then((pkg) => {
-                              const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: 'application/json' });
-                              const url = URL.createObjectURL(blob);
-                              const anchor = document.createElement('a');
-                              anchor.href = url;
-                              anchor.download = `${book.key}-export.json`;
-                              anchor.click();
-                              URL.revokeObjectURL(url);
+                            void textbookAdministrationApi.exportTextbook(book.key).then((pkg) => {
+                              downloadJson(`${book.key}-export.json`, pkg);
                             });
                           }} aria-label={t('textbookAdmin.downloadExport')}>
                             <Download className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="iconSm" onClick={() => setImportBookKey(book.key)} aria-label={t('content.importPackageTitle')}>
+                          <Button variant="ghost" size="iconSm" onClick={() => modals.setImportBookKey(book.key)} aria-label={t('content.importPackageTitle')}>
                             <Archive className="size-4" />
                           </Button>
                         </div>
@@ -388,66 +362,11 @@ export function TextbooksAdminPage(): ReactNode {
         </div>
       </section>
 
-      {transitionTarget ? (
-        <ConfirmDialog
-          title={t(`textbookAdmin.${transitionTarget.action === 'SUBMIT' ? 'submit' : transitionTarget.action === 'APPROVE' ? 'approve' : 'archive'}` as never)}
-          body={t('textbookAdmin.confirmTransition', {
-            action: t(`textbookAdmin.${transitionTarget.action === 'SUBMIT' ? 'submit' : transitionTarget.action === 'APPROVE' ? 'approve' : 'archive'}` as never),
-            name: transitionTarget.book.title,
-          })}
-          confirmLabel={t(`textbookAdmin.${transitionTarget.action === 'SUBMIT' ? 'submit' : transitionTarget.action === 'APPROVE' ? 'approve' : 'archive'}` as never)}
-          pending={transitionMutation.isPending}
-          destructive={transitionTarget.action === 'ARCHIVE'}
-          onConfirm={() => transitionMutation.mutate({ key: transitionTarget.book.key, action: transitionTarget.action })}
-          onCancel={() => setTransitionTarget(null)}
-        />
-      ) : null}
-
-      <TextbookWorkspaceModal open={workspaceOpen} onClose={() => setWorkspaceOpen(false)} initialCoordinates={{ part: partValue, grade: selectedGradeKey ?? undefined }} />
-      <TextbookCreateModal open={createOpen} onClose={() => setCreateOpen(false)} initialGradeKey={selectedGradeKey ?? undefined} initialPart={partValue} />
-      <TextbookBulkGradeModal open={bulkOpen} onClose={() => setBulkOpen(false)} initialGradeKey={selectedGradeKey ?? undefined} initialPart={partValue} />
-      <TextbookAccreditModal open={accreditOpen} onClose={() => setAccreditOpen(false)} />
-      <TextbookEditModal open={!!editBook} textbook={editBook as TextbookAdminSummary | null} onClose={() => setEditBook(null)} />
-      <TextbookPdfModal open={!!pdfBook} textbook={pdfBook} onClose={() => setPdfBook(null)} onSaved={() => queryClient.invalidateQueries({ queryKey: queryKeys.textbookAdministration.all })} />
-      <TextbookOutlineModal open={!!outlineBook} textbook={outlineBook} onClose={() => setOutlineBook(null)} />
-      <ContentImportModal open={!!importBookKey} textbookKey={importBookKey} onClose={() => setImportBookKey(null)} />
+      <TextbookAdminModals
+        modals={modals}
+        selectedPart={partValue}
+        selectedGradeKey={selectedGradeKey}
+      />
     </div>
-  );
-}
-
-function SummaryCard({
-  label,
-  value,
-  icon,
-  tone = 'default',
-}: {
-  readonly label: string;
-  readonly value: number;
-  readonly icon: ReactNode;
-  readonly tone?: 'default' | 'success' | 'warning' | 'info';
-}): ReactNode {
-  const toneClass = {
-    default: 'bg-surface-subtle text-accent',
-    success: 'bg-success-subtle text-success',
-    warning: 'bg-warning-subtle text-warning',
-    info: 'bg-info-subtle text-info',
-  }[tone];
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-xs">
-      <div className="flex items-center justify-between">
-        <span className="text-2xs font-bold uppercase tracking-wide text-text-muted">{label}</span>
-        <span className={`grid size-8 place-items-center rounded-xl ${toneClass}`}>{icon}</span>
-      </div>
-      <p className="mt-3 text-2xl font-black text-text">{value}</p>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { readonly label: string; readonly value: number }): ReactNode {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-subtle px-2.5 py-1 text-2xs font-semibold text-text-muted">
-      <span>{label}</span>
-      <span className="font-black text-text">{value}</span>
-    </span>
   );
 }

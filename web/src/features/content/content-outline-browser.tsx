@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, Download, FileUp, FolderTree, Plus, Search, Sparkles } from 'lucide-react';
+import { BookOpen, Download, FileUp, Plus, Search } from 'lucide-react';
 import { PageHeader } from '../../design-system/patterns/page-header';
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';

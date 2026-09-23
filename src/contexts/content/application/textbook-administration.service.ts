@@ -104,7 +104,7 @@ export class TextbookAdministrationService {
         ...(query.gradeKey ? { gradeKey: query.gradeKey } : {}),
         ...(query.part ? { part: query.part } : {}),
         ...(query.status ? { status: query.status } : {}),
-        limit: Math.min(Math.max(query.limit ?? 25, 1), 250),
+        limit: Math.min(Math.max(query.limit ?? 25, 1), 100),
         offset: Math.max(query.offset ?? 0, 0),
       }),
     );

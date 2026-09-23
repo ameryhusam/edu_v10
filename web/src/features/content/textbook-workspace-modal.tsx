@@ -33,14 +33,15 @@ export function TextbookWorkspaceModal({ open, onClose, initialCoordinates, onIm
   const workspaces = useQuery({ queryKey: ['admin-workspaces-list'], queryFn: () => textbookAdministrationApi.workspaceList(), enabled: open });
   const inspected = useQuery({ queryKey: ['admin-workspace-inspect', workspace], queryFn: () => workspace ? textbookAdministrationApi.workspaceInspect(workspace) : Promise.resolve(null), enabled: open && Boolean(workspace) });
 
-  const prepare = useMutation({
+  const prepare = useMutation<any, Error, boolean>({
     mutationFn: async (confirm = false) => {
       if (!file) throw new Error('اختر ملف PDF أولاً.');
+      const part = initialCoordinates?.part === 'PART_1' || initialCoordinates?.part === 'PART_2' ? initialCoordinates.part : undefined;
       return textbookAdministrationApi.workspacePrepareUpload({
         file,
-        part: initialCoordinates?.part === 'PART_1' || initialCoordinates?.part === 'PART_2' ? initialCoordinates.part : undefined,
-        edition: initialCoordinates?.edition,
-        title: initialCoordinates?.title,
+        ...(part ? { part } : {}),
+        ...(initialCoordinates?.edition ? { edition: initialCoordinates.edition } : {}),
+        ...(initialCoordinates?.title ? { title: initialCoordinates.title } : {}),
         autoSegment: true,
         confirmDetectedIdentity: confirm,
       });

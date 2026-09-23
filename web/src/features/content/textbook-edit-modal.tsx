@@ -7,15 +7,15 @@ import { Input } from '../../design-system/ui/input';
 import { Textarea } from '../../design-system/ui/textarea';
 import { ErrorState } from '../../design-system/patterns/data-states';
 import { ActionModal, ActionStepCard } from '../../design-system/patterns/action-modal';
-import { textbookAdministrationApi, type TextbookAdminSummary, type PublicationStatus } from './content.api';
+import { textbookAdministrationApi, type TextbookSummary, type PublicationStatus } from './content.api';
 import { queryKeys } from '../../shared/api/query-keys';
 import { useI18n } from '../../shared/i18n/i18n';
 
-export function TextbookEditModal({ open, onClose, textbook }: { readonly open:boolean; readonly onClose:()=>void; readonly textbook:TextbookAdminSummary|null }): ReactNode {
+export function TextbookEditModal({ open, onClose, textbook }: { readonly open:boolean; readonly onClose:()=>void; readonly textbook:TextbookSummary|null }): ReactNode {
   if (!open || !textbook) return null;
   return <TextbookEditForm textbook={textbook} onClose={onClose} />;
 }
-function TextbookEditForm({ textbook, onClose }: { readonly textbook:TextbookAdminSummary; readonly onClose:()=>void }): ReactNode {
+function TextbookEditForm({ textbook, onClose }: { readonly textbook:TextbookSummary; readonly onClose:()=>void }): ReactNode {
   const {t}=useI18n(); const qc=useQueryClient();
   const [title,setTitle]=useState(textbook.title); const [status,setStatus]=useState<PublicationStatus>(textbook.status ?? 'DRAFT');
   const [description,setDescription]=useState(textbook.description ?? ''); const [issuer,setIssuer]=useState(textbook.issuer ?? '');

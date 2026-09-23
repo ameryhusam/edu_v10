@@ -1,13 +1,12 @@
 import { useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { AlertCircle, CheckCircle2, FileText, Link2, UploadCloud, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, FileText, UploadCloud, X } from 'lucide-react';
 import { ActionModal } from '../../design-system/patterns/action-modal';
 import { Button } from '../../design-system/ui/button';
 import { Input } from '../../design-system/ui/input';
 import { Textarea } from '../../design-system/ui/textarea';
 import { ConfirmDialog } from '../../design-system/patterns/confirm-dialog';
 import { Badge } from '../../design-system/ui/badge';
-import { useI18n } from '../../shared/i18n/i18n';
 import { textbookAdministrationApi, type ResourceRecord, type TextbookSummary } from './content.api';
 import { TextbookPdfAttachedList } from './textbook-pdf-attached-list';
 
@@ -19,7 +18,6 @@ export interface TextbookPdfModalProps {
 }
 
 export function TextbookPdfModal({ open, textbook, onClose, onSaved }: TextbookPdfModalProps): ReactNode {
-  const { t } = useI18n();
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'FILE' | 'URL'>('FILE');
