@@ -162,6 +162,50 @@ READY additionally requires successful canonical reconciliation and learner-deli
 
 Never silently overwrite a canonical textbook.
 
+
+### 6.1 Incomplete prepared Workspace / resumable preparation
+
+An existing Workspace that belongs to a known textbook is not automatically re-extracted from the source PDF. Preparation is resumable at the highest valid checkpoint.
+
+The preparation checkpoint is derived from validated artifacts, manifests, checksums and preparation provenance. A stage is reusable only when its required inputs, configuration/algorithm version and output checksums still match. If a dependency changed or an artifact is missing/corrupt, only that stage and its downstream dependent stages are invalidated.
+
+Decision algorithm:
+
+    locate existing Workspace
+     ↓
+    resolve textbook identity
+     ↓
+    validate book/lesson manifests and preparation provenance
+     ↓
+    compare source fingerprint + configuration/algorithm versions
+     ↓
+    inspect stage checkpoints
+     ├─ complete + inputs unchanged → REUSE
+     ├─ complete + outputs valid but downstream incomplete → RESUME from first incomplete stage
+     ├─ artifact missing/corrupt → REBUILD that stage and downstream dependents
+     ├─ source fingerprint changed → NEW preparation operation
+     └─ identity/configuration conflict → NEEDS_REVIEW
+
+The engine MUST NOT repeat expensive upstream extraction merely because a later stage is incomplete.
+
+Example:
+
+    PDF extraction ✓
+    TOC ✓
+    page mapping ✓
+    segmentation ✓
+    lesson PDFs ✓
+    grounding ✗
+    page classification ✗
+
+The next preparation run starts from grounding, validates/reuses the completed upstream artifacts, then continues through classification and package validation.
+
+If only one lesson is incomplete, preparation may be scoped to that lesson when the manifest proves that book-level identity, mapping and segmentation are unchanged. Unrelated completed lessons remain untouched.
+
+If the source PDF checksum changes, the existing Workspace is never silently treated as the result of the new source. The new source gets a new preparation operation and reconciliation compares it with the existing Workspace.
+
+Re-extraction is therefore a deliberate recovery action, not the default behavior. It is required only when the source fingerprint, relevant configuration/algorithm version, identity, or an upstream artifact has changed or failed validation.
+
 ## 7. Workspace contract
 
     ED2026/
