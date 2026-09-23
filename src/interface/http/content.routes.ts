@@ -247,7 +247,7 @@ const textbookListInput = z.object({
   gradeKey: z.string().min(1).max(8).optional(),
   part: z.enum(['PART_1', 'PART_2']).optional(),
   status: z.enum(PUBLICATION_STATES).optional(),
-  limit: z.coerce.number().int().positive().max(100).optional(),
+  limit: z.coerce.number().int().positive().max(250).optional(),
   offset: z.coerce.number().int().min(0).optional(),
 });
 
