@@ -1,0 +1,322 @@
+{
+  "schema_version": "1.0.0",
+  "package_type": "TEXTBOOK_CATALOG_SEED",
+  "package_key": "EDU-AR-G07-P1-ED2026",
+  "textbook": {
+    "key": "EDU-AR-G07-P1-ED2026",
+    "title": "لغة العربية للصف السابع من مرحلة التعليم الأساسي",
+    "subject": "اللغة العربية",
+    "grade": "G07",
+    "part": "PART_1",
+    "edition": null,
+    "publishYear": null,
+    "publisher": "وزارة التربية والتعليم - الجمهورية اليمنية"
+  },
+  "source": {
+    "file": "Arabic_part1_7th_ (1).pdf",
+    "tocPdfStartPage": 7,
+    "tocPdfEndPage": 8
+  },
+  "toc": [
+    {
+      "order": 1,
+      "text": "الوحدة الأولى: القرآن كتاب هداية",
+      "printedPage": null
+    },
+    {
+      "order": 2,
+      "text": "وصايا قرآنية (نصوص)",
+      "printedPage": 9
+    },
+    {
+      "order": 3,
+      "text": "النحو (تكاليف)",
+      "printedPage": 13
+    },
+    {
+      "order": 4,
+      "text": "الإملاء (تطبيقات على ما سبقت دراسته)",
+      "printedPage": 16
+    },
+    {
+      "order": 5,
+      "text": "تقويم الوحدة الأولى",
+      "printedPage": 18
+    },
+    {
+      "order": 6,
+      "text": "الوحدة الثانية: الغزو الفكري",
+      "printedPage": null
+    },
+    {
+      "order": 7,
+      "text": "فقدان التربية الواعية (قراءة)",
+      "printedPage": 21
+    },
+    {
+      "order": 8,
+      "text": "النحو (علامات الاسم وعلامات الفعل)",
+      "printedPage": 25
+    },
+    {
+      "order": 9,
+      "text": "الإملاء (التاء المربوطة والهاء في آخر الكلمة)",
+      "printedPage": 28
+    },
+    {
+      "order": 10,
+      "text": "تقويم الوحدة الثانية",
+      "printedPage": 32
+    },
+    {
+      "order": 11,
+      "text": "الوحدة الثالثة: قضايا وطنية",
+      "printedPage": null
+    },
+    {
+      "order": 12,
+      "text": "من عزّ (نصوص)",
+      "printedPage": 35
+    },
+    {
+      "order": 13,
+      "text": "النحو (أنواع الاسم - مذكر ومؤنث)",
+      "printedPage": 39
+    },
+    {
+      "order": 14,
+      "text": "الإملاء (تطبيقات على ما سبقت دراسته)",
+      "printedPage": 43
+    },
+    {
+      "order": 15,
+      "text": "تقويم الوحدة الثالثة",
+      "printedPage": 45
+    },
+    {
+      "order": 16,
+      "text": "الوحدة الرابعة: منتجات محلية",
+      "printedPage": null
+    },
+    {
+      "order": 17,
+      "text": "الملح اليمني (قراءة)",
+      "printedPage": 47
+    },
+    {
+      "order": 18,
+      "text": "النحو (تقسيم الاسم إلى مفرد ومثنى وجمع)",
+      "printedPage": 51
+    },
+    {
+      "order": 19,
+      "text": "الإملاء (المقارنة بين التاء المربوطة والهاء في آخر الكلمة)",
+      "printedPage": 55
+    },
+    {
+      "order": 20,
+      "text": "تقويم الوحدة الرابعة",
+      "printedPage": 57
+    },
+    {
+      "order": 21,
+      "text": "الوحدة الخامسة: قيم إيمانية",
+      "printedPage": null
+    },
+    {
+      "order": 22,
+      "text": "أهمية العلم (حديث شريف)",
+      "printedPage": 59
+    },
+    {
+      "order": 23,
+      "text": "النحو (تطبيقات على الكلام وأنواعه)",
+      "printedPage": 63
+    },
+    {
+      "order": 24,
+      "text": "الإملاء (تطبيقات على ما سبقت دراسته)",
+      "printedPage": 65
+    },
+    {
+      "order": 25,
+      "text": "تقويم الوحدة الخامسة",
+      "printedPage": 67
+    },
+    {
+      "order": 26,
+      "text": "الوحدة السادسة: أحداث ومناسبات",
+      "printedPage": null
+    },
+    {
+      "order": 27,
+      "text": "استشهاد الإمام علي كرم الله وجهه (قراءة)",
+      "printedPage": 69
+    },
+    {
+      "order": 28,
+      "text": "النحو (الأخبار والإنشاء)",
+      "printedPage": 73
+    },
+    {
+      "order": 29,
+      "text": "الإملاء (همزة الوصل)",
+      "printedPage": 76
+    },
+    {
+      "order": 30,
+      "text": "تقويم الوحدة السادسة",
+      "printedPage": 79
+    },
+    {
+      "order": 31,
+      "text": "الوحدة السابعة: عطاء الشهادة",
+      "printedPage": null
+    },
+    {
+      "order": 32,
+      "text": "الشهيد الحي (نصوص)",
+      "printedPage": 81
+    },
+    {
+      "order": 33,
+      "text": "النحو (من مبنيات الأسماء - 1)",
+      "printedPage": 85
+    },
+    {
+      "order": 34,
+      "text": "الإملاء (تطبيقات على همزة الوصل)",
+      "printedPage": 88
+    },
+    {
+      "order": 35,
+      "text": "تقويم الوحدة السابعة",
+      "printedPage": 90
+    },
+    {
+      "order": 36,
+      "text": "الوحدة الثامنة: أعلام يمانية",
+      "printedPage": null
+    },
+    {
+      "order": 37,
+      "text": "ذو الشهادتين - خزيمة بن ثابت الأنصاري (قراءة)",
+      "printedPage": 92
+    },
+    {
+      "order": 38,
+      "text": "النحو (من المبنيات من الأسماء - 2)",
+      "printedPage": 96
+    },
+    {
+      "order": 39,
+      "text": "الإملاء (همزة القطع)",
+      "printedPage": 100
+    },
+    {
+      "order": 40,
+      "text": "تقويم الوحدة الثامنة",
+      "printedPage": 104
+    },
+    {
+      "order": 41,
+      "text": "الوحدة التاسعة: علوم وتكنولوجيا",
+      "printedPage": null
+    },
+    {
+      "order": 42,
+      "text": "الحاسوب (قراءة)",
+      "printedPage": 107
+    },
+    {
+      "order": 43,
+      "text": "النحو (من المبنيات من الأفعال - 1)",
+      "printedPage": 111
+    },
+    {
+      "order": 44,
+      "text": "الإملاء (تطبيقات على همزتي الوصل والقطع)",
+      "printedPage": 115
+    },
+    {
+      "order": 45,
+      "text": "تقويم الوحدة التاسعة",
+      "printedPage": 117
+    },
+    {
+      "order": 46,
+      "text": "الوحدة العاشرة: قضايا إسلامية",
+      "printedPage": null
+    },
+    {
+      "order": 47,
+      "text": "سأقاوم (نصوص)",
+      "printedPage": 119
+    },
+    {
+      "order": 48,
+      "text": "النحو (من المبنيات من الأفعال - 2)",
+      "printedPage": 125
+    },
+    {
+      "order": 49,
+      "text": "الإملاء (المقارنة بين همزتي الوصل والقطع)",
+      "printedPage": 129
+    },
+    {
+      "order": 50,
+      "text": "تقويم الوحدة العاشرة",
+      "printedPage": 132
+    },
+    {
+      "order": 51,
+      "text": "الوحدة الحادية عشرة: مع الله",
+      "printedPage": null
+    },
+    {
+      "order": 52,
+      "text": "من دعاء أهل الثغور (نصوص)",
+      "printedPage": 135
+    },
+    {
+      "order": 53,
+      "text": "النحو (الأسماء الخمسة)",
+      "printedPage": 140
+    },
+    {
+      "order": 54,
+      "text": "الإملاء (تطبيقات)",
+      "printedPage": 144
+    },
+    {
+      "order": 55,
+      "text": "تقويم الوحدة الحادية عشرة",
+      "printedPage": 146
+    },
+    {
+      "order": 56,
+      "text": "الوحدة الثانية عشرة: جماليات اللغة العربية",
+      "printedPage": null
+    },
+    {
+      "order": 57,
+      "text": "اللغة العربية: تاريخ وإبداع (قراءة)",
+      "printedPage": 149
+    },
+    {
+      "order": 58,
+      "text": "النحو (تطبيقات)",
+      "printedPage": 154
+    },
+    {
+      "order": 59,
+      "text": "الإملاء (مراجعة عامة)",
+      "printedPage": 156
+    },
+    {
+      "order": 60,
+      "text": "تقويم الوحدة الثانية عشرة",
+      "printedPage": 158
+    }
+  ]
+}
