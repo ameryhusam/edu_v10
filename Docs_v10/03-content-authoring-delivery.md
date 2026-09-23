@@ -13,6 +13,8 @@ Textbook
           └─ Concept
 ```
 
+`Lesson.branch` is the owner of subject-specific educational branch/domain classification (for example READING, GRAMMAR, SPELLING). `Unit` remains a structural container; it does not own branch classification. Branch values are configuration/profile-driven rather than a fixed Prisma enum.
+
 Supporting entities include prerequisites, questions, answer keys, resources, flashcards, pages, chunks, misconceptions and assets.
 
 Content owns authored facts. Learning owns learner decisions.
