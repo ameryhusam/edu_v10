@@ -131,18 +131,25 @@ export function TextbookWorkspaceModal({
       const validPart: 'PART_1' | 'PART_2' = part === 'BOTH' ? 'PART_1' : part;
       const res = await textbookAdministrationApi.workspacePrepareUpload({
         file: selectedFile,
-        part: validPart,
-        ...(grade.trim() ? { grade: grade.trim() } : {}),
-        ...(subject.trim() ? { subject: subject.trim() } : {}),
-        ...(edition.trim() ? { edition: edition.trim() } : {}),
-        ...(title.trim() ? { title: title.trim() } : {}),
+        grade: grade.trim(),
+        subject: subject.trim(),
         autoSegment: true,
       });
       return res;
     },
     onSuccess: (data: any) => {
-      setSelectedWorkspaceDir(data.workspaceDir);
-      setActionSuccess('تم تجهيز الكتاب عبر محرك المحتوى وحفظ شرائح الدروس المعيارية بنجاح!');
+      if (data?.status === 'CONFIRM_REQUIRED') {
+        setActionError(`تم اكتشاف هوية مختلفة عن الاختيار: ${data?.conflicts?.map((item: any) => `${item.field}: ${item.declared ?? '—'} → ${item.detected ?? '—'}`).join('، ') || 'يوجد تعارض في الهوية'}. أعد التحليل للتأكيد.`);
+        setCurrentStep(1);
+        return;
+      }
+      const firstWorkspace = data?.workspaceDir ?? data?.workspaces?.[0]?.workspaceDir ?? null;
+      if (!firstWorkspace) {
+        setActionError('اكتمل التحليل لكن لم تُنتج مساحة Workspace صالحة للمراجعة.');
+        return;
+      }
+      setSelectedWorkspaceDir(firstWorkspace);
+      setActionSuccess('تم تحليل هوية الكتاب وتجهيز Workspace بنجاح.');
       refetchWorkspaces();
       setCurrentStep(2);
     },
@@ -363,28 +370,10 @@ export function TextbookWorkspaceModal({
         {/* STEP 1: Coordinates & PDF Upload / Workspace Select */}
         {currentStep === 1 && (
           <TextbookWorkspaceUploadStep
-            workspacesList={workspacesList}
-            refetchWorkspaces={refetchWorkspaces}
-            selectedWorkspaceDir={selectedWorkspaceDir}
-            onSelectWorkspace={(ws) => {
-              setSelectedWorkspaceDir(ws.workspaceDir);
-              setPart(ws.manifest?.part || 'PART_1');
-              setGrade(ws.manifest?.grade || '');
-              setSubject(ws.manifest?.subject || '');
-              setEdition(ws.manifest?.edition || '');
-              setTitle(ws.manifest?.title || '');
-              setCurrentStep(2);
-            }}
-            part={part}
-            onPartChange={setPart}
             grade={grade}
             onGradeChange={setGrade}
             subject={subject}
             onSubjectChange={setSubject}
-            edition={edition}
-            onEditionChange={setEdition}
-            title={title}
-            onTitleChange={setTitle}
             selectedFile={selectedFile}
             fileInputRef={fileInputRef}
             onFileChange={handleFileChange}
