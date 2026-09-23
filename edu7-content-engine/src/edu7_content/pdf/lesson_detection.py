@@ -7,9 +7,7 @@ from __future__ import annotations
 
 import re
 from typing import Any, Dict, List
-
-from .semantic_blocks import classify_block
-
+\n
 LESSON_RE = re.compile(
     r"^\s*(?:الدرس\s+(?:الأول|الاول|الثاني|الثانى|الثالث|الرابع|الخامس|السادس|السابع|الثامن|التاسع|العاشر|[0-9٠-٩]+)|[0-9٠-٩]+\.[0-9٠-٩]+\s+.+)",
     re.I,
