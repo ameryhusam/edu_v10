@@ -24,10 +24,12 @@ import {
   type GradeRecord,
 } from '../../features/administration/administration.api';
 import { queryKeys } from '../../shared/api/query-keys';
+import { useSession } from '../../shared/auth/session';
 
 export function TextbooksAdminPage(): ReactNode {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { hasRole } = useSession();
   const [selectedPartOrdinal, setSelectedPartOrdinal] = useState<1 | 2>(1);
   const [selectedGradeKey, setSelectedGradeKey] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<PublicationStatus | undefined>(undefined);
@@ -69,6 +71,8 @@ export function TextbooksAdminPage(): ReactNode {
   }
 
   const activePart = selectedPartOrdinal === 1 ? 'PART_1' : 'PART_2';
+  const canApprove = hasRole('SYSTEM_ADMIN', 'SCHOOL_ADMIN');
+  const canManageDeployment = hasRole('SYSTEM_ADMIN', 'SCHOOL_ADMIN');
   const commonViewProps = {
     statusFilter,
     onSelectStatus: setStatusFilter,
@@ -107,6 +111,8 @@ export function TextbooksAdminPage(): ReactNode {
           onOpenCreateModal={() => setCreateModalOpen(true)}
           onOpenBulkModal={() => setBulkModalOpen(true)}
           onNavigateToContentManager={(key: string) => navigate(`/admin/content?textbook=${encodeURIComponent(key)}`)}
+          canApprove={canApprove}
+          canManageDeployment={canManageDeployment}
         />
       )}
 
