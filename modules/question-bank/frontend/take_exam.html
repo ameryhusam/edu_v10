@@ -1,3 +1,4 @@
+<!-- update take_exam.html to support drag/drop matching & ordering and use apiFetch -->
 <!doctype html>
 <html>
 <head>
@@ -13,15 +14,16 @@
   </div>
   <div id="questionArea"></div>
   <div id="controls"></div>
-  <script>
+  <script type="module">
+    import { apiFetch } from './api.js';
     let attemptId = null;
     let currentItem = null;
+
     document.getElementById('start').addEventListener('click', async () => {
       const examId = document.getElementById('examId').value;
-      const res = await fetch(`/api/v1/exams/${encodeURIComponent(examId)}/start`, { method: 'POST' });
-      const json = await res.json();
-      attemptId = json.attemptId;
-      renderQuestion(json.item);
+      const res = await apiFetch(`/api/v1/exams/${encodeURIComponent(examId)}/start`, { method: 'POST' });
+      attemptId = res.attemptId;
+      renderQuestion(res.item);
     });
 
     function renderQuestion(item) {
@@ -29,7 +31,7 @@
       const area = document.getElementById('questionArea'); area.innerHTML = '';
       const q = item.question;
       const h = document.createElement('h2'); h.innerText = q.text; area.appendChild(h);
-      // render by type simple
+
       if (q.type === 'MCQ_SINGLE' || q.type === 'MCQ_MULTI') {
         const opts = q.answerData?.options || [];
         opts.forEach(opt => {
@@ -40,11 +42,40 @@
       } else if (q.type === 'TRUE_FALSE') {
         ['true','false'].forEach(v => { const b = document.createElement('button'); b.innerText = v; b.addEventListener('click', () => submitAnswer({ value: v === 'true' })); area.appendChild(b); });
       } else if (q.type === 'MATCHING') {
-        area.appendChild(document.createElement('p')).innerText = 'Matching interaction not fully interactive in demo. Submit pairs via JSON.';
-        const ta = document.createElement('textarea'); ta.id='pairs'; ta.placeholder='[{"leftId":"L1","rightId":"R1"}]'; area.appendChild(ta);
+        // build drag/drop lists
+        const left = q.answerData.left || [];
+        const right = q.answerData.right || [];
+        const leftCol = document.createElement('div'); leftCol.style.display='inline-block'; leftCol.style.marginRight='20px';
+        leftCol.innerHTML = '<h4>Left</h4>';
+        left.forEach(it => {
+          const el = document.createElement('div'); el.draggable = true; el.id = 'left-' + it.id; el.className='draggable'; el.innerText = it.text;
+          el.addEventListener('dragstart', (ev)=> { ev.dataTransfer.setData('text/plain', it.id); });
+          leftCol.appendChild(el);
+        });
+        const rightCol = document.createElement('div'); rightCol.style.display='inline-block'; rightCol.innerHTML = '<h4>Right (drop here)</h4>';
+        right.forEach(it => {
+          const el = document.createElement('div'); el.id='right-'+it.id; el.className='dropzone'; el.innerText = it.text; el.dataset.rightId = it.id;
+          el.addEventListener('dragover', (ev)=> ev.preventDefault());
+          el.addEventListener('drop', (ev)=> {
+            ev.preventDefault(); const leftId = ev.dataTransfer.getData('text/plain');
+            // show mapping
+            const mapping = document.createElement('div'); mapping.innerText = leftId + ' → ' + it.id; mapping.dataset.left = leftId; mapping.dataset.right = it.id;
+            if (!el.querySelector('.maplist')) { const ul = document.createElement('div'); ul.className='maplist'; el.appendChild(ul); }
+            el.querySelector('.maplist').appendChild(mapping);
+          });
+          rightCol.appendChild(el);
+        });
+        area.appendChild(leftCol); area.appendChild(rightCol);
       } else if (q.type === 'ORDERING') {
-        area.appendChild(document.createElement('p')).innerText = 'Ordering: enter comma-separated ids in order.';
-        const inp = document.createElement('input'); inp.id='order'; area.appendChild(inp);
+        const ul = document.createElement('ul'); ul.id='order-list'; ul.style.listStyle='none'; ul.style.padding='0';
+        (q.answerData.items || []).forEach(it => {
+          const li = document.createElement('li'); li.draggable = true; li.id = 'ord-' + it.id; li.innerText = it.text; li.style.padding='8px'; li.style.border='1px solid #ccc'; li.style.margin='4px 0';
+          li.addEventListener('dragstart', (e)=> e.dataTransfer.setData('text/plain', it.id));
+          li.addEventListener('dragover', (e)=> e.preventDefault());
+          li.addEventListener('drop', (e)=> { e.preventDefault(); const dragged = e.dataTransfer.getData('text/plain'); const target = e.target; const draggedEl = document.getElementById('ord-'+dragged); ul.insertBefore(draggedEl, target.nextSibling); });
+          ul.appendChild(li);
+        });
+        area.appendChild(ul);
       } else if (q.type === 'NUMERIC') {
         const inp = document.createElement('input'); inp.type='number'; inp.id='num'; area.appendChild(inp);
       } else if (q.type === 'SHORT_TEXT' || q.type === 'FILL_BLANK' || q.type === 'ESSAY') {
@@ -59,34 +90,36 @@
       const q = currentItem.question;
       let payload = {};
       if (q.type === 'MCQ_SINGLE') {
-        const sel = document.querySelector('input[name="opt"]:checked'); if (!sel) { alert('select'); return; } payload = sel.value;
-        payload = { selectedOptionIds: [sel.value] };
+        const sel = document.querySelector('input[name="opt"]:checked'); if (!sel) { alert('select'); return; } payload = { selectedOptionIds: [sel.value] };
       } else if (q.type === 'MCQ_MULTI') {
         const sels = Array.from(document.querySelectorAll('input[name="opt"]:checked')).map(i=>i.value);
         payload = { selectedOptionIds: sels };
       } else if (q.type === 'MATCHING') {
-        const ta = document.getElementById('pairs'); try { payload = { pairs: JSON.parse(ta.value) }; } catch (e) { alert('invalid json'); return; }
+        const pairs = [];
+        document.querySelectorAll('.dropzone').forEach(dz => {
+          const rightId = dz.dataset.rightId;
+          dz.querySelectorAll('.maplist > div').forEach(m => pairs.push({ leftId: m.dataset.left, rightId }));
+        });
+        payload = { pairs };
       } else if (q.type === 'ORDERING') {
-        const v = document.getElementById('order').value; payload = { orderedItemIds: v.split(',').map(s=>s.trim()) };
+        const ids = Array.from(document.getElementById('order-list').children).map(li => li.id.replace('ord-',''));
+        payload = { orderedItemIds: ids };
       } else if (q.type === 'NUMERIC') {
         const v = Number(document.getElementById('num').value); payload = { value: v };
-      } else if (q.type === 'TRUE_FALSE') {
-        // handled via buttons
       } else { const t = document.getElementById('text').value; payload = { text: t }; }
-      await fetch(`/api/v1/attempts/${attemptId}/answer`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ examItemId: currentItem.examItemId, answerPayload: payload }) });
+      await apiFetch(`/api/v1/attempts/${attemptId}/answer`, { method: 'POST', body: JSON.stringify({ examItemId: currentItem.examItemId, answerPayload: payload }) });
       alert('Answer saved');
     }
 
     async function submitAnswer(obj) {
-      await fetch(`/api/v1/attempts/${attemptId}/answer`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ examItemId: currentItem.examItemId, answerPayload: obj }) });
+      await apiFetch(`/api/v1/attempts/${attemptId}/answer`, { method: 'POST', body: JSON.stringify({ examItemId: currentItem.examItemId, answerPayload: obj }) });
       alert('Answer saved');
     }
 
     async function finishAttempt() {
-      const res = await fetch(`/api/v1/attempts/${attemptId}/submit`, { method: 'POST' });
-      const json = await res.json();
-      alert('Attempt submitted. Total score: ' + json.totalScore);
-      localStorage.setItem('lastReview', JSON.stringify(json.review));
+      const res = await apiFetch(`/api/v1/attempts/${attemptId}/submit`, { method: 'POST' });
+      alert('Attempt submitted. Total score: ' + res.totalScore);
+      localStorage.setItem('lastReview', JSON.stringify(res.review));
       window.location.href = '/static/review.html';
     }
   </script>
