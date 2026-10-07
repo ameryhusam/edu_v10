@@ -1,4 +1,4 @@
-<!-- update import.html script to use apiFetch and add login link -->
+<!-- enhance import.html: add Excel upload and export XLSX button -->
 <!doctype html>
 <html>
 <head>
@@ -12,7 +12,12 @@
   <p>Preview the bundled sample questions and approve them into the question bank.</p>
   <div>
     <label>Sample file: <input id="sampleFile" value="questions.json"></label>
-    <button id="preview">Preview</button>
+    <button id="preview">Preview JSON</button>
+  </div>
+  <div>
+    <label>Excel file: <input type="file" id="excelFile" accept=".xlsx,.xls" /></label>
+    <button id="uploadExcel">Upload Excel & Preview</button>
+    <button id="exportXlsx">Export XLSX (current lesson)</button>
   </div>
   <div id="jobs"></div>
   <h2>Imported Questions</h2>
@@ -50,6 +55,23 @@
       const res = await apiFetch('/api/v1/imports/preview-from-sample', { method: 'POST', body: JSON.stringify({ sampleFile })});
       alert('Preview created');
       renderJobs();
+    });
+
+    document.getElementById('uploadExcel').addEventListener('click', async () => {
+      const fileInput = document.getElementById('excelFile');
+      if (!fileInput.files || fileInput.files.length === 0) { alert('Select a file'); return; }
+      const fd = new FormData(); fd.append('file', fileInput.files[0]);
+      const token = localStorage.getItem('qb_token');
+      const res = await fetch('/api/v1/imports/preview-from-excel', { method: 'POST', body: fd, headers: token ? { 'Authorization': 'Bearer ' + token } : undefined });
+      const j = await res.json();
+      alert('Excel preview created: ' + j.jobId);
+      renderJobs();
+    });
+
+    document.getElementById('exportXlsx').addEventListener('click', async () => {
+      const lessonKey = prompt('Enter lessonKey to export (e.g. MATH-G05-U01-L01)');
+      if (!lessonKey) return;
+      window.location.href = `/api/v1/export.xlsx?lessonKey=${encodeURIComponent(lessonKey)}`;
     });
 
     renderJobs();

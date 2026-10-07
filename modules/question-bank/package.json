@@ -1,6 +1,6 @@
 {
   "name": "modules-question-bank",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,13 +9,16 @@
     "start": "node dist/backend/server_prisma.js",
     "prisma:generate": "prisma generate --schema=prisma/question_bank/schema.prisma",
     "prisma:migrate": "prisma migrate deploy --schema=prisma/question_bank/schema.prisma",
-    "seed": "node dist/prisma/seed.js"
+    "seed": "node dist/prisma/seed.js",
+    "test:integration": "vitest tests/integration --run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "express": "^4.18.2",
     "body-parser": "^1.20.2",
-    "jsonwebtoken": "^9.0.0"
+    "jsonwebtoken": "^9.0.0",
+    "xlsx": "^0.18.5",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "vitest": "^1.0.0",
