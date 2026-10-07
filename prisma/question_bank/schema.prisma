@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client-question-bank"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleName {
+  SYSTEM_ADMIN
+  STUDENT
+}
+
+enum QuestionType {
+  MCQ_SINGLE
+  MCQ_MULTI
+  TRUE_FALSE
+  NUMERIC
+  SHORT_TEXT
+  FILL_BLANK
+  MATCHING
+  ORDERING
+  ESSAY
+}
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  role         RoleName @default(STUDENT)
+  gradeId      String?  @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Subject {
+  id       String @id @default(uuid()) @db.Uuid
+  key      String @unique
+  name     String
+  createdAt DateTime @default(now())
+}
+
+model Grade {
+  id       String @id @default(uuid()) @db.Uuid
+  key      String @unique
+  name     String
+  createdAt DateTime @default(now())
+}
+
+model Unit {
+  id        String @id @default(uuid()) @db.Uuid
+  key       String
+  title     String
+  subjectId String @db.Uuid
+  gradeId   String @db.Uuid
+  createdAt DateTime @default(now())
+}
+
+model Lesson {
+  id      String @id @default(uuid()) @db.Uuid
+  key     String
+  title   String
+  unitId  String @db.Uuid
+  createdAt DateTime @default(now())
+}
+
+model Question {
+  id         String     @id @default(uuid()) @db.Uuid
+  key        String?    @unique
+  lessonId   String     @db.Uuid
+  type       QuestionType
+  text       String     
+  points     Int        @default(1)
+  difficulty String?    
+  hint       String?
+  explanation String?
+  answerData Json?
+  metadata   Json?
+  status     String     @default("DRAFT")
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model QuestionChoice {
+  id         String @id @default(uuid()) @db.Uuid
+  questionId String @db.Uuid
+  key        String
+  text       String
+  orderIndex Int?
+}
+
+model ImportJob {
+  id         String   @id @default(uuid()) @db.Uuid
+  jobType    String
+  inputMeta  Json?
+  status     String   @default("PENDING")
+  createdBy  String?  @db.Uuid
+  createdAt  DateTime @default(now())
+  completedAt DateTime?
+  items      ImportItem[]
+}
+
+model ImportItem {
+  id                String   @id @default(uuid()) @db.Uuid
+  jobId             String   @db.Uuid
+  canonicalQuestion Json
+  validationErrors  Json?
+  fingerprint       String?
+  action            String?
+  createdAt         DateTime @default(now())
+  job ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+}
+
+model Exam {
+  id         String   @id @default(uuid()) @db.Uuid
+  title      String
+  subjectId  String?  @db.Uuid
+  gradeId    String?  @db.Uuid
+  strategy   String
+  criteria   Json?
+  createdBy  String?  @db.Uuid
+  createdAt  DateTime @default(now())
+  items      ExamItem[]
+}
+
+model ExamItem {
+  id         String   @id @default(uuid()) @db.Uuid
+  examId     String   @db.Uuid
+  questionId String   @db.Uuid
+  orderIndex Int
+  points     Int
+  exam Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
+}
+
+model Attempt {
+  id         String   @id @default(uuid()) @db.Uuid
+  examId     String   @db.Uuid
+  userId     String   @db.Uuid
+  status     String   @default("IN_PROGRESS")
+  startedAt  DateTime @default(now())
+  submittedAt DateTime?
+  totalScore Int?
+}
+
+model AttemptAnswer {
+  id             String   @id @default(uuid()) @db.Uuid
+  attemptId      String   @db.Uuid
+  examItemId     String?  @db.Uuid
+  questionId     String?  @db.Uuid
+  answerPayload  Json
+  isCorrect      Boolean?
+  pointsAwarded  Int?
+  evaluationMeta Json?
+  responseTimeMs Int?
+  createdAt      DateTime @default(now())
+}
