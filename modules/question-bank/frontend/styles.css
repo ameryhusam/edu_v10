@@ -1,0 +1,6 @@
+body { font-family: system-ui, Arial; margin: 12px; }
+header { margin-bottom: 12px }
+nav a { margin-right: 8px }
+button { margin: 6px 0 }
+pre { background:#f6f6f6; padding:8px; border-radius:4px }
+.error { color: red }

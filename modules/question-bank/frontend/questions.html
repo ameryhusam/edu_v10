@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Questions</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <h1>Questions</h1>
+  <div id="questions"></div>
+  <script>
+    async function load() {
+      const res = await fetch('/api/v1/questions');
+      const j = await res.json();
+      const container = document.getElementById('questions');
+      container.innerHTML = '<pre>' + JSON.stringify(j.rows, null, 2) + '</pre>';
+    }
+    load();
+  </script>
+</body>
+</html>

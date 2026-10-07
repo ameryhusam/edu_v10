@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Import Preview</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <h1>Import Preview</h1>
+  <p>Preview the bundled sample questions and approve them into the question bank (mock DB).</p>
+  <div>
+    <label>Sample file: <input id="sampleFile" value="questions.json"></label>
+    <button id="preview">Preview</button>
+  </div>
+  <div id="jobs"></div>
+  <h2>Imported Questions</h2>
+  <div id="imported"></div>
+  <script>
+    async function renderJobs() {
+      const res = await fetch('/api/v1/imports');
+      const jobs = await res.json();
+      const container = document.getElementById('jobs');
+      container.innerHTML = '';
+      jobs.forEach(job => {
+        const div = document.createElement('div');
+        div.innerHTML = `<h3>Job ${job.id} (${job.status})</h3><button data-id="${job.id}" class="approve">Approve</button><pre>${JSON.stringify(job.items, null, 2)}</pre>`;
+        container.appendChild(div);
+      });
+      document.querySelectorAll('.approve').forEach(btn => btn.addEventListener('click', async (e) => {
+        const id = e.target.dataset.id;
+        const r = await fetch(`/api/v1/imports/${id}/approve`, { method: 'POST' });
+        const json = await r.json();
+        alert('Imported ' + json.imported + ' items');
+        loadImported();
+        renderJobs();
+      }));
+    }
+
+    async function loadImported() {
+      const res = await fetch('/api/v1/questions');
+      const data = await res.json();
+      const container = document.getElementById('imported');
+      container.innerHTML = '<pre>' + JSON.stringify(data.rows, null, 2) + '</pre>';
+    }
+
+    document.getElementById('preview').addEventListener('click', async () => {
+      const sampleFile = document.getElementById('sampleFile').value;
+      const res = await fetch('/api/v1/imports/preview-from-sample', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sampleFile })});
+      const json = await res.json();
+      alert('Preview created: ' + json.jobId);
+      renderJobs();
+    });
+
+    renderJobs();
+    loadImported();
+  </script>
+</body>
+</html>

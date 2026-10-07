@@ -2,32 +2,21 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Question Bank Import Preview</title>
-  <style>
-    body { font-family: system-ui, Arial; padding: 16px; }
-    pre { background:#f4f4f4; padding:8px; border-radius:4px; }
-    .error { color: red }
-  </style>
+  <title>Question Bank — Home</title>
+  <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
-  <h1>Import Preview (Sample)</h1>
-  <p>Click the button to preview the bundled sample JSON questions.</p>
-  <button id="preview">Preview sample</button>
-  <div id="result"></div>
-  <script>
-    document.getElementById('preview').addEventListener('click', async () => {
-      const res = await fetch('/api/v1/imports/preview-from-sample', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sampleFile: 'questions.json' })});
-      const data = await res.json();
-      const out = document.getElementById('result');
-      out.innerHTML = '';
-      if (data.error) { out.innerHTML = '<p class="error">' + data.error + '</p>'; return; }
-      out.innerHTML = '<h2>Preview job: ' + data.jobId + '</h2>';
-      data.items.forEach(item => {
-        const div = document.createElement('div');
-        div.innerHTML = '<h3>' + (item.key || item.id) + '</h3>' + (item.errors.length ? '<p class="error">Errors: ' + item.errors.join(', ') + '</p>' : '<p>OK</p>') + '<pre>' + JSON.stringify(item.fingerprint, null, 2) + '</pre>';
-        out.appendChild(div);
-      });
-    });
-  </script>
+  <header>
+    <h1>Question Bank — Demo</h1>
+    <nav>
+      <a href="/static/import.html">Import Preview</a> |
+      <a href="/static/questions.html">Questions</a> |
+      <a href="/static/create_exam.html">Create Exam</a> |
+      <a href="/static/take_exam.html">Take Exam</a>
+    </nav>
+  </header>
+  <main>
+    <p>Welcome to the Question Bank prototype. Use the links above to preview imports, approve them, create simple exams and take them.</p>
+  </main>
 </body>
 </html>
