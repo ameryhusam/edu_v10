@@ -1,0 +1,47 @@
+[
+  {
+    "id": "q-sample-1",
+    "key": "MATH-G05-U01-L01-Q01",
+    "subject": {"id": "s-math", "key": "MATH", "name": "Mathematics"},
+    "grade": {"id":"g05","key":"G05","name":"Grade 5"},
+    "unit": {"id":"u1","key":"U01","title":"Numbers"},
+    "lesson": {"id":"l1","key":"L01","title":"Addition"},
+    "type": "MCQ_SINGLE",
+    "text": "What is 2 + 2?",
+    "points": 1,
+    "difficulty": "EASY",
+    "hint": "Think of pairs.",
+    "explanation": "2 + 2 equals 4 because adding two pairs gives four.",
+    "answerData": {
+      "options": [
+        {"id":"A","text":"3"},
+        {"id":"B","text":"4"},
+        {"id":"C","text":"5"}
+      ],
+      "correctOptions": ["B"]
+    },
+    "status": "PUBLISHED",
+    "metadata": {"part":"PART_1"}
+  },
+  {
+    "id": "q-sample-2",
+    "key": "SCI-G05-U02-L03-Q05",
+    "subject": {"id": "s-sci", "key": "SCI", "name": "Science"},
+    "grade": {"id":"g05","key":"G05","name":"Grade 5"},
+    "unit": {"id":"u2","key":"U02","title":"Human Body"},
+    "lesson": {"id":"l3","key":"L03","title":"Organs"},
+    "type": "MATCHING",
+    "text": "Match the organ to its primary function.",
+    "points": 3,
+    "difficulty": "MEDIUM",
+    "hint": null,
+    "explanation": "Each organ has specific roles such as pumping blood or exchanging gases.",
+    "answerData": {
+      "left": [{"id":"L1","text":"Heart"},{"id":"L2","text":"Lungs"},{"id":"L3","text":"Kidney"}],
+      "right": [{"id":"R1","text":"Pumps blood"},{"id":"R2","text":"Filters blood"},{"id":"R3","text":"Exchanges oxygen"}],
+      "pairs": [{"leftId":"L1","rightId":"R1"},{"leftId":"L2","rightId":"R3"},{"leftId":"L3","rightId":"R2"}]
+    },
+    "status": "PUBLISHED",
+    "metadata": {}
+  }
+]
