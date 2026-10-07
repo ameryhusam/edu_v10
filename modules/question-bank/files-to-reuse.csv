@@ -1,0 +1,13 @@
+path,action,owner,notes
+web/src/education/authoring/question-bank.api.ts,reuse,frontend-team,Reuse types and API client helpers; remove concept-related fields before using
+web/src/education/authoring/question-form-utils.ts,adapt,frontend-team,Use buildQuestionInput but make conceptLinks optional; adapt to canonical model
+web/src/education/authoring/question-create-card.tsx,adapt,frontend-team,Reuse UI components; remove concept linking requirement on create
+web/src/education/authoring/question-bank-studio-overview.tsx,reuse,frontend-team,Metrics useful for studio UI; adjust metrics that depend on concepts
+web/src/pages/author/question-bank.tsx,adapt,frontend-team,Use for admin studio UI with concept features disabled
+web/src/education/authoring/question-link-modal.tsx,ignore,frontend-team,Concept-linking not used for Question Bank
+web/src/education/authoring/use-question-linking.ts,ignore,frontend-team,Concept-linking not used
+src/contexts/content/domain/question-authoring.ts,ignore,backend-team,Contains publish check requiring ConceptLink; do not call from new flow
+prisma/schema.prisma,refer,infra-team,Use as source of truth. Plan migrations after PHASE 1
+web/src/education/authoring/question-form-utils.ts,reuse,frontend-team,Field mapping utilities reusable
+web/src/design-system,refer,frontend-team,Design system components reusable
+web/src/education/authoring/question-linking.api.ts,ignore,frontend-team,Not needed
