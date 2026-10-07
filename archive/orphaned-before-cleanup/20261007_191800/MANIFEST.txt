@@ -1,0 +1,39 @@
+Archive manifest of non‑Question‑Bank files
+Timestamp: 20261007_191800
+
+This manifest lists the top-level files and directories that were selected for archival from the repository root. No original files were deleted or moved by this commit — this is a safe first step. If you confirm, I will proceed to copy these files into this archive directory (preserving structure) and then optionally remove the originals from the branch.
+
+Items to archive:
+- .env.example
+- .gitignore
+- Audit_codex/
+- Docs_v10/
+- README.md
+- architecture/
+- books_input/
+- bun.lock
+- content-data/
+- docs/
+- edu7-content-engine/
+- index.html
+- metadata.json
+- package-lock.json
+- package.json
+- prisma.config.ts
+- prisma/
+- scripts/
+- src/
+- system instructions.txt
+- tests/
+- tsconfig.build.json
+- tsconfig.json
+- vite.config.ts
+- vitest.config.ts
+- web/
+- workspace/
+
+Next steps (choose one):
+- "COPY_ARCHIVE" — I will copy all files and directories listed above into this archive directory (this will create duplicates in archive/...). After copying, I will show a summary and wait for your approval to delete originals.
+- "DELETE_ORIGINALS" — AFTER copying, delete the originals (irreversible within this branch without git history recovery). I will NOT delete without explicit confirmation.
+
+If you prefer to review the list again, respond: "SHOW LIST".
