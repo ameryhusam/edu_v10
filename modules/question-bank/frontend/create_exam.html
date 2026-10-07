@@ -2,38 +2,28 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Create Exam</title>
+  <title>Create Exam — Question Bank</title>
   <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
   <h1>Create Exam</h1>
+  <p><a href="/static/login.html">Login</a></p>
   <div>
-    <label>Title: <input id="title"></label>
-    <button id="load">Load questions</button>
-    <div id="pool"></div>
-    <button id="create">Create Exam</button>
+    <label>Title: <input id="title" /></label>
+    <label>Questions (comma-separated IDs): <input id="qids" /></label>
+    <button id="create">Create Fixed Exam</button>
   </div>
-  <div id="out"></div>
-  <script>
-    let selected = new Set();
-    document.getElementById('load').addEventListener('click', async () => {
-      const res = await fetch('/api/v1/questions');
-      const data = await res.json();
-      const pool = document.getElementById('pool');
-      pool.innerHTML = '';
-      data.rows.forEach(q => {
-        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = q.id; cb.addEventListener('change', (e) => { if(e.target.checked) selected.add(e.target.value); else selected.delete(e.target.value); });
-        const label = document.createElement('label'); label.appendChild(cb); label.append(' ' + (q.key || q.id) + ' - ' + q.type);
-        pool.appendChild(label); pool.appendChild(document.createElement('br'));
-      });
-    });
-
+  <div id="result"></div>
+  <script type="module">
+    import { apiFetch } from './api.js';
     document.getElementById('create').addEventListener('click', async () => {
-      const title = document.getElementById('title').value || 'Practice Exam';
-      const body = { title, questionIds: Array.from(selected) };
-      const res = await fetch('/api/v1/exams', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      const json = await res.json();
-      document.getElementById('out').innerText = 'Exam created: ' + JSON.stringify(json);
+      const title = document.getElementById('title').value;
+      const qids = document.getElementById('qids').value.split(',').map(s => s.trim()).filter(Boolean);
+      const token = localStorage.getItem('qb_token');
+      const res = await fetch('/api/v1/exams', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': token ? 'Bearer ' + token : '' }, body: JSON.stringify({ title, questionIds: qids }) });
+      const j = await res.json();
+      if (res.ok) document.getElementById('result').innerText = 'Exam created: ' + j.exam.id;
+      else document.getElementById('result').innerText = 'Error: ' + (j.error || JSON.stringify(j));
     });
   </script>
 </body>

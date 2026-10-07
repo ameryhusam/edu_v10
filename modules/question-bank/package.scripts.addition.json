@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "test:integration": "npx prisma migrate deploy --schema=prisma/question_bank/schema.prisma && vitest tests/integration --run"
+  }
+}
