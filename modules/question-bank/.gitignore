@@ -1,0 +1,3 @@
+# ignore local environment files
+.env
+.env.local
