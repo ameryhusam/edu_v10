@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["relationJoins"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,50 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserStatus {
-  ACTIVE
-  SUSPENDED
-  INVITED
-  ARCHIVED
-}
-
-enum RoleName {
-  SYSTEM_ADMIN
-  SCHOOL_ADMIN
-  TEACHER
-  STUDENT
-  PARENT
-  CONTENT_AUTHOR
-}
-
-enum PublicationStatus {
-  DRAFT
-  IN_REVIEW
-  PUBLISHED
-  ARCHIVED
-}
-
-enum ContentNodeType {
-  UNIT
-  SECTION
-}
-
-enum TextbookPart {
-  PART_1
-  PART_2
-}
-
-enum ContentAssetType {
-  TEXTBOOK_PDF
-  UNIT_PDF
-  LESSON_PDF
-  PAGE_IMAGE
-  PAGE_TEXT
-  RESOURCE_FILE
-  IMAGE_SUMMARY
-  AUDIO
-  VIDEO
-}
+// Reduced schema for standalone Question Bank module.
+// This schema is intentionally self-contained: it removes relations to the old monolith
+// (User, School, Textbook, etc.) and keeps only the models required by the question-bank
+// service. External references (authors, schools) are stored as plain string IDs so the
+// schema can operate on a separate database without depending on the rest of the system.
 
 enum QuestionType {
   MCQ_SINGLE
@@ -65,163 +25,158 @@ enum QuestionType {
   ESSAY
 }
 
-enum QuestionOrigin {
-  TEXTBOOK
-  TEACHER
-  MINISTERIAL
-  AI
-  UNKNOWN
-}
-
-enum QuestionVisibility {
-  PRIVATE
-  SCHOOL
-  SUBMITTED_FOR_REVIEW
-  GLOBAL
-}
-
-enum TextbookQuestionRole {
-  EXERCISE
-  SELF_TEST
-  REVIEW
-  OTHER
-}
-
-enum AttemptKind {
-  PRACTICE
-  LESSON_CHECK
-  EXAM
-  REVIEW
-  DIAGNOSTIC
-}
-
-enum AttemptStatus {
-  IN_PROGRESS
-  SUBMITTED
-  ABANDONED
-  EXPIRED
-}
-
-enum Verdict {
-  CORRECT
-  INCORRECT
-  PARTIALLY_CORRECT
-  SKIPPED
-  INVALID
-  UNGRADABLE
-  REQUIRES_MANUAL_REVIEW
-}
-
-enum RemediationTrigger {
-  MISCONCEPTION
-  MASTERY_GAP
-}
-
-enum RemediationStatus {
-  OPEN
-  RESOLVED
-  SUPERSEDED
-}
-
-enum AssignmentOrigin {
-  TEACHER
-  PARENT
-  REMEDIAL
-  ADAPTIVE
-  SELF
-}
-
-enum InstructionalActivityType {
-  LESSON
-  CONCEPT
-  EXAM
-  REVIEW_SET
-  REMEDIATION_PLAN
-}
-
-enum PlanStatus {
+enum PublicationStatus {
   DRAFT
+  IN_REVIEW
   PUBLISHED
-  CANCELLED
+  ARCHIVED
 }
 
-enum ObligationStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  EXPIRED
-  WAIVED
-}
+model Subject {
+  id    String  @id @default(uuid()) @db.Uuid
+  key   String  @unique
+  name  String
 
-enum ActivityType {
-  REMEDIATE
-  REVIEW
-  UNBLOCK
-  LEARN
-  PRACTISE
-  ASSESS
-  ADVANCE
-}
-
-enum ResourceKind {
-  READING
-  VIDEO
-  WORKED_EXAMPLE
-  FLASHCARD_DECK
-  REMEDIAL
-  TEXTBOOK_PAGE
-}
-
-enum AiTask {
-  EXPLAIN_CONCEPT
-  ANSWER_QUESTION
-  GENERATE_HINT
-  GENERATE_QUESTIONS
-  GRADE_ESSAY
-  SUMMARISE_PROGRESS
-  REVIEW_CONTENT
-}
-
-enum AiPurpose {
-  TUTORING
-  CONTENT_GENERATION
-  CONTENT_REVIEW
-}
-
-enum ReviewReportStatus {
-  OPEN
-  ACKNOWLEDGED
-  DISMISSED
-}
-
-model User {
-  id           String     @id @default(uuid()) @db.Uuid
-  key          String     @unique
-  email        String?    @unique
-  username     String     @unique
-  passwordHash String
-  fullName     String
-  phone        String?
-  status       UserStatus @default(ACTIVE)
-  locale       String     @default("ar")
-  lastLoginAt  DateTime?
-
-  roles           UserRole[]
-  sessions        Session[]
-  learnerProfile  LearnerProfile?
-  educatorProfile EducatorProfile?
-  guardianProfile GuardianProfile?
-  auditEntries    AuditEntry[]
-  aiInteractions  AiInteraction[]
-  requestedContentReviews ContentReviewReport[]
-  authoredPlans     InstructionalPlan[] @relation("PlanAuthor")
-  waivedObligations LearnerObligation[] @relation("ObligationWaiver")
+  grades Grade[]
+  units  Unit[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([status])
-  @@map("users")
 }
 
-// (file continues unchanged below...)
+model Grade {
+  id    String @id @default(uuid()) @db.Uuid
+  key   String @unique
+  name  String
+
+  units Unit[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Unit {
+  id        String  @id @default(uuid()) @db.Uuid
+  key       String  @unique
+  title     String
+  subjectId String? @db.Uuid
+  gradeId   String? @db.Uuid
+
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lesson {
+  id       String  @id @default(uuid()) @db.Uuid
+  key      String  @unique
+  title    String
+  unitId   String  @db.Uuid
+
+  questions Question[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Question {
+  id          String          @id @default(uuid()) @db.Uuid
+  key         String          @unique
+  type        QuestionType
+  text        String
+  lessonId    String          @db.Uuid
+  hint        String?
+  explanation String?
+  points      Int             @default(1)
+  answerData  Json?
+  metadata    Json?
+  status      PublicationStatus @default(DRAFT)
+
+  choices     QuestionChoice[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model QuestionChoice {
+  id         String @id @default(uuid()) @db.Uuid
+  questionId String @db.Uuid
+  key        String
+  text       String
+  orderIndex Int    @default(0)
+
+  @@index([questionId])
+}
+
+model ImportJob {
+  id         String   @id @default(uuid()) @db.Uuid
+  jobType    String
+  status     String   @default("PENDING")
+  inputMeta  Json?
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  completedAt DateTime?
+
+  items ImportItem[]
+}
+
+model ImportItem {
+  id               String @id @default(uuid()) @db.Uuid
+  jobId            String @db.Uuid
+  canonicalQuestion Json
+  fingerprint      String
+  validationErrors  Json?
+  action           String  @default("PREVIEW")
+
+  @@index([jobId])
+}
+
+model Exam {
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String   @unique
+  title       String
+  description String?
+  isAdaptive  Boolean  @default(false)
+  timeLimitMins Int?
+  passingScore Float   @default(0.5)
+  status      PublicationStatus @default(DRAFT)
+
+  items ExamItem[]
+  attempts Attempt[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ExamItem {
+  id         String @id @default(uuid()) @db.Uuid
+  examId     String @db.Uuid
+  questionId String @db.Uuid
+  orderIndex Int    @default(0)
+  points     Int    @default(1)
+
+  @@index([examId])
+}
+
+model Attempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  learnerId String?
+  examId    String?  @db.Uuid
+  status    String   @default("IN_PROGRESS")
+  startedAt DateTime @default(now())
+  submittedAt DateTime?
+
+  answers AttemptAnswer[]
+}
+
+model AttemptAnswer {
+  id         String @id @default(uuid()) @db.Uuid
+  attemptId  String @db.Uuid
+  questionId String @db.Uuid
+  payload    Json
+  pointsAwarded Int?
+  verdict    String?
+
+  @@index([attemptId])
+}
