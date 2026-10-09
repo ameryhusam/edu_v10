@@ -77,6 +77,7 @@ export class OpenAiProvider implements AiProvider {
     let lastError: unknown;
     for (const model of this.models) {
       const keyOrder = this.getKeyOrder();
+      let modelUnavailable = false;
       for (const keyIndex of keyOrder) {
         const key = this.apiKeys[keyIndex]!;
         let delay = 400;
@@ -138,6 +139,7 @@ export class OpenAiProvider implements AiProvider {
             lowerMessage.includes('model not found') ||
             lowerMessage.includes('does not exist');
           if (unavailableModel) {
+            modelUnavailable = true;
             break;
           }
 
@@ -158,6 +160,7 @@ export class OpenAiProvider implements AiProvider {
           // Invalid request/payload errors will not be fixed by another key.
           throw new Error(message);
         }
+        if (modelUnavailable) break;
       }
     }
 
