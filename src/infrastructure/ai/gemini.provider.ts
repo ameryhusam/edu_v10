@@ -83,9 +83,9 @@ export class GeminiProvider implements AiProvider {
 
     const started = Date.now();
     const prompt = [
-      request.context ? \`CONTEXT:\\n\${request.context}\` : null,
+      request.context ? `CONTEXT:\n${request.context}` : null,
       request.userPrompt,
-    ].filter(Boolean).join('\\n\\n');
+    ].filter(Boolean).join('\n\n');
 
     const generationConfig: Record<string, unknown> = {
       systemInstruction: request.systemInstruction,
