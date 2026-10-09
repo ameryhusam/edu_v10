@@ -55,7 +55,7 @@ export class OpenAiProvider implements AiProvider {
     this.apiKeys = uniqueNonPlaceholder([...(config.apiKeys ?? []), config.apiKey]);
     this.models = [...new Set((config.models?.length ? config.models : [config.model ?? 'gpt-4o-mini'])
       .map((model) => model.trim()).filter(Boolean))];
-    this.baseUrl = (config.baseUrl ?? 'https://api.openai.com/v1').replace(/\\/+$/, '');
+    this.baseUrl = (config.baseUrl ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
     this.maxRetries = Math.max(0, Math.floor(config.maxRetries ?? 2));
     this.timeoutMs = Math.max(1, Math.floor(config.timeoutMs ?? 60_000));
     this.cooldownMs = Math.max(0, Math.floor(config.cooldownMs ?? 300_000));
