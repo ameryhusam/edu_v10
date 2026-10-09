@@ -101,6 +101,7 @@ export class GeminiProvider implements AiProvider {
     for (let modelIndex = 0; modelIndex < this.models.length; modelIndex += 1) {
       const model = this.models[modelIndex]!;
       const keyOrder = this.getKeyOrder();
+      let modelUnavailable = false;
 
       for (const keyIndex of keyOrder) {
         const key = this.apiKeys[keyIndex]!;
@@ -136,6 +137,7 @@ export class GeminiProvider implements AiProvider {
               message.includes('model is not available');
 
             if (unavailableModel) {
+              modelUnavailable = true;
               break;
             }
 
@@ -159,6 +161,7 @@ export class GeminiProvider implements AiProvider {
             throw error;
           }
         }
+        if (modelUnavailable) break;
       }
       // Continue to the next explicitly configured model after model-level or
       // exhausted key/network failures; never invent a model outside config.
