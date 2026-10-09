@@ -219,15 +219,32 @@ function isAiProviderId(value: string): value is AiProviderId {
   return value === 'gemini' || value === 'openai' || value === 'deterministic';
 }
 
+function splitConfigList(value: string | undefined): string[] {
+  return (value ?? '').split(/[;,]/).map((item) => item.trim()).filter(Boolean);
+}
+
 function buildAiProviders(env: Env): readonly AiProvider[] {
+  const common = {
+    maxRetries: env.AI_PROVIDER_MAX_RETRIES,
+    timeoutMs: env.AI_PROVIDER_TIMEOUT_MS,
+    cooldownMs: env.AI_KEY_COOLDOWN_MS,
+  };
   const registry: Record<AiProviderId, () => AiProvider> = {
-    gemini: () => new GeminiProvider({ apiKey: env.GEMINI_API_KEY, model: env.GEMINI_MODEL }),
-    openai: () =>
-      new OpenAiProvider({
-        apiKey: env.OPENAI_API_KEY,
-        model: env.OPENAI_MODEL,
-        baseUrl: env.OPENAI_BASE_URL,
-      }),
+    gemini: () => new GeminiProvider({
+      ...common,
+      apiKey: env.GEMINI_API_KEY,
+      apiKeys: splitConfigList(env.GEMINI_API_KEYS),
+      model: env.GEMINI_MODEL,
+      models: splitConfigList(env.GEMINI_MODELS),
+    }),
+    openai: () => new OpenAiProvider({
+      ...common,
+      apiKey: env.OPENAI_API_KEY,
+      apiKeys: splitConfigList(env.OPENAI_API_KEYS),
+      model: env.OPENAI_MODEL,
+      models: splitConfigList(env.OPENAI_MODELS),
+      baseUrl: env.OPENAI_BASE_URL,
+    }),
     deterministic: () => new DeterministicProvider(),
   };
 
@@ -237,7 +254,8 @@ function buildAiProviders(env: Env): readonly AiProvider[] {
 
   if (!ids.includes('deterministic')) ids.push('deterministic');
 
-  return ids.map((id) => registry[id]());
+  // Ignore duplicates so an accidentally repeated id cannot consume quota twice.
+  return [...new Set(ids)].map((id) => registry[id]());
 }
 
 export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } = {}): Container {

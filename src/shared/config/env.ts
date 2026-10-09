@@ -43,12 +43,21 @@ const schema = z.object({
 
   // AI is optional by design — the platform degrades, it does not break.
   GEMINI_API_KEY: z.string().optional(),
+  /** Comma/semicolon-separated key list; singular key remains backward-compatible. */
+  GEMINI_API_KEYS: z.string().optional(),
   GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  /** Ordered model fallback list; only explicitly configured models are tried. */
+  GEMINI_MODELS: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
+  OPENAI_API_KEYS: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+  OPENAI_MODELS: z.string().optional(),
   OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),
   /** Comma-separated provider ids. Deterministic is appended if omitted. */
   AI_PROVIDER_ORDER: z.string().default('gemini,openai,deterministic'),
+  AI_PROVIDER_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(2),
+  AI_PROVIDER_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
+  AI_KEY_COOLDOWN_MS: z.coerce.number().int().min(0).default(300_000),
   AI_DAILY_QUOTA: z.coerce.number().int().positive().default(50),
 
   // Python content-engine bridge. The browser never talks to Python directly.
