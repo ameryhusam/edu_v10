@@ -82,42 +82,47 @@ class TocExtractor:
 
     # ── Public API ───────────────────────────────────────────────────────────
 
-    def find_toc_pages(self, max_search: int = 20) -> List[int]:
-        """
-        Scan first `max_search` pages and return indices of TOC pages.
-
-        A page is a TOC page when:
-          1. Its normalized text contains at least one TOC_TITLE_KW
-          2. Its normalized text contains at least one TOC_STRUCT_KW
-          3. It contains at least one digit (page number)
-        """
-        toc_pages = []
+    def find_toc_pages(self, max_search: int = 15) -> List[int]:
+        """Find TOC pages using title/structure/number density and continuation."""
         limit = min(self.reader.page_count, max_search)
+        candidates: List[int] = []
+
+        def metrics(index: int) -> tuple[bool, bool, int, int]:
+            norm = normalize_arabic(self.reader.extract_page_text(index))
+            has_title = any(kw in norm for kw in TOC_TITLE_KW)
+            structural = sum(norm.count(kw) for kw in TOC_STRUCT_KW)
+            numbers = len(re.findall(r"[0-9٠-٩]+", norm))
+            dotted = len(re.findall(r"\.{2,}|…{2,}|-{2,}", norm))
+            return has_title, structural > 0, structural, numbers + dotted
 
         for i in range(limit):
-            raw = self.reader.extract_page_text(i)
-            norm = normalize_arabic(raw)
+            has_title, has_struct, struct_count, number_score = metrics(i)
+            if has_title and has_struct and number_score >= 3:
+                candidates.append(i)
 
-            has_title  = any(kw in norm for kw in TOC_TITLE_KW)
-            has_struct = any(kw in norm for kw in TOC_STRUCT_KW)
-            has_digits = bool(re.search(r'[0-9٠-٩]', norm))
-
-            if has_title and has_struct and has_digits:
-                toc_pages.append(i)
-
-        # Relaxed fallback: if nothing found, look for STRUCT + digits only
-        if not toc_pages:
+        if not candidates:
             for i in range(limit):
-                raw = self.reader.extract_page_text(i)
-                norm = normalize_arabic(raw)
-                has_struct = any(kw in norm for kw in TOC_STRUCT_KW)
-                has_digits = bool(re.search(r'[0-9٠-٩]', norm))
-                struct_count = sum(norm.count(kw) for kw in TOC_STRUCT_KW)
-                # Must have multiple occurrences of structural keywords
-                if has_struct and has_digits and struct_count >= 3:
-                    toc_pages.append(i)
+                has_title, has_struct, struct_count, number_score = metrics(i)
+                if has_struct and struct_count >= 3 and number_score >= 3:
+                    candidates.append(i)
 
-        return toc_pages
+        # A TOC commonly spans consecutive pages and the continuation page
+        # does not repeat "المحتويات". Extend only while structure + numbers
+        # remain strong, avoiding accidental back-of-book index pages.
+        if candidates:
+            expanded = set(candidates)
+            for start in list(candidates):
+                page = start + 1
+                while page < limit:
+                    _, has_struct, struct_count, number_score = metrics(page)
+                    if has_struct and struct_count >= 2 and number_score >= 3:
+                        expanded.add(page)
+                        page += 1
+                    else:
+                        break
+            candidates = sorted(expanded)
+
+        return candidates
 
     def extract_hierarchy(
         self,
