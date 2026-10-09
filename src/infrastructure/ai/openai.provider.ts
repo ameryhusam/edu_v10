@@ -53,7 +53,7 @@ export class OpenAiProvider implements AiProvider {
 
   constructor(private readonly config: OpenAiConfig) {
     this.apiKeys = uniqueNonPlaceholder([...(config.apiKeys ?? []), config.apiKey]);
-    this.models = [...new Set([...(config.models ?? []), config.model ?? 'gpt-4o-mini']
+    this.models = [...new Set((config.models?.length ? config.models : [config.model ?? 'gpt-4o-mini'])
       .map((model) => model.trim()).filter(Boolean))];
     this.baseUrl = (config.baseUrl ?? 'https://api.openai.com/v1').replace(/\\/+$/, '');
     this.maxRetries = Math.max(0, Math.floor(config.maxRetries ?? 2));
@@ -77,7 +77,6 @@ export class OpenAiProvider implements AiProvider {
     let lastError: unknown;
     for (const model of this.models) {
       const keyOrder = this.getKeyOrder();
-      let modelUnavailable = false;
       for (const keyIndex of keyOrder) {
         const key = this.apiKeys[keyIndex]!;
         let delay = 400;
@@ -139,7 +138,6 @@ export class OpenAiProvider implements AiProvider {
             lowerMessage.includes('model not found') ||
             lowerMessage.includes('does not exist');
           if (unavailableModel) {
-            modelUnavailable = true;
             break;
           }
 
@@ -160,7 +158,6 @@ export class OpenAiProvider implements AiProvider {
           // Invalid request/payload errors will not be fixed by another key.
           throw new Error(message);
         }
-        if (modelUnavailable) break;
       }
     }
 
