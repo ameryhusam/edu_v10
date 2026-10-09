@@ -67,7 +67,7 @@ export class GeminiProvider implements AiProvider {
 
   constructor(private readonly config: GeminiConfig) {
     this.apiKeys = uniqueNonPlaceholder([...(config.apiKeys ?? []), config.apiKey]);
-    this.models = [...new Set([...(config.models ?? []), config.model ?? 'gemini-2.5-flash']
+    this.models = [...new Set((config.models?.length ? config.models : [config.model ?? 'gemini-2.5-flash'])
       .map((model) => model.trim()).filter(Boolean))];
     this.maxRetries = Math.max(0, Math.floor(config.maxRetries ?? 2));
     this.timeoutMs = Math.max(1, Math.floor(config.timeoutMs ?? 60_000));
@@ -101,7 +101,6 @@ export class GeminiProvider implements AiProvider {
     for (let modelIndex = 0; modelIndex < this.models.length; modelIndex += 1) {
       const model = this.models[modelIndex]!;
       const keyOrder = this.getKeyOrder();
-      let modelUnavailable = false;
 
       for (const keyIndex of keyOrder) {
         const key = this.apiKeys[keyIndex]!;
@@ -137,7 +136,6 @@ export class GeminiProvider implements AiProvider {
               message.includes('model is not available');
 
             if (unavailableModel) {
-              modelUnavailable = true;
               break;
             }
 
@@ -161,7 +159,6 @@ export class GeminiProvider implements AiProvider {
             throw error;
           }
         }
-        if (modelUnavailable) break;
       }
       // Continue to the next explicitly configured model after model-level or
       // exhausted key/network failures; never invent a model outside config.
