@@ -49,6 +49,25 @@ describe('loadEnv', () => {
     ).toThrow(/JWT_SECRET/);
   });
 
+  it('accepts multi-key and ordered-model AI configuration without requiring API keys', () => {
+    const env = loadEnv(baseEnv({
+      GEMINI_API_KEYS: 'gemini-key-a;gemini-key-b',
+      GEMINI_MODELS: 'gemini-primary,gemini-fallback',
+      OPENAI_API_KEYS: 'openai-key-a,openai-key-b',
+      OPENAI_MODELS: 'gpt-primary;gpt-fallback',
+      AI_PROVIDER_MAX_RETRIES: '1',
+      AI_PROVIDER_TIMEOUT_MS: '45000',
+      AI_KEY_COOLDOWN_MS: '120000',
+    }));
+    expect(env.GEMINI_API_KEYS).toBe('gemini-key-a;gemini-key-b');
+    expect(env.GEMINI_MODELS).toBe('gemini-primary,gemini-fallback');
+    expect(env.OPENAI_API_KEYS).toBe('openai-key-a,openai-key-b');
+    expect(env.OPENAI_MODELS).toBe('gpt-primary;gpt-fallback');
+    expect(env.AI_PROVIDER_MAX_RETRIES).toBe(1);
+    expect(env.AI_PROVIDER_TIMEOUT_MS).toBe(45000);
+    expect(env.AI_KEY_COOLDOWN_MS).toBe(120000);
+  });
+
   it('caches the parsed result across calls until reset', () => {
     const first = loadEnv(baseEnv());
     const second = loadEnv(baseEnv({ CORS_ORIGINS: '*' }));
