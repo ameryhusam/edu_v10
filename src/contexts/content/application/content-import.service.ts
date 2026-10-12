@@ -861,6 +861,7 @@ export class ContentImportService {
     // Concept attachments (G7). Both resolve their parent through the same
     // slug path the concepts loop just built, so a misconception can never
     // silently land on a same-named concept in another lesson.
+    const misconceptionKeyBySlug = new Map<string, string>();
     for (const [index, mis] of (pkg.misconceptions ?? []).entries()) {
       const conceptKey = conceptKeyByPath.get(
         `${mis.unitSlug}/${mis.lessonSlug}/${mis.conceptSlug}`,
@@ -888,11 +889,14 @@ export class ContentImportService {
 
       if (!result.ok) {
         problems.push(this.toProblem('misconceptions', index, mis.slug, result.error));
-      } else if (result.value.created) {
-        generatedKeys.push({ sheet: 'misconceptions', reference: mis.slug, key: result.value.key });
-        created.misconceptions += 1;
       } else {
-        unchanged.misconceptions += 1;
+        misconceptionKeyBySlug.set(mis.slug, result.value.key);
+        if (result.value.created) {
+          generatedKeys.push({ sheet: 'misconceptions', reference: mis.slug, key: result.value.key });
+          created.misconceptions += 1;
+        } else {
+          unchanged.misconceptions += 1;
+        }
       }
     }
 
@@ -1054,7 +1058,9 @@ export class ContentImportService {
         choices: question.choices.map((c) => ({
           id: c.id,
           text: c.text,
-          misconceptionKey: c.misconceptionKey ?? null,
+          misconceptionKey: c.misconceptionKey
+            ? (misconceptionKeyBySlug.get(c.misconceptionKey) ?? c.misconceptionKey)
+            : null,
           feedback: c.feedback ?? null,
         })),
         answerKey: {

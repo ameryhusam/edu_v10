@@ -403,11 +403,6 @@ export class ContentAuthoringService {
     const key = buildMisconceptionKey(input.conceptKey as ConceptKey, slug.value);
     if (!key.ok) return key;
 
-    const taken = await this.repo.slugTaken('misconception', input.conceptKey, slug.value);
-    if (taken) {
-      return Ok({ key: key.value, created: false });
-    }
-
     const parent = await this.assertParentAcceptsChildren('concept', input.conceptKey);
     if (!parent.ok) return parent;
 

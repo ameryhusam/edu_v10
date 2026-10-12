@@ -125,6 +125,16 @@ export async function seedTextbookFromSpec(
   const contentAuthoring = container.useCases.contentAuthoring;
 
   const pkg = normalizeOrConvertPackage(spec, { dryRun: false });
+  const tbKey = pkg.textbook.key;
+
+  // If this textbook was already published in a previous seed run, temporarily
+  // set status to DRAFT so that re-seeding / appending / updating works idempotently
+  // without triggering structural write locks. It will be republished below.
+  await prisma.textbook.updateMany({
+    where: { key: tbKey, status: 'PUBLISHED' },
+    data: { status: 'DRAFT' },
+  });
+
   const authorCtx = { actorKey: 'usr_seed_admin' };
   const importResult = await contentImport.importPackage(authorCtx, pkg, {
     dryRun: false,
@@ -137,7 +147,6 @@ export async function seedTextbookFromSpec(
     );
   }
 
-  const tbKey = importResult.value.textbookKey;
   const textbook = await prisma.textbook.findUniqueOrThrow({ where: { key: tbKey } });
 
   // Update status to PUBLISHED so seed content is immediately usable by learners
