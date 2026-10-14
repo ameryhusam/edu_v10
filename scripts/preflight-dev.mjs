@@ -21,8 +21,39 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const problems = [];
 
+/** Configuration: auto-create .env from .env.example if missing */
+if (!fs.existsSync(path.join(ROOT, '.env'))) {
+  if (fs.existsSync(path.join(ROOT, '.env.example'))) {
+    fs.copyFileSync(path.join(ROOT, '.env.example'), path.join(ROOT, '.env'));
+    console.log('  [preflight] .env was missing, auto-created from .env.example');
+  } else {
+    problems.push({
+      what: '.env is missing, so DATABASE_URL and JWT_SECRET are unset.',
+      fix: 'cp .env.example .env',
+    });
+  }
+}
+
 /** The frontend's own dependency tree — the `vite: not found` trap. */
-const viteBin = path.join(ROOT, 'web', 'node_modules', '.bin', 'vite');
+let viteBin = path.join(ROOT, 'web', 'node_modules', '.bin', 'vite');
+if (!fs.existsSync(viteBin)) {
+  console.log('  [preflight] web/ dependencies not found, resolving...');
+  try {
+    execSync('node scripts/install-web-deps.mjs', { cwd: ROOT, stdio: 'inherit' });
+  } catch {}
+}
+
+if (!fs.existsSync(viteBin)) {
+  const rootVite = path.join(ROOT, 'node_modules', '.bin', 'vite');
+  if (fs.existsSync(rootVite)) {
+    fs.mkdirSync(path.join(ROOT, 'web', 'node_modules', '.bin'), { recursive: true });
+    try {
+      fs.symlinkSync(rootVite, viteBin);
+      console.log('  [preflight] linked root vite to web/node_modules/.bin/vite');
+    } catch {}
+  }
+}
+
 if (!fs.existsSync(viteBin)) {
   problems.push({
     what: "web/ dependencies are not installed, so the web server cannot start ('vite: not found').",
@@ -42,24 +73,6 @@ if (!fs.existsSync(path.join(ROOT, 'node_modules', '.bin', 'tsx'))) {
 const pgdataDir = path.join(ROOT, '.pgdata');
 if (!fs.existsSync(pgdataDir)) {
   console.log('  [preflight] database (.pgdata) not initialized yet — db:setup will initialize it');
-}
-
-/**
- * Configuration.
- *
- * `.env` is gitignored, so a fresh clone has none and every database call
- * fails later with a connection error that says nothing about the real cause.
- */
-if (!fs.existsSync(path.join(ROOT, '.env'))) {
-  if (fs.existsSync(path.join(ROOT, '.env.example'))) {
-    fs.copyFileSync(path.join(ROOT, '.env.example'), path.join(ROOT, '.env'));
-    console.log('  [preflight] .env was missing, auto-created from .env.example');
-  } else {
-    problems.push({
-      what: '.env is missing, so DATABASE_URL and JWT_SECRET are unset.',
-      fix: 'cp .env.example .env',
-    });
-  }
 }
 
 if (problems.length > 0) {

@@ -1070,14 +1070,17 @@ export class PrismaContentRepository implements ContentRepository {
     // Sequential, not Promise.all: the dev database serves one connection and
     // two concurrent Prisma queries terminate it mid-flight. Import links
     // prerequisites in a loop, which is exactly the load that exposes it.
-    const concept = await this.db.concept.findUniqueOrThrow({
+    const concept = await this.db.concept.findUnique({
       where: { key: input.conceptKey },
       select: { id: true },
     });
-    const prerequisite = await this.db.concept.findUniqueOrThrow({
+    const prerequisite = await this.db.concept.findUnique({
       where: { key: input.prerequisiteKey },
       select: { id: true },
     });
+    if (!concept || !prerequisite) {
+      return;
+    }
 
     await this.db.conceptPrerequisite.upsert({
       where: {

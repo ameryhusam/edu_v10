@@ -37,6 +37,7 @@ import type { ContentAssetService } from '../../contexts/content/application/con
 import type { WorkspaceImporterService } from '../../contexts/content/application/workspace-importer.service.js';
 import type { WorkspaceArchiveService } from '../../contexts/content/application/workspace-archive.service.js';
 import type { TextbookAdministrationService } from '../../contexts/content/application/textbook-administration.service.js';
+import type { ContentEnrichmentPort } from '../../contexts/content/application/content-enrichment.port.js';
 import type { Actor } from './middleware/context.js';
 import { handle } from './handler.js';
 
@@ -47,6 +48,7 @@ export interface ContentRouteDeps {
   readonly contentImport: ContentImportService;
   readonly textbookAdministration: TextbookAdministrationService;
   readonly contentAsset?: ContentAssetService;
+  readonly contentEnrichment?: ContentEnrichmentPort;
   readonly workspaceImporter?: WorkspaceImporterService;
   readonly workspaceArchive?: WorkspaceArchiveService;
   readonly contentUploadMaxBytes?: number;
@@ -1105,6 +1107,42 @@ export function contentRoutes(deps: ContentRouteDeps): Router {
       next(err);
     }
   });
+
+  router.post(
+    '/lessons/:lessonKey/enrich-concepts',
+    handle({
+      input: z.object({}),
+      requireAuth: true,
+      successStatus: 201,
+      execute: async ({ actor, req }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.contentEnrichment) {
+          return Err(Errors.internal('enrichment.unavailable', 'Content enrichment service is not enabled.'));
+        }
+        const lessonKey = String(req.params.lessonKey);
+        return deps.contentEnrichment.enrichLessonConcepts(author.value, lessonKey);
+      },
+    }),
+  );
+
+  router.post(
+    '/lessons/:lessonKey/enrich-questions',
+    handle({
+      input: z.object({ count: z.number().int().min(1).max(20).optional() }),
+      requireAuth: true,
+      successStatus: 201,
+      execute: async ({ input, actor, req }) => {
+        const author = requireAuthor(actor);
+        if (!author.ok) return author;
+        if (!deps.contentEnrichment) {
+          return Err(Errors.internal('enrichment.unavailable', 'Content enrichment service is not enabled.'));
+        }
+        const lessonKey = String(req.params.lessonKey);
+        return deps.contentEnrichment.enrichLessonQuestions(author.value, lessonKey, input.count ?? 4);
+      },
+    }),
+  );
 
   return router;
 }

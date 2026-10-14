@@ -280,7 +280,12 @@ export class WorkspaceImporterService {
     };
     confirmDetectedIdentity?: boolean;
   }) {
-    const proposal = await this.contentEngine.identify({ pdf: input.pdfBuffer, analysisPages: 15, dpi: 150 });
+    const proposal = await this.contentEngine.identify({
+      pdf: input.pdfBuffer,
+      analysisPages: 15,
+      dpi: 150,
+      declared: input.declared,
+    });
     const detected = proposal.identity;
     // In existing-book mode the administrator may already know the printed
     // edition. Detection is evidence, not a prerequisite when a declared
@@ -324,6 +329,19 @@ export class WorkspaceImporterService {
         const built = buildTextbookKey({ subject: detected.subjectKey, grade: Number(String(detected.gradeKey).replace(/^G/i, '')), part, edition });
         if (!built.ok) throw new DomainErrorException(built.error);
         textbooks.push({ key: built.value, created: false, part });
+      } else if (created.error.code === 'content.coordinate_not_found') {
+        return {
+          status: 'NEEDS_REVIEW' as const,
+          proposal,
+          conflicts: [
+            ...conflicts,
+            {
+              field: 'subjectKey',
+              declared: input.declared?.subjectKey ?? null,
+              detected: detected.subjectKey ?? null,
+            },
+          ],
+        };
       } else {
         throw new DomainErrorException(created.error);
       }

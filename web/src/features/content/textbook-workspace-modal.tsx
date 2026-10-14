@@ -42,6 +42,8 @@ export function TextbookWorkspaceModal({ open, onClose, initialCoordinates, onIm
       return textbookAdministrationApi.workspacePrepareUpload({
         file,
         ...(part ? { part } : {}),
+        ...(initialCoordinates?.grade ? { grade: initialCoordinates.grade } : {}),
+        ...(initialCoordinates?.subject ? { subject: initialCoordinates.subject } : {}),
         ...(initialCoordinates?.edition ? { edition: initialCoordinates.edition } : {}),
         ...(initialCoordinates?.title ? { title: initialCoordinates.title } : {}),
         autoSegment: true,

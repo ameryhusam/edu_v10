@@ -104,6 +104,8 @@ import { TextbookAdministrationService } from '../contexts/content/application/t
 import { LocalContentStorage } from '../infrastructure/storage/local-content-storage.js';
 import { WorkspaceManager } from '../infrastructure/storage/workspace-manager.js';
 import { ContentEngineService } from '../infrastructure/content/content-engine.service.js';
+import { ContentEnrichmentService } from '../infrastructure/content/content-enrichment.service.js';
+import type { ContentEnrichmentPort } from '../contexts/content/application/content-enrichment.port.js';
 import { PrismaContentAssetRepository } from '../infrastructure/database/content-asset.repository.js';
 import { AssignmentService } from '../contexts/instruction/application/assignment.service.js';
 import { DueWorkService } from '../contexts/instruction/application/due-work.service.js';
@@ -182,6 +184,7 @@ export interface Container {
     readonly contentExport: ContentExportService;
     readonly contentImport: ContentImportService;
     readonly contentAsset: ContentAssetService;
+    readonly contentEnrichment: ContentEnrichmentPort;
     readonly workspaceImporter: WorkspaceImporterService;
   /** Safe ZIP import/export over the canonical workspace. */
   readonly workspaceArchive: WorkspaceArchiveService;
@@ -273,7 +276,12 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
     rootDir: env.STORAGE_ROOT,
   });
   const workspaceManager = new WorkspaceManager(env.WORKSPACE_ROOT);
-  const contentEngine = new ContentEngineService(env.CONTENT_ENGINE_PYTHON, env.CONTENT_ENGINE_ROOT);
+  const contentEngine = new ContentEngineService(
+    env.CONTENT_ENGINE_PYTHON,
+    env.CONTENT_ENGINE_ROOT,
+    env.GEMINI_API_KEY,
+    env.GEMINI_MODEL,
+  );
   const contentAssetRepository = new PrismaContentAssetRepository(db);
 
   const contentRepository = new PrismaContentRepository(db);
@@ -298,6 +306,13 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
     clock,
     contentAudit,
     flashcardRepository,
+  );
+
+  const contentEnrichment = new ContentEnrichmentService(
+    db,
+    contentAuthoring,
+    itemBank,
+    contentEngine.getGeminiEngine(),
   );
 
   const planRepository = new PrismaPlanRepository(db);
@@ -518,6 +533,7 @@ export function buildContainer(env: Env, overrides: { db?: Db; clock?: Clock } =
       // duplicate instances would be more objects to keep in step.
       contentImport: new ContentImportService(contentAuthoring, itemBank),
       contentAsset,
+      contentEnrichment,
       workspaceImporter,
       workspaceArchive,
       contentUploadMaxBytes: env.CONTENT_UPLOAD_MAX_BYTES,

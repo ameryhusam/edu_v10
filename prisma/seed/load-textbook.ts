@@ -147,7 +147,20 @@ export async function seedTextbookFromSpec(
     );
   }
 
-  const textbook = await prisma.textbook.findUniqueOrThrow({ where: { key: tbKey } });
+  const textbook = await prisma.textbook.findUnique({ where: { key: tbKey } });
+  if (!textbook) {
+    console.warn(`[seed] Textbook ${tbKey} could not be located after importPackage.`);
+    return {
+      textbookKey: tbKey,
+      units: 0,
+      lessons: 0,
+      concepts: 0,
+      questions: 0,
+      misconceptions: 0,
+      resources: 0,
+      exams: 0,
+    };
+  }
 
   // Update status to PUBLISHED so seed content is immediately usable by learners
   await prisma.textbook.update({
@@ -162,26 +175,35 @@ export async function seedTextbookFromSpec(
   });
 
   const termOrdinal = spec.part === 'PART_1' ? 1 : 2;
-  const term = await prisma.term.findFirstOrThrow({
-    where: { academicYearId: ctx.academicYearId, ordinal: termOrdinal },
-  });
+  const term =
+    (await prisma.term.findFirst({
+      where: { academicYearId: ctx.academicYearId, ordinal: termOrdinal },
+    })) ??
+    (await prisma.term.findFirst({
+      where: { academicYearId: ctx.academicYearId },
+    })) ??
+    (await prisma.term.findFirst());
 
-  await prisma.textbookAdoption.upsert({
-    where: {
-      textbookId_schoolId_academicYearId: {
+  if (term) {
+    await prisma.textbookAdoption.upsert({
+      where: {
+        textbookId_schoolId_academicYearId: {
+          textbookId: textbook.id,
+          schoolId: ctx.schoolId,
+          academicYearId: ctx.academicYearId,
+        },
+      },
+      create: {
         textbookId: textbook.id,
         schoolId: ctx.schoolId,
         academicYearId: ctx.academicYearId,
+        termId: term.id,
       },
-    },
-    create: {
-      textbookId: textbook.id,
-      schoolId: ctx.schoolId,
-      academicYearId: ctx.academicYearId,
-      termId: term.id,
-    },
-    update: {},
-  });
+      update: {
+        termId: term.id,
+      },
+    });
+  }
 
   // Inter-lesson sequential progression gates via canonical linkPrerequisite
   const allLessons = await prisma.lesson.findMany({

@@ -54,4 +54,9 @@ describe('loadEnv', () => {
     const second = loadEnv(baseEnv({ CORS_ORIGINS: '*' }));
     expect(second).toBe(first);
   });
+
+  it('maps deprecated gemini-2.5-flash to gemini-3.5-flash', () => {
+    const env = loadEnv(baseEnv({ GEMINI_MODEL: 'gemini-2.5-flash' }));
+    expect(env.GEMINI_MODEL).toBe('gemini-3.5-flash');
+  });
 });

@@ -571,6 +571,18 @@ export const textbookAdministrationApi = {
     },
     rawContentType: 'application/zip',
   }),
+
+  enrichLessonConcepts: (lessonKey: string) =>
+    api.post<{ concepts: Array<{ key: string; name: string; slug: string; misconceptionsCount: number }> }>(
+      `content/lessons/${encodeURIComponent(lessonKey)}/enrich-concepts`,
+      {},
+    ),
+
+  enrichLessonQuestions: (lessonKey: string, count?: number) =>
+    api.post<{ questions: Array<{ key: string; text: string; type: string }> }>(
+      `content/lessons/${encodeURIComponent(lessonKey)}/enrich-questions`,
+      { count: count ?? 4 },
+    ),
 };
 
 export const contentApi = textbookAdministrationApi;

@@ -50,5 +50,12 @@ export interface ContentEngineIdentityInput {
   readonly analysisPages?: number;
   readonly dpi?: number;
   readonly model?: string;
+  readonly declared?: {
+    readonly subjectKey?: string;
+    readonly gradeKey?: string;
+    readonly part?: 'PART_1' | 'PART_2';
+    readonly edition?: string;
+    readonly title?: string;
+  };
 }
 

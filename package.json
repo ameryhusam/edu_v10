@@ -47,6 +47,7 @@
     "express": "^5.2.1",
     "http-proxy-middleware": "^4.2.0",
     "jsonwebtoken": "^9.0.3",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.23.0",
     "zod": "^4.6.2"
   },

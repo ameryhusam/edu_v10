@@ -26,7 +26,8 @@ export class GeminiProvider implements AiProvider {
   private readonly model: string;
 
   constructor(private readonly config: GeminiConfig) {
-    this.model = config.model ?? 'gemini-2.5-flash';
+    const raw = config.model ?? 'gemini-3.8-flash';
+    this.model = raw.includes('2.5') ? 'gemini-3.8-flash' : raw;
   }
 
   isAvailable(): boolean {

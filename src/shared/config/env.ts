@@ -43,7 +43,10 @@ const schema = z.object({
 
   // AI is optional by design — the platform degrades, it does not break.
   GEMINI_API_KEY: z.string().optional(),
-  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
+  GEMINI_MODEL: z
+    .string()
+    .default('gemini-3.5-flash')
+    .transform((val) => (val === 'gemini-2.5-flash' || val.includes('2.5') ? 'gemini-3.5-flash' : val)),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default('gpt-4o-mini'),
   OPENAI_BASE_URL: z.string().url().default('https://api.openai.com/v1'),

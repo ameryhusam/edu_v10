@@ -1,2 +1,0 @@
-[console_scripts]
-edu7-content = edu7_content.cli.main:main
