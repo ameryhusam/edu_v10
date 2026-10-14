@@ -199,4 +199,35 @@ describe('Page Offset Reconciliation & Gemini Content Engine', () => {
     const validation = validateIndexDocument(indexDoc);
     expect(validation.ok).toBe(true);
   });
+
+  it('performs retries on temporary 503 errors before failing over', async () => {
+    const engine = new GeminiContentEngine({ apiKey: 'fake-test-key' });
+    let attempts = 0;
+
+    const mockClient: any = {
+      models: {
+        generateContent: async ({ model }: any) => {
+          attempts++;
+          if (attempts < 3) {
+            const err: any = new Error('This model is currently experiencing high demand.');
+            err.status = 'UNAVAILABLE';
+            err.code = 503;
+            throw err;
+          }
+          return { text: JSON.stringify({ success: true, modelUsed: model }) };
+        },
+      },
+    };
+
+    // Override internal generateWithFallback call with minimal retry delays for test speed
+    const result: any = await (engine as any).generateWithFallback(
+      mockClient,
+      { contents: [{ role: 'user', parts: [{ text: 'test' }] }] },
+      { maxRetries: 3, retryDelaysMs: [5, 5, 5] },
+    );
+
+    expect(attempts).toBe(3);
+    const parsed = JSON.parse(result.text);
+    expect(parsed.success).toBe(true);
+  });
 });

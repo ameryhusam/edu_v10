@@ -183,33 +183,69 @@ export class GeminiContentEngine {
       contents: Array<any>;
       config?: Record<string, unknown>;
     },
+    options?: {
+      maxRetries?: number;
+      retryDelaysMs?: number[];
+    },
   ) {
     const primaryModel = this.model;
     const secondaryModel = primaryModel === 'gemini-3.5-flash' ? 'gemini-3.8-flash' : 'gemini-3.5-flash';
+    const maxRetries = options?.maxRetries ?? 3;
+    const retryDelaysMs = options?.retryDelaysMs ?? [3000, 4000, 5000];
 
-    try {
-      return await client.models.generateContent({
-        model: primaryModel,
-        ...params,
-      });
-    } catch (err: any) {
-      const isTemporary =
-        err?.status === 'UNAVAILABLE' ||
-        err?.code === 503 ||
-        err?.status === 503 ||
-        String(err?.message || '').includes('503') ||
-        String(err?.message || '').includes('high demand');
+    let lastError: any = null;
 
-      if (isTemporary) {
-        console.warn(
-          `[GeminiContentEngine] Model ${primaryModel} is experiencing temporary high demand (503). Retrying with alternative model ${secondaryModel}...`,
-        );
+    // Phase 1: Try primary model (Gemini 3.5) with at least 3 retries spaced 3 to 5 seconds apart
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          const delay = retryDelaysMs[attempt - 1] ?? 4000;
+          console.log(
+            `[GeminiContentEngine] Retry ${attempt}/${maxRetries} for ${primaryModel} after ${delay / 1000}s pause...`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+
         return await client.models.generateContent({
-          model: secondaryModel,
+          model: primaryModel,
           ...params,
         });
+      } catch (err: any) {
+        lastError = err;
+        const isTemporary =
+          err?.status === 'UNAVAILABLE' ||
+          err?.code === 503 ||
+          err?.status === 503 ||
+          err?.code === 429 ||
+          err?.status === 429 ||
+          String(err?.message || '').includes('503') ||
+          String(err?.message || '').includes('high demand') ||
+          String(err?.message || '').includes('RESOURCE_EXHAUSTED') ||
+          String(err?.message || '').includes('fetch failed') ||
+          String(err?.message || '').includes('HeadersTimeoutError');
+
+        if (!isTemporary || attempt === maxRetries) {
+          break;
+        }
+
+        console.warn(
+          `[GeminiContentEngine] ${primaryModel} encountered temporary condition (${err?.status || err?.code || err?.message || 'error'}). Preparing retry (${attempt + 1}/${maxRetries})...`,
+        );
       }
-      throw err;
+    }
+
+    // Phase 2: If primary model still failed after all 3 retries, failover to secondary model
+    console.warn(
+      `[GeminiContentEngine] All ${maxRetries} retries for ${primaryModel} exhausted. Attempting failover to ${secondaryModel}...`,
+    );
+    try {
+      return await client.models.generateContent({
+        model: secondaryModel,
+        ...params,
+      });
+    } catch (fallbackErr: any) {
+      console.warn(`[GeminiContentEngine] Failover model ${secondaryModel} also failed:`, fallbackErr);
+      throw lastError || fallbackErr;
     }
   }
 

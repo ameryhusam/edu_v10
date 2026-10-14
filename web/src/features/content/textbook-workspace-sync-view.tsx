@@ -1,22 +1,15 @@
 import { type ReactNode } from 'react';
-import { Database, CheckCircle2, RefreshCw } from 'lucide-react';
-import { Button } from '../../design-system/ui/button';
+import { Database, CheckCircle2 } from 'lucide-react';
 import { Badge } from '../../design-system/ui/badge';
 
 export interface TextbookWorkspaceSyncViewProps {
   readonly dryRunResult: any;
   readonly importResult: any;
-  readonly syncPending: boolean;
-  readonly onSync: () => void;
-  readonly onBack: () => void;
 }
 
 export function TextbookWorkspaceSyncView({
   dryRunResult,
   importResult,
-  syncPending,
-  onSync,
-  onBack,
 }: TextbookWorkspaceSyncViewProps): ReactNode {
   return (
     <div className="space-y-4">
@@ -61,7 +54,7 @@ export function TextbookWorkspaceSyncView({
       )}
 
       {/* Final Sync Confirmation */}
-      <div className="p-5 border border-border/60 rounded-xl text-center space-y-3">
+      <div className="p-5 border border-border/60 rounded-xl text-center space-y-2">
         <div className="w-12 h-12 rounded-full bg-surface-subtle text-accent flex items-center justify-center mx-auto">
           <Database className="w-6 h-6" />
         </div>
@@ -71,28 +64,12 @@ export function TextbookWorkspaceSyncView({
             سيتم إنشاء وتحديث سجلات الكتاب، الوحدات، الدروس، المفاهيم، الأسئلة، وملفات الأصول بصورة آمنة وغير قابلة لفقدان البيانات السابقة.
           </p>
         </div>
-
-        <div className="pt-2 flex justify-center gap-3">
-          <Button variant="secondary" size="sm" onClick={onBack}>
-            <span>رجوع للمعاينة</span>
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={onSync}
-            disabled={syncPending || !!importResult}
-            className="gap-2"
-          >
-            {syncPending ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4" />
-            )}
-            <span>
-              {importResult ? 'تم الحفظ والمزامنة بنجاح' : 'تأكيد الحفظ النهائي في قاعدة البيانات'}
-            </span>
-          </Button>
-        </div>
+        {importResult ? (
+          <div className="pt-2 text-xs font-bold text-success flex items-center justify-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>تم الحفظ والمزامنة بنجاح في قاعدة البيانات</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

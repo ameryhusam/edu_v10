@@ -27,16 +27,12 @@ export function TextbookWorkspaceUploadStep({
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent-subtle text-accent">
             <BookOpen className="size-5" />
           </span>
-          <div>
-            <h3 className="text-sm font-black text-text">اختيار موقع الكتاب</h3>
-            <p className="mt-1 text-xs leading-5 text-text-muted">
-              اختر الصف والمادة فقط. لا تختار الجزء أو الفصل الدراسي أو الطبعة؛ محرك المحتوى يستخرج هذه الهوية من ملف PDF.
+          <div className="space-y-1">
+            <h3 className="text-sm font-black text-text">تحليل وتجهيز الكتاب آلياً</h3>
+            <p className="text-xs leading-5 text-text-muted">
+              ارفع ملف PDF فقط؛ يقوم المحرك باقتطاع الصفحات (1–12) في استدعاء موحد لاستخراج هوية المادة والصف والفصل الدراسي ورقم الطبعة وشجرة الفهرس وحساب فارق الترقيم (Offset) وتقطيع الدروس تلقائياً.
             </p>
           </div>
-        </div>
-
-        <div className="mt-5 rounded-xl border border-border bg-surface p-3 text-xs leading-5 text-text-muted">
-          لا تحتاج إلى إدخال اسم الكتاب أو الصف أو المادة أو الجزء أو الطبعة أو عدد الصفحات. ارفع ملف PDF فقط؛ سيحاول محرك المحتوى اكتشاف هوية الكتاب وبنيته، ثم يعرض أي تعارض يحتاج إلى مراجعة قبل الاستيراد.
         </div>
       </section>
 
