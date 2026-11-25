@@ -1,3 +1,21 @@
+## Architecture direction adopted on 2026-11-25 — implementation pending
+
+The prior current-state section below describes the September 2026 implementation snapshot and must not be read as the active target architecture.
+
+The newly adopted target is:
+- `indexer2` owns the existing Workspace layout and lesson-PDF slicing.
+- `edu_v10` reads the existing Workspace without changing its layout or re-slicing PDFs.
+- No edition directory is added to Workspace. Each printed edition is a separate existing `Textbook` row using `Textbook.edition`.
+- Only the latest confirmed edition occupies active Workspace; historical generated content remains attached to its historical Textbook/Lesson records in PostgreSQL.
+- Generated AI content is persisted in the database through canonical services, not in Workspace.
+- The legacy Python preparation path is not the target ingestion path for this integration. Remaining Python usages must be audited and isolated before removal.
+
+The schema already supports separate Textbook rows by edition. A textbook-level source SHA binding is the only candidate minimal schema addition if no existing source record can associate the current Workspace manifest fingerprint with its edition.
+
+The code has not yet been migrated to this target. See the adopted contracts in `architecture/02-content-workspace-ingestion.md`, `architecture/03-ai-evidence-provenance.md`, `architecture/04-data-identity-schema.md` and `architecture/08-decision-register.md`.
+
+---
+
 # Current Repository State — edu_v10
 
 **Review date:** 2026-09-22  

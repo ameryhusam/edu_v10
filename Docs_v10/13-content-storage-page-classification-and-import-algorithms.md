@@ -1,3 +1,5 @@
+> **HISTORICAL / SUPERSEDED — 2026-11-25.** This document records the former Python-owned preparation and/or edition-directory Workspace design. It is retained as implementation history only; do not use its old Workspace paths, slicing ownership, page-image Workspace tree or AI-draft-in-Workspace steps as active instructions. Follow `architecture/02-content-workspace-ingestion.md`, `architecture/03-ai-evidence-provenance.md`, `architecture/04-data-identity-schema.md` and `architecture/08-decision-register.md`. Active target: preserve the existing `indexer2` Workspace exactly; `edu_v10` reads it; AI-generated content is persisted in the database.
+
 # Content Storage, Page Classification and Import Algorithms
 
 **Status:** ADOPTED target implementation contract  
