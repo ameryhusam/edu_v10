@@ -1,3 +1,5 @@
+> **IDENTITY SECTION SUPERSEDED — 2026-11-25.** This document contains an older term-based Textbook key/uniqueness description. That identity contract is no longer active. Use `architecture/04-data-identity-schema.md` and the current Prisma schema: Textbook identity is subject + grade + physical part + printed edition; academic term belongs to TextbookAdoption. The remaining lifecycle discussion is retained as historical context and must be checked against current code before implementation.
+
 # Content Management — Readiness Check & Publishing Lifecycle Gate
 
 **The instruction was conditional:** build Content Management Core first **if**

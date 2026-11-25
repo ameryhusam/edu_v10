@@ -1,3 +1,5 @@
+> **HISTORICAL IDENTITY AUDIT — 2026-11-25.** This audit records an earlier term-based textbook-key state. Its historical findings remain useful for understanding the migration, but its T1/T2 textbook key examples are not the current contract. Current identity is subject + grade + physical part + printed edition; see `architecture/04-data-identity-schema.md` and `architecture/08-decision-register.md`.
+
 # Canonical Key Identity — Mandatory Pre-Implementation Audit
 
 **Directive:** reuse the existing key-generation behaviour as *behavioural
