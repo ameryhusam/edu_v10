@@ -69,11 +69,13 @@
 
 ### 3.1 Textbook
 
+Academic term is not a Textbook identity field. It belongs to `TextbookAdoption` and is supplied only when adopting a textbook to a school/academic year.
+
 | الحقل | النوع | مطلوب | يطابق |
 |---|---|---:|---|
 | subjectKey | string | نعم | `Subject.key` |
 | gradeKey | string | نعم | `Grade.key` |
-| termKey | string | نعم | `Term.key` |
+| physicalPart | string | نعم | `Textbook.part` (`PART_1` or `PART_2`) |
 | title | string | نعم | `Textbook.title` |
 | edition | string | نعم | `Textbook.edition` |
 | description | string/null | لا | `Textbook.description` |
@@ -186,7 +188,7 @@
 #### Textbook
 
 ```csv
-subjectKey,gradeKey,termKey,title,edition,description,issuer,isbn,publishYear,totalPages
+subjectKey,gradeKey,physicalPart,title,edition,description,issuer,isbn,publishYear,totalPages
 ```
 
 #### Units
