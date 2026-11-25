@@ -73,7 +73,7 @@ Therefore:
 - No edition folder is added to Workspace.
 - Academic adoption remains separate in `TextbookAdoption`; term is not part of edition identity.
 
-The existing schema does not currently expose a textbook-level source PDF fingerprint. Add only `Textbook.sourceSha256` if no existing persisted source record can safely bind the current Workspace manifest's `sourceSha256` to the exact edition. Do not add an Edition table or duplicate the textbook hierarchy.
+The current `indexer2` manifest provides source identity/fingerprint and curriculum coordinates, but it does not currently provide a canonical printed-edition field. Because the Workspace must remain unchanged, `edu_v10` must resolve/confirm the target printed edition at intake from the selected textbook or an explicit identity-review step; it must not infer edition from the Workspace path, PDF filename or academic year. It then binds the manifest `sourceSha256` to that selected `Textbook` row. The existing schema does not currently expose a textbook-level source PDF fingerprint. Add only `Textbook.sourceSha256` if no existing persisted source record can safely bind that fingerprint to the exact edition. Do not add an Edition table or duplicate the textbook hierarchy.
 
 ## 4. Current Workspace edition and replacement policy
 
