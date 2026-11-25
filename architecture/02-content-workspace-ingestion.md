@@ -1,167 +1,161 @@
 # Content Workspace, Preparation and Synchronization Contract
 
-Status: ADOPTED
-Last reviewed: 2026-09-22
-Detailed implementation algorithms: Docs_v10/12-end-to-end-dataflows.md, Docs_v10/13-content-storage-page-classification-and-import-algorithms.md, Docs_v10/14-developer-content-ingestion-guide.md
+Status: ADOPTED TARGET ARCHITECTURE
+Decision date: 2026-11-25
+Implementation status: pending in edu_v10; the current code still contains legacy Python-workspace assumptions.
+Workspace producer contract: the existing `indexer2` implementation. Do not redefine or duplicate its slicing algorithm here.
 
-## 1. Ownership and boundary
+## 1. Single ownership boundary
 
-Python Content Preparation owns PDF inspection, OCR/text extraction, page rendering, TOC analysis, printed↔PDF mapping, unit/lesson segmentation, page classification proposals and generation of Workspace artifacts.
+- `indexer2` remains the producer and owner of the existing Workspace layout and PDF lesson slicing.
+- `edu_v10` consumes that Workspace. It must discover, validate, resolve and serve the existing lesson files; it must not re-slice the source PDF or create a second Workspace format.
+- Gemini calls, Task Specifications, AI response validation, review and generated-content persistence belong to `edu_v10`.
+- PostgreSQL is the canonical store for textbook-edition identity and generated educational content.
+- Workspace stores the prepared lesson PDFs and the structural/control metadata required to locate and validate them. AI-generated explanations, summaries, questions, interactive lesson bodies and other generated content are not written into Workspace.
 
-Node.js/TypeScript owns identity resolution, validation/reconciliation, canonical semantic writes, ContentAsset registration, import transactions, publication/readiness and synchronization with PostgreSQL/ContentStorage.
+This is a one-way consumption boundary, not a live two-way mirror.
 
-Workspace is a controlled preparation/exchange snapshot. It is not a second database and it is not live two-way replication.
+## 2. Canonical indexer2 Workspace layout — preserve exactly
 
-## 2. Books containing two physical parts
+The current `indexer2` root is:
 
-A source book may contain two physical parts. The Content Engine must determine part membership from source evidence before creating the Workspace package.
+```text
+workspace/
+└── <gradeKey>/
+    └── <subjectKey>/
+        └── [componentKey]/
+            ├── cover.png
+            ├── index.json
+            ├── validation_report.json
+            ├── book_manifest.json
+            ├── manual_review/
+            │   └── slice_approval_index.json
+            ├── P01/
+            │   └── units/
+            │       └── unit_01/
+            │           └── lesson_01.pdf
+            └── P02/
+                └── units/
+                    └── unit_02/
+                        └── lesson_01.pdf
+```
 
-Required evidence order:
-1. explicit publisher/book metadata when available;
-2. table-of-contents/index evidence;
-3. printed-page ranges and section boundaries;
-4. deterministic structural rules;
-5. AI analysis of the TOC/first pages and surrounding evidence;
-6. review when evidence conflicts or confidence is insufficient.
+Rules:
 
-For a two-part book:
+1. Preserve the actual `indexer2` directory/file names and relative paths.
+2. `index.json` is the canonical structural index.
+3. `book_manifest.json`, `validation_report.json` and `manual_review/slice_approval_index.json` retain their existing roles.
+4. Lesson PDFs remain at `P01/units/unit_NN/lesson_NN.pdf` or `P02/units/unit_NN/lesson_NN.pdf`.
+5. Do not add an edition directory, slug directory, alternate lesson-PDF naming scheme or second manifest tree.
+6. Do not move the existing slicing algorithm into `edu_v10`. The Workspace Reader must consume the files produced by `indexer2`.
+7. Do not put generated AI output under lesson folders. Generated content is persisted through `edu_v10` canonical services.
 
-    source PDF
-      ↓
-    identify book + printed edition
-      ↓
-    analyze TOC/index and first ~15 pages (configurable)
-      ↓
-    detect Part 1 / Part 2 boundaries
-      ↓
-    segment units → lessons → printed page ranges
-      ↓
-    assign each segment to physicalPart
-      ↓
-    P1 for PART_1; P2 for PART_2
-      ↓
-    validate cross-part identity and page mappings
+The root may contain the existing structural metadata and cover artifact. “Lesson-only Workspace” means that lesson PDFs are its canonical prepared PDF content; it does not mean deleting the index and validation metadata required to identify and safely read those lessons.
 
-P1/P2 are the only physical Workspace coordinates. T01/T02 are academic-term coordinates and are not textbook identity aliases.
+## 3. Edition identity is a database concern, not a Workspace path
 
-The AI may propose a boundary; it does not make an unreviewed canonical database decision. The manifest preserves the evidence and confidence used for the assignment.
+There is deliberately no `ED2026/` directory in the canonical Workspace path.
 
-## 3. Canonical Workspace layout
+The current Prisma model already has:
 
-    Workspace/
-      P1/G07/SCI/ED2026/
-        cover/
-        unit_01_<slug>/lesson_01_<slug>/
-          lesson_manifest.json
-          grounding_manifest.json
-          page_classification.json
-          lesson_full_text.txt
-          text/
-          pages/
-          ai_pages/
-          resource/
-      P2/G07/SCI/ED2026/...
+- `Textbook.edition`;
+- `Textbook.publishYear`;
+- uniqueness on `[subjectId, gradeId, part, edition]`;
+- `Unit → Textbook`;
+- `Lesson → Unit`;
+- edition-scoped relations for questions, concepts, resources and assets through their lesson/textbook parents.
 
-pages/ contains original page evidence. ai_pages/ contains derived AI representations and never replaces the original page asset.
+Therefore:
 
-Page filenames remain stable (page_025.png, page_025.txt). Classification is metadata, never filename identity.
+- Each printed edition is a separate `Textbook` row.
+- Each edition owns its own Unit/Lesson hierarchy and generated content.
+- No separate `Edition` model is required for this workflow.
+- No edition folder is added to Workspace.
+- Academic adoption remains separate in `TextbookAdoption`; term is not part of edition identity.
 
-## 4. Page identity and classification
+The existing schema does not currently expose a textbook-level source PDF fingerprint. Add only `Textbook.sourceSha256` if no existing persisted source record can safely bind the current Workspace manifest's `sourceSha256` to the exact edition. Do not add an Edition table or duplicate the textbook hierarchy.
 
-Printed page number is the educational identity. PDF page index is the physical/rendering coordinate.
+## 4. Current Workspace edition and replacement policy
 
-A lesson may contain lesson-only pages, question/exercise pages, assessment/review pages, mixed pages, and pages adjacent to structural boundaries.
+The Workspace path represents the currently prepared edition for its grade/subject/component/physical-part coordinates. Historical generated content remains in PostgreSQL under its historical `Textbook` edition.
 
-The system MUST NOT decide learner-visible lesson pages, question extraction pages, or unit-assessment pages by renaming or changing image filenames.
+On a new PDF upload:
 
-page_classification.json is the authoritative per-page classification artifact after validation.
+1. Resolve subject, grade, physical part and printed edition explicitly.
+2. Compute/read the source SHA-256 and compare it with the current Workspace manifest and the edition record.
+3. Compare edition chronology only from explicit, verified edition metadata. Never compare edition strings lexically or infer edition from filename/academic year.
+4. If the uploaded PDF is older than the current Workspace edition, stop before slicing. Leave the current Workspace untouched.
+5. If edition and source SHA are unchanged, return an idempotent no-op.
+6. If the same printed edition has a different source SHA, classify it as a source revision/conflict and require review; do not silently treat it as a new printed edition.
+7. If a newer printed edition is confirmed, let the existing `indexer2` preparation/slicing workflow produce the replacement Workspace in staging. Validate its index, approval evidence, lesson list, file existence and checksums.
+8. Replace the current Workspace atomically only after the new preparation passes validation. Remove the previous edition's lesson slices from the active Workspace after successful replacement.
+9. Never delete or overwrite the previous edition's textbook, lessons, questions, resources or generated content in PostgreSQL.
 
-Minimum conceptual fields:
-    printedPageNumber
-    pdfPageIndex
-    contentType
-    branch
-    lessonType
-    questionRole
-    questionBlocks[]
-    lessonContent
-    unitAssessment
-    includeInLessonView
-    includeInQuestionExtraction
-    includeInUnitAssessment
-    confidence
-    evidence[]
-    source
+A failed or incomplete preparation must leave the previous active Workspace intact. An older upload must never downgrade the active Workspace.
 
-A page may be MIXED: lessonContent=true and questionBlocks non-empty. A page may be excluded from a specific use while remaining lesson evidence.
+## 5. Edition switching in the application
 
-## 5. Configurable classification vocabulary
+The API resolves the selected `Textbook` edition, then reads content through that edition's own Unit/Lesson relationships.
 
-Classification labels and rules are configuration, not hard-coded assumptions scattered through Python, Node and UI.
+- The latest Workspace edition is the default for current source-PDF access and new generation.
+- Historical editions remain selectable for viewing their previously generated database content.
+- Switching edition changes the selected textbook identity and its lesson/content query; it does not rename or mutate lesson records from another edition.
+- If no generated content exists for a selected historical lesson, the API returns an explicit empty state; it must not borrow content from the current edition.
 
-The configuration defines, at minimum: TOC/index page detection; first-page analysis window (default 15 PDF pages, configurable); part-boundary signals; content types; subject/branch lesson types; question roles; unit-assessment roles; mixed-page handling; confidence/review thresholds; and precedence.
+Important limitation: because Workspace retains only the currently prepared edition's lesson PDFs, switching to an older edition can display its retained database content but cannot display or regenerate from its old source lesson PDF unless that PDF is separately retained in edition-owned ContentStorage. Historical PDF retention is not part of this phase.
 
-Precedence:
-    explicit validated manifest
-      > validated deterministic mapping
-      > TOC/index evidence
-      > subject/branch profile
-      > AI proposal
-      > unresolved/review
+## 6. edu_v10 Workspace Reader and API boundary
 
-Configuration changes are versioned and recorded in preparation/provenance metadata.
+The implementation target is:
 
-## 6. Export algorithm
+```text
+indexer2 Workspace
+    │
+    ▼
+edu_v10 Workspace Reader
+    ├── list workspaces/books
+    ├── read index.json and book_manifest.json
+    ├── discover P01/P02 units and lesson PDFs
+    ├── verify safe relative paths and checksums
+    ├── resolve the selected Textbook edition
+    └── expose lesson metadata and PDF streaming endpoints
+             │
+             ▼
+        Content / Gemini APIs
+             │
+             ▼
+        Task Specification + prompt/schema versions
+             │
+             ▼
+        validation → review → canonical DB persistence
+```
 
-    request textbook/part
-      ↓ resolve canonical identity
-      ↓ resolve Workspace package
-      ↓ validate manifest + references + checksums
-      ↓ collect selected package tree
-      ↓ deterministic ZIP rooted at canonical identity
-      ↓ return package
+The Workspace Reader is read-only with respect to the source Workspace. It must reject path traversal, missing lesson files, checksum mismatches, ambiguous textbook identity and edition/hash mismatch.
 
-Export never includes learner mastery, attempts, XP, assignments or other runtime learner state.
+AI generation uses the lesson PDF as source input but writes its output to the database through existing canonical application services. The browser never calls Gemini directly and never receives provider secrets.
 
-## 7. Import / Workspace synchronization algorithm
+## 7. Synchronization and safety invariants
 
-    receive
-      ↓ fingerprint
-      ↓ safe archive inspection/staging
-      ↓ normalize aliases/coordinates
-      ↓ validate package + identity + schema
-      ↓ validate hierarchy + printed↔PDF mappings
-      ↓ validate page classifications
-      ↓ reconcile physical assets
-      ↓ reconcile semantic units/lessons/pages/resources/questions
-      ↓ dry-run
-      ↓ human Apply when required
-      ↓ canonical Node services
-      ↓ transactional DB/ContentStorage application
-      ↓ commit validated Workspace snapshot
-      ↓ audit + readiness recomputation
+- One canonical Workspace layout: the current `indexer2` layout.
+- One canonical index file: `index.json`.
+- One owner for slicing: `indexer2`.
+- One canonical database writer: `edu_v10` application services.
+- Workspace contains lesson source PDFs and structural/control metadata, not generated AI lesson content.
+- Same edition + same source fingerprint → no-op.
+- Older edition → reject before slicing.
+- Newer edition → staged preparation, validation, then atomic replacement.
+- Failed preparation → preserve previous Workspace.
+- Replacing Workspace never deletes historical database content.
+- Generated content is always scoped to a specific textbook edition and lesson.
+- No automatic fallback from one edition's generated content to another edition.
+- No filesystem watcher or uncontrolled bidirectional synchronization.
 
-Reconciliation uses stable semantic identity and checksums, not filenames alone.
+## 8. Documentation authority
 
-For PARTIAL packages, omitted files never mean deletion. For FULL packages, deletion/replacement still requires an explicit supported change operation; absence alone is not a deletion command.
+This document is the canonical Workspace ownership/layout/replacement contract.
 
-## 8. Synchronization invariants
+`architecture/04-data-identity-schema.md` owns edition identity and schema implications.
+`architecture/03-ai-evidence-provenance.md` owns AI provenance and review boundaries.
+`architecture/08-decision-register.md` records the adopted decisions.
 
-- One canonical owner/write path per semantic decision.
-- Python never writes PostgreSQL directly.
-- Workspace files are evidence/assets, not implicit semantic rows.
-- Same fingerprint → idempotent no-op.
-- Incomplete Workspace → resume from the first invalid checkpoint; do not repeat valid upstream stages.
-- Full re-extraction requires a changed/invalid upstream dependency or an explicit rebuild request.
-- New artifact → create/reconcile through canonical service.
-- Changed artifact → staged replacement and review according to policy.
-- Identity conflict → stop; never silently overwrite.
-- Failed validation/apply → existing canonical state and existing Workspace remain intact.
-- Every operation has an operation key and source fingerprint sufficient for safe retry.
-- Concurrent imports for the same textbook must be serialized before production-scale multi-worker mutation.
-
-## 9. Detailed-document rule
-
-This file records architecture, ownership, invariants and algorithm boundaries only.
-
-Docs_v10/12 is the normative end-to-end workflow specification; Docs_v10/13 owns detailed storage/page-classification/import algorithms; Docs_v10/14 is the developer operating guide. Do not copy their step-by-step procedures into this file. If a detailed algorithm changes, update its Docs_v10 owner and update this file only when the architectural contract changes.
+Older documents describing Python-owned segmentation, `EDITION` Workspace directories, page-image trees or AI draft files inside Workspace are historical records only. They must not be used as active implementation instructions.
