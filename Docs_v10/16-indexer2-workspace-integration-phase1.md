@@ -187,3 +187,43 @@ Keep the existing edu_v10 Python archive dependency unchanged for now. Removing 
 - HTML execution in a WebView;
 - changing learner assessment/mastery models;
 - deleting the Python content engine or archive module.
+
+
+## 12. Repository baseline audit (2026-11-25)
+
+Open pull requests found in edu_v10:
+
+| PR | Branch | Scope | Current finding | Decision |
+|---|---|---|---|---|
+| #8 | `feat/content-structure-engine-v2` | Python educational structure extraction, TOC/page mapping, semantic blocks, question grouping, lesson-boundary evidence | Draft; 25 commits; 12 files; no check runs/statuses reported; mergeable=false | Do not use as Phase 1 base. It changes the extraction engine, while this phase consumes the already-built workspace and does not change slicing/extraction. |
+| #9 | `feature/ai-provider-key-rotation` | Gemini/OpenAI multi-key and model fallback in tutoring AI providers | Draft; 15 commits; 9 files; latest `verify` check failed in backend type/architecture/tests step; later frontend/build/Python steps were skipped; mergeable=false | Relevant provider work, but do not build directly on this branch or cherry-pick blindly. Rebase/fix CI first, then assess whether the provider logic should be shared with the content engine. |
+
+Repository branches inspected:
+- `main`: `da136988965aa498c993d4eacee4f2c67f66b6b7`, 2026-10-14 — newest branch head found.
+- `feature/ai-provider-key-rotation`: 2026-10-09.
+- `feat/content-structure-engine-v2`: 2026-09-23.
+- `dev`: 2026-09-22.
+- `03_build_algorithm_and_new_Docs`: 2026-09-22.
+- `feature/content-ai-foundation-g1`: 2026-09-21.
+- `feature/content-ai-g2-smart-toc-pypdf-fallback`: 2026-09-20.
+- `fix/python-both-part-detection`: 2026-09-22.
+
+The GitHub repository's default branch is `main`; its head is newer than the heads of the open PR branches. Therefore the Phase 1 branch is based on `main`, not on an older open PR branch.
+
+## 13. Existing Gemini API implementation audit
+
+There are two distinct Gemini integrations in edu_v10 and they must not be conflated:
+
+1. `src/infrastructure/ai/gemini.provider.ts` implements the general `AiProvider` used by tutoring. PR #9 changes this adapter.
+2. `src/infrastructure/content/gemini-content-engine.ts` implements content ingestion/generation and is injected into `ContentEnrichmentService`. It owns a separate `GoogleGenAI` client and its own `generateWithFallback` method.
+
+The current content engine:
+- sends PDF bytes as base64 `inlineData` with `mimeType: application/pdf`;
+- embeds task prompts directly in TypeScript methods;
+- uses `responseMimeType: application/json` for structured outputs in the inspected methods;
+- currently does not attach the task's JSON Schema as `responseJsonSchema` in those content-engine calls;
+- has its own retry/fallback behavior (three retries with configured delays and a hard-coded secondary model choice).
+
+Consequently PR #9 does not by itself complete the content-generation integration requested here. The correct adaptation is to retain the GoogleGenAI transport boundary and multimodal PDF capability, but move prompt text and response schemas into the server-side Task Specification registry. The content engine should receive a resolved task specification and validated input, pass the specification's response schema to Gemini where supported, and always validate the returned JSON locally. Retry/model/key policy should be one shared, tested policy rather than two independent fallback implementations.
+
+The API key and model remain server-only. Neither the prompt registry nor the browser receives credentials.
