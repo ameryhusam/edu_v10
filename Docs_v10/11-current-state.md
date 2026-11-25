@@ -10,7 +10,7 @@ The newly adopted target is:
 - Generated AI content is persisted in the database through canonical services, not in Workspace.
 - The legacy Python preparation path is not the target ingestion path for this integration. Remaining Python usages must be audited and isolated before removal.
 
-The schema already supports separate Textbook rows by edition. A textbook-level source SHA binding is the only candidate minimal schema addition if no existing source record can associate the current Workspace manifest fingerprint with its edition.
+The schema already supports separate Textbook rows by edition. The current Prisma schema has no textbook-level source SHA binding, so the expected minimal schema addition is one optional `Textbook.sourceSha256` field to associate the active Workspace manifest fingerprint with its edition.
 
 The code has not yet been migrated to this target. See the adopted contracts in `architecture/02-content-workspace-ingestion.md`, `architecture/03-ai-evidence-provenance.md`, `architecture/04-data-identity-schema.md` and `architecture/08-decision-register.md`.
 

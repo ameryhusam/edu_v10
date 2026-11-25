@@ -36,7 +36,7 @@ Do not create a separate `Edition` model for this workflow. Do not encode the ed
 
 The Workspace `book_manifest.json` contains `sourceSha256`. The application must bind that fingerprint to the selected `Textbook` edition so it can detect stale, replaced or mismatched lesson PDFs.
 
-The current `Textbook` model does not have a textbook-level `sourceSha256` field. Before adding one, verify whether an existing persisted source record already provides an exact, durable binding. If not, add only an optional `Textbook.sourceSha256` field and index it appropriately. Do not create a generic Edition table or duplicate source identity in several unrelated records.
+The current `Textbook` model does not have a textbook-level `sourceSha256` field, and repository search found no existing textbook-level source-fingerprint binding. Add one optional `Textbook.sourceSha256` field and use it to bind the active Workspace manifest to the exact edition. Do not create a generic Edition table or duplicate source identity in several unrelated records.
 
 A source SHA identifies the exact uploaded PDF bytes; it does not define printed-edition identity. Two scans of the same printed edition may have different SHA values and require explicit source-revision review.
 
