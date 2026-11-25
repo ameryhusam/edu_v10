@@ -1,3 +1,5 @@
+> **HISTORICAL / SUPERSEDED — 2026-11-25.** This document records the previous preparation architecture. It is not an active implementation contract. Do not follow the Python-owned slicing or edition-directory Workspace flow described below. Use `architecture/02-content-workspace-ingestion.md` and `architecture/08-decision-register.md`: `indexer2` owns the existing Workspace and slicing; `edu_v10` reads that layout; AI-generated content is stored in the database.
+
 # End-to-End Data Flows, Algorithms and Operational Workflows
 
 **Status:** ADOPTED target production contract.  
