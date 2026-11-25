@@ -83,6 +83,10 @@ The current `indexer2` manifest provides source identity/fingerprint and curricu
 
 The Workspace path represents the currently prepared edition for its grade/subject/component/physical-part coordinates. Historical generated content remains in PostgreSQL under its historical `Textbook` edition.
 
+### Pre-slice edition guard — required integration boundary
+
+The older-edition rejection must run in the same intake path that invokes the existing `indexer2` `sliceBookLessons` operation, before that operation writes/replaces lesson files. A read-only `edu_v10` Workspace Reader cannot prevent an external `indexer2` intake action from overwriting the current Workspace after slicing has already started. The slicing algorithm and directory layout remain unchanged; only a pre-slice identity/edition guard is required. If `indexer2` must remain completely unmodified, then all PDF intake must instead be routed through an `edu_v10`-controlled orchestration path that checks the edition before invoking the existing slicer. Without one of these two arrangements, “reject older edition before slicing” cannot be guaranteed.
+
 On a new PDF upload:
 
 1. Resolve subject, grade, physical part and printed edition explicitly.
