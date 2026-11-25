@@ -193,11 +193,13 @@ export class Indexer2WorkspaceReader {
     }
     if (normalizedIndexPath) {
       const workspacePrefix = `workspace/${candidate.relativePath}/`;
+      if (normalizedIndexPath.startsWith('workspace/') && !normalizedIndexPath.startsWith(workspacePrefix)) {
+        issues.push('Index lesson PDF path points to a different workspace.');
+        return { relativePath: null, bytes: null, issues };
+      }
       references.push(normalizedIndexPath.startsWith(workspacePrefix)
         ? normalizedIndexPath.slice(workspacePrefix.length)
-        : normalizedIndexPath.startsWith('workspace/')
-          ? normalizedIndexPath.slice('workspace/'.length)
-          : normalizedIndexPath);
+        : normalizedIndexPath);
     }
 
     const slices = Array.isArray(manifest?.slices) ? manifest.slices : [];
