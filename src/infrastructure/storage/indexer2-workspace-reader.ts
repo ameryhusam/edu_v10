@@ -269,17 +269,16 @@ export class Indexer2WorkspaceReader {
       const manifestRange = Array.isArray(manifestSlice?.pdfRange)
         ? manifestSlice.pdfRange.map(positiveInt)
         : [];
-      if (
-        manifestRange.length === 2 &&
-        manifestRange[0] !== null &&
-        manifestRange[1] !== null &&
-        positiveInt(lesson.pdfPageStart) !== manifestRange[0] ||
-        manifestRange.length === 2 &&
-        manifestRange[0] !== null &&
-        manifestRange[1] !== null &&
-        positiveInt(lesson.pdfPageEnd) !== manifestRange[1]
-      ) {
-        issues.push('Lesson PDF page range differs between index.json and book_manifest.json.');
+      if (manifestRange.length === 2) {
+        const [manifestStart, manifestEnd] = manifestRange;
+        if (
+          manifestStart !== null &&
+          manifestEnd !== null &&
+          (positiveInt(lesson.pdfPageStart) !== manifestStart ||
+            positiveInt(lesson.pdfPageEnd) !== manifestEnd)
+        ) {
+          issues.push('Lesson PDF page range differs between index.json and book_manifest.json.');
+        }
       }
       if (typeof manifestSlice?.sha256 === 'string' && manifestSlice.sha256 && sha256(bytes) !== manifestSlice.sha256) {
         issues.push('Lesson PDF SHA-256 differs from book_manifest.');
