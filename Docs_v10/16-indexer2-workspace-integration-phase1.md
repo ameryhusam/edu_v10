@@ -227,3 +227,18 @@ The current content engine:
 Consequently PR #9 does not by itself complete the content-generation integration requested here. The correct adaptation is to retain the GoogleGenAI transport boundary and multimodal PDF capability, but move prompt text and response schemas into the server-side Task Specification registry. The content engine should receive a resolved task specification and validated input, pass the specification's response schema to Gemini where supported, and always validate the returned JSON locally. Retry/model/key policy should be one shared, tested policy rather than two independent fallback implementations.
 
 The API key and model remain server-only. Neither the prompt registry nor the browser receives credentials.
+
+
+## 14. Phase 1 implementation progress
+
+Initial code slice added on `feat/indexer2-workspace-integration-phase1`:
+- `src/infrastructure/storage/indexer2-workspace-reader.ts`: read-only discovery/inspection adapter for the grade/subject[/component] layout, canonical index + book manifest, P01/P02 lesson PDFs, PDF byte hashes, and path/symlink containment checks.
+- `tests/unit/indexer2-workspace-reader.test.ts`: fixtures for discovery, merged BOTH metadata with per-unit part assignment, manifest/index path disagreement, path traversal rejection, and unknown workspace keys.
+
+Not yet wired in this slice:
+- environment configuration and composition-root registration;
+- authenticated HTTP discovery/preview/sync endpoints;
+- conversion into the existing ContentPackage and idempotent Unit/Lesson/ContentAsset synchronization;
+- student lesson API/client rendering changes.
+
+The test file has been authored but has not been executed in this environment. Do not treat the reader as production-verified until `npm run typecheck`, the focused Vitest test, `npm run arch:check`, and the full `npm test` pass in CI or a local checkout.
