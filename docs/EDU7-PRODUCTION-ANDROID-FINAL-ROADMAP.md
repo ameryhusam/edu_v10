@@ -70,7 +70,7 @@ Review/Publish workflow منفصل
 
 ### 2.2 الحقول الأساسية
 
-- كتاب: `subjectKey`, `gradeKey`, `termKey`, `title`, `edition`, `issuer`, `isbn`, `publishYear`, `totalPages`.
+- كتاب: `subjectKey`, `gradeKey`, `physicalPart` (`PART_1`/`PART_2`), `title`, `edition`, `issuer`, `isbn`, `publishYear`, `totalPages`. الفصل الدراسي ليس جزءًا من هوية الكتاب؛ يضاف عبر `TextbookAdoption` عند اعتماد الكتاب لمدرسة وسنة دراسية.
 - وحدات: `slug`, `parentUnitSlug`, `name`, `orderIndex`, `startPage`, `endPage`, `sourceRef`.
 - دروس: `unitSlug`, `slug`, `name`, `description`, `orderIndex`, `estimatedMins`, `startPage`, `endPage`, `sourceRef`.
 - مفاهيم: `unitSlug`, `lessonSlug`, `slug`, `name`, `description`, `difficulty`, `importance`, `masteryThreshold`, `isCore`, `pageNumber`, `sourceRef`, `nameEn`, `bloomsLevel`.

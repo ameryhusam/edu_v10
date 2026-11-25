@@ -1,3 +1,5 @@
+> **HISTORICAL / SUPERSEDED — 2026-11-25.** This earlier import/export plan contains a term-based Textbook payload. Do not use `termKey` as a Textbook identity field. Current identity is subject + grade + physical part + printed edition; term belongs to `TextbookAdoption`. Use `architecture/04-data-identity-schema.md` and the current import template.
+
 # Edu7 — المعمارية الموحدة للاستيراد والتصدير وخطة التحول للإنتاجية العالمية
 ## Unified Content Interchange Standard & World-Class EdTech Execution Roadmap
 
