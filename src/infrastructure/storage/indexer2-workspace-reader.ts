@@ -189,7 +189,9 @@ export class Indexer2WorkspaceReader {
     const normalizedIndexPath = normalizeRelativePath(rawIndexPath);
     if (rawIndexPath !== undefined && rawIndexPath !== null && !normalizedIndexPath) {
       issues.push('Index contains an unsafe lesson PDF path.');
-    } else if (normalizedIndexPath) {
+      return { relativePath: null, bytes: null, issues };
+    }
+    if (normalizedIndexPath) {
       const workspacePrefix = `workspace/${candidate.relativePath}/`;
       references.push(normalizedIndexPath.startsWith(workspacePrefix)
         ? normalizedIndexPath.slice(workspacePrefix.length)
@@ -211,22 +213,21 @@ export class Indexer2WorkspaceReader {
     const manifestPath = normalizeRelativePath(manifestSlice?.path);
     if (manifestSlice?.path !== undefined && !manifestPath) {
       issues.push('Manifest contains an unsafe lesson PDF path.');
-    } else if (manifestPath) {
-      references.push(manifestPath);
+      return { relativePath: null, bytes: null, issues };
     }
-
-    if (unitNumber && lessonNumber && unitPart) {
-      references.push(
-        `${unitPart}/units/unit_${String(unitNumber).padStart(2, '0')}/lesson_${String(lessonNumber).padStart(2, '0')}.pdf`,
-      );
-    }
+    if (manifestPath) references.push(manifestPath);
 
     const uniqueReferences = [...new Set(references)];
-    if (uniqueReferences.length > 1 && references[0] !== references[1]) {
+    if (uniqueReferences.length > 1) {
       issues.push('Index and book_manifest reference different lesson PDF paths.');
+      return { relativePath: null, bytes: null, issues };
     }
 
-    const relativePath = uniqueReferences[0] ?? null;
+    const relativePath = uniqueReferences[0] ?? (
+      unitNumber && lessonNumber && unitPart
+        ? `${unitPart}/units/unit_${String(unitNumber).padStart(2, '0')}/lesson_${String(lessonNumber).padStart(2, '0')}.pdf`
+        : null
+    );
     if (!relativePath) {
       issues.push('No lesson PDF path is available in index, manifest, or canonical layout.');
       return { relativePath: null, bytes: null, issues };
@@ -258,8 +259,27 @@ export class Indexer2WorkspaceReader {
         return { relativePath, bytes: null, issues };
       }
       const bytes = await fs.readFile(fileReal);
+      if (bytes.subarray(0, 5).toString('ascii') !== '%PDF-') {
+        issues.push('Resolved lesson asset does not have a PDF file signature.');
+        return { relativePath, bytes: null, issues };
+      }
       if (manifestSlice && typeof manifestSlice.byteSize === 'number' && manifestSlice.byteSize !== bytes.length) {
         issues.push('Lesson PDF byte size differs from book_manifest.');
+      }
+      const manifestRange = Array.isArray(manifestSlice?.pdfRange)
+        ? manifestSlice.pdfRange.map(positiveInt)
+        : [];
+      if (
+        manifestRange.length === 2 &&
+        manifestRange[0] !== null &&
+        manifestRange[1] !== null &&
+        positiveInt(lesson.pdfPageStart) !== manifestRange[0] ||
+        manifestRange.length === 2 &&
+        manifestRange[0] !== null &&
+        manifestRange[1] !== null &&
+        positiveInt(lesson.pdfPageEnd) !== manifestRange[1]
+      ) {
+        issues.push('Lesson PDF page range differs between index.json and book_manifest.json.');
       }
       if (typeof manifestSlice?.sha256 === 'string' && manifestSlice.sha256 && sha256(bytes) !== manifestSlice.sha256) {
         issues.push('Lesson PDF SHA-256 differs from book_manifest.');
