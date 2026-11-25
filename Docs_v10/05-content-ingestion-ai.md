@@ -1,3 +1,5 @@
+> **HISTORICAL / SUPERSEDED — 2026-11-25.** This document describes the former Python-owned preparation workflow. It is retained as history only. Do not use its Python segmentation ownership, edition-directory Workspace paths or AI draft files in Workspace as active instructions. The adopted contract is in `architecture/02-content-workspace-ingestion.md`, `architecture/03-ai-evidence-provenance.md`, `architecture/04-data-identity-schema.md` and `architecture/08-decision-register.md`. The active Workspace is the existing `indexer2` layout; `edu_v10` reads it, and AI-generated content is persisted in the database.
+
 # Content Ingestion, Workspace, Grounding and AI
 
 **Status:** ADOPTED; target production contract.  
