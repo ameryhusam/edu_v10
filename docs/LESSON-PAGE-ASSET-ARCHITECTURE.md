@@ -19,8 +19,12 @@ workspace/<gradeKey>/<subjectKey>/[componentKey]/
 ├── validation_report.json
 ├── book_manifest.json
 ├── manual_review/slice_approval_index.json
-├── P01/units/unit_01/lesson_01.pdf
-└── P02/units/unit_02/lesson_01.pdf
+├── P01/
+│   ├── cover.png and index.json (merged-source package only)
+│   └── units/unit_01/lesson_01.pdf
+└── P02/
+    ├── cover.png and index.json (merged-source package only)
+    └── units/unit_02/lesson_01.pdf
 ```
 
 The actual `indexer2` directory and file names are authoritative. Do not add an edition folder, rename lesson files, introduce slug-based lesson directories or implement another slicing algorithm in `edu_v10`.

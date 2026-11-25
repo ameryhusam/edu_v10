@@ -30,11 +30,15 @@ workspace/
             ├── book_manifest.json
             ├── manual_review/
             │   └── slice_approval_index.json
-            ├── P01/
+            ├── P01/                         # when this part exists
+            │   ├── cover.png                 # merged-source package only
+            │   ├── index.json                 # merged-source package only
             │   └── units/
             │       └── unit_01/
             │           └── lesson_01.pdf
-            └── P02/
+            └── P02/                         # when this part exists
+                ├── cover.png                 # merged-source package only
+                ├── index.json                 # merged-source package only
                 └── units/
                     └── unit_02/
                         └── lesson_01.pdf
